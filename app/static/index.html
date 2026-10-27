@@ -1,0 +1,1115 @@
+<!doctype html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Blockplan</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Crect x='2' y='2' width='9' height='6' rx='1.5' fill='%232A62A8'/%3E%3Crect x='13' y='2' width='9' height='6' rx='1.5' fill='%23A86A12'/%3E%3Crect x='2' y='16' width='9' height='6' rx='1.5' fill='%23B0442A'/%3E%3Crect x='13' y='16' width='9' height='6' rx='1.5' fill='%234B5867'/%3E%3Cpath d='M6.5 8v8M17.5 8v8' stroke='%231F5B4E' stroke-width='2'/%3E%3C/svg%3E">
+<style>
+@font-face{font-family:"Bricolage Grotesque";font-weight:600;font-display:swap;src:url(/static/fonts/bricolage-grotesque-latin-600-normal.woff2) format("woff2")}
+@font-face{font-family:"Bricolage Grotesque";font-weight:700;font-display:swap;src:url(/static/fonts/bricolage-grotesque-latin-700-normal.woff2) format("woff2")}
+@font-face{font-family:"Hanken Grotesk";font-weight:400;font-display:swap;src:url(/static/fonts/hanken-grotesk-latin-400-normal.woff2) format("woff2")}
+@font-face{font-family:"Hanken Grotesk";font-weight:500;font-display:swap;src:url(/static/fonts/hanken-grotesk-latin-500-normal.woff2) format("woff2")}
+@font-face{font-family:"Hanken Grotesk";font-weight:600;font-display:swap;src:url(/static/fonts/hanken-grotesk-latin-600-normal.woff2) format("woff2")}
+@font-face{font-family:"JetBrains Mono";font-weight:500;font-display:swap;src:url(/static/fonts/jetbrains-mono-latin-500-normal.woff2) format("woff2")}
+html{color-scheme:light}
+body{margin:0}
+[hidden]{display:none!important}
+img{max-width:100%}
+/* Layout: top bar, then three columns – block shelf | map canvas in six stacked lanes | details, helper and checks */
+:root{
+  --bg:#E9EEEC; --surface:#FFFFFF; --panel:#F5F7F6; --ink:#16211E; --muted:#56665F; --line:#CFD8D4;
+  --accent:#1F5B4E; --accent-ink:#FFFFFF; --accent-soft:#DCEBE6;
+  --c-goal:#A86A12; --c-ability:#2A62A8; --c-team:#7E4A9E; --c-info:#0C7680; --c-system:#B0442A; --c-tech:#4B5867;
+  --good:#2F8A4E; --watch:#C28A12; --bad:#C2372B;
+  --f-display:"Bricolage Grotesque", "Segoe UI", system-ui, sans-serif;
+  --f-body:"Hanken Grotesk", "Segoe UI", system-ui, sans-serif;
+  --f-mono:"JetBrains Mono", ui-monospace, Menlo, Consolas, monospace;
+  --shadow:0 1px 2px rgba(20,35,30,.08), 0 4px 14px rgba(20,35,30,.07);
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#101614; --surface:#1A2220; --panel:#151C1A; --ink:#E3ECE8; --muted:#94A49E; --line:#2D3935;
+  --accent:#62C3A6; --accent-ink:#0D1F19; --accent-soft:#1D3530;
+  --c-goal:#E0A548; --c-ability:#6FA3E6; --c-team:#B88AD6; --c-info:#4CB8C2; --c-system:#E57C5F; --c-tech:#9AA8B8;
+  --good:#5CC17E; --watch:#E3B04A; --bad:#EE6A5D;
+  --shadow:0 1px 2px rgba(0,0,0,.4), 0 4px 14px rgba(0,0,0,.3); color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#101614; --surface:#1A2220; --panel:#151C1A; --ink:#E3ECE8; --muted:#94A49E; --line:#2D3935;
+  --accent:#62C3A6; --accent-ink:#0D1F19; --accent-soft:#1D3530;
+  --c-goal:#E0A548; --c-ability:#6FA3E6; --c-team:#B88AD6; --c-info:#4CB8C2; --c-system:#E57C5F; --c-tech:#9AA8B8;
+  --good:#5CC17E; --watch:#E3B04A; --bad:#EE6A5D;
+  --shadow:0 1px 2px rgba(0,0,0,.4), 0 4px 14px rgba(0,0,0,.3); color-scheme:dark}
+
+html,body{height:100%}
+body{background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:14px;line-height:1.45;
+  display:grid;grid-template-rows:auto minmax(0,1fr);overflow:hidden;
+  padding-left:max(16px, env(safe-area-inset-left, 0px));padding-right:max(16px, env(safe-area-inset-right, 0px));padding-block:0 12px;box-sizing:border-box}
+*{box-sizing:border-box}
+button,input,textarea,select{font:inherit;color:inherit}
+button{cursor:pointer}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+
+/* Top bar */
+.top{display:flex;flex-wrap:wrap;align-items:center;gap:10px 16px;padding-block:12px}
+.brand{font-family:var(--f-display);font-weight:700;font-size:20px;letter-spacing:-.01em;display:flex;align-items:center;gap:8px}
+.brand i{display:grid;grid-template-columns:repeat(3,6px);gap:2px}
+.brand i b{width:6px;height:6px;border-radius:1px}
+.mapname{border:1px solid transparent;background:transparent;border-radius:6px;padding:4px 8px;font-weight:600;min-width:0;width:min(260px,40vw)}
+.mapname:hover,.mapname:focus{border-color:var(--line);background:var(--surface)}
+.spacer{flex:1}
+.seg{display:inline-flex;background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:2px}
+.seg button{border:0;background:transparent;padding:5px 10px;border-radius:6px;color:var(--muted);font-weight:500}
+.seg button[aria-pressed="true"]{background:var(--accent);color:var(--accent-ink)}
+.tools{display:flex;gap:6px;align-items:center;flex-wrap:wrap}
+.btn{border:1px solid var(--line);background:var(--surface);border-radius:8px;padding:6px 11px;font-weight:500}
+.btn:hover{border-color:var(--muted)}
+.btn:disabled{opacity:.45;cursor:default}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.btn.danger{color:var(--bad)}
+.zoom{font-family:var(--f-mono);font-size:12px;color:var(--muted);min-width:42px;text-align:center;font-variant-numeric:tabular-nums}
+details.menu{position:relative}
+details.menu summary{list-style:none}
+details.menu summary::-webkit-details-marker{display:none}
+details.menu .drop{position:absolute;right:0;top:calc(100% + 6px);z-index:40;background:var(--surface);border:1px solid var(--line);border-radius:10px;box-shadow:var(--shadow);padding:6px;min-width:200px;display:grid}
+details.menu .drop button{border:0;background:transparent;text-align:left;padding:8px 10px;border-radius:6px}
+details.menu .drop button:hover{background:var(--panel)}
+
+/* Main grid */
+.app{display:grid;grid-template-columns:200px minmax(0,1fr) 340px;gap:12px;min-height:0}
+.shelf,.side{background:var(--panel);border:1px solid var(--line);border-radius:12px;min-height:0;overflow:auto}
+.shelf{padding:12px;display:flex;flex-direction:column;gap:8px}
+.shelf h2,.side h2{font-family:var(--f-mono);font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin:0;font-weight:500}
+.pal{display:flex;flex-direction:column;gap:8px}
+.pal-item{touch-action:none;user-select:none;-webkit-user-select:none;cursor:grab;background:var(--surface);border:1px solid var(--line);border-left:4px solid var(--tc);border-radius:8px;padding:8px 10px;text-align:left}
+.pal-item:hover{border-color:var(--tc)}
+.pal-item strong{display:block;font-weight:600}
+.pal-item span{display:block;font-size:12px;color:var(--muted);line-height:1.3}
+.shelf .tip{font-size:12px;color:var(--muted);margin:4px 0 0}
+
+/* Canvas */
+.viewport{position:relative;overflow:auto;background:var(--surface);border:1px solid var(--line);border-radius:12px;min-height:0;overscroll-behavior:contain}
+.viewport.panning{cursor:grabbing}
+.sizer{position:relative}
+.surface{position:absolute;left:0;top:0;transform-origin:0 0}
+.lane{position:absolute;left:0;right:0;border-bottom:1px dashed var(--line)}
+.lane .lname{position:sticky;left:0;display:inline-flex;gap:8px;align-items:baseline;padding:8px 12px;font-family:var(--f-display);font-weight:600;font-size:14px;color:var(--tc)}
+.lane .lname small{font-family:var(--f-mono);font-weight:500;font-size:10.5px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+.lane .empty{position:absolute;left:24px;top:52px;font-size:13px;color:var(--muted);border:1.5px dashed var(--line);border-radius:10px;padding:14px 16px;pointer-events:none}
+.lane:nth-child(odd){background:color-mix(in srgb, var(--panel) 55%, transparent)}
+svg.links{position:absolute;left:0;top:0;overflow:visible;pointer-events:none}
+svg.links path.l{fill:none;stroke:var(--muted);stroke-width:1.6}
+svg.links path.l.sel{stroke:var(--accent);stroke-width:2.6}
+svg.links path.l.faded{stroke-dasharray:5 4;opacity:.7}
+svg.links path.hit{fill:none;stroke:transparent;stroke-width:14;pointer-events:stroke;cursor:pointer}
+svg.links path.tmp{fill:none;stroke:var(--accent);stroke-width:2;stroke-dasharray:6 4}
+.llabel{position:absolute;transform:translate(-50%,-50%);font-size:11.5px;color:var(--muted);background:var(--surface);border:1px solid var(--line);padding:1px 7px;border-radius:20px;white-space:nowrap;cursor:pointer;max-width:180px;overflow:hidden;text-overflow:ellipsis}
+.llabel.sel{color:var(--accent);border-color:var(--accent);font-weight:600}
+.block{position:absolute;width:172px;height:62px;background:color-mix(in srgb, var(--tc) 9%, var(--surface));border:1.5px solid color-mix(in srgb, var(--tc) 55%, var(--line));border-radius:10px;padding:7px 26px 7px 10px;touch-action:none;user-select:none;-webkit-user-select:none;cursor:grab;display:flex;flex-direction:column;justify-content:center;gap:1px}
+.block:hover{box-shadow:var(--shadow)}
+.block.sel{box-shadow:0 0 0 3px color-mix(in srgb, var(--accent) 40%, transparent);border-color:var(--accent)}
+.block.drag{cursor:grabbing;box-shadow:var(--shadow);z-index:5}
+.block.w-planned{border-style:dashed;background:var(--surface)}
+.block.w-retiring{opacity:.62}
+.block.w-retiring .nm{text-decoration:line-through;text-decoration-color:color-mix(in srgb, var(--ink) 40%, transparent)}
+.block .kind{font-family:var(--f-mono);font-size:10px;letter-spacing:.06em;text-transform:uppercase;color:var(--tc);display:flex;gap:6px;align-items:center}
+.block .kind em{font-style:normal;color:var(--muted);text-transform:none;letter-spacing:0;font-family:var(--f-body);font-size:11px}
+.block .kind .cost{margin-left:auto;font-family:var(--f-mono);color:var(--ink);letter-spacing:0;text-transform:none;font-size:10.5px;font-variant-numeric:tabular-nums}
+/* Costs tab */
+.totals{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px}
+.totals div{background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:9px 10px}
+.totals b{display:block;font-family:var(--f-display);font-size:21px;font-variant-numeric:tabular-nums;line-height:1.15}
+.totals span{font-size:11.5px;color:var(--muted)}
+.verdict{background:var(--accent-soft);border-radius:8px;padding:9px 11px;margin-bottom:16px;font-size:13px}
+.verdict b{font-variant-numeric:tabular-nums}
+.bars{display:grid;gap:10px;margin:8px 0 18px}
+.bar-row .bl{display:flex;justify-content:space-between;font-size:12.5px;margin-bottom:3px;gap:8px}
+.bar-row .bl span{color:var(--muted);font-family:var(--f-mono);font-size:11px;font-variant-numeric:tabular-nums;white-space:nowrap}
+.bar{height:7px;border-radius:4px;background:var(--line);margin-top:2px;position:relative;overflow:hidden}
+.bar i{position:absolute;left:0;top:0;bottom:0;border-radius:4px;background:var(--tc)}
+.bar.fut i{background:transparent;border:1.5px dashed var(--tc);box-sizing:border-box}
+.key{display:flex;gap:14px;font-size:11.5px;color:var(--muted);margin-top:4px}
+.key i{display:inline-block;width:14px;height:7px;border-radius:3px;background:var(--muted);margin-right:5px;vertical-align:1px}
+.key i.f{background:transparent;border:1.5px dashed var(--muted)}
+.toplist{list-style:none;margin:6px 0 16px;padding:0;display:grid;gap:5px}
+.toplist button{width:100%;display:flex;justify-content:space-between;gap:8px;text-align:left;border:1px solid var(--line);background:var(--surface);border-radius:8px;padding:6px 10px;border-left:4px solid var(--tc)}
+.toplist button span:last-child{font-family:var(--f-mono);font-size:12px;font-variant-numeric:tabular-nums;white-space:nowrap}
+.money{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.money .field{margin-bottom:0}
+.money small{font-size:11px;color:var(--muted);font-variant-numeric:tabular-nums;min-height:1em}
+.block .nm{font-weight:600;font-size:13.5px;line-height:1.2;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
+.block .hdot{position:absolute;right:8px;top:8px;width:9px;height:9px;border-radius:50%}
+.h-good .hdot{background:var(--good)} .h-watch .hdot{background:var(--watch)} .h-bad .hdot{background:var(--bad)}
+.block .handle{position:absolute;right:-9px;top:50%;width:18px;height:18px;margin-top:-9px;border-radius:50%;border:2px solid var(--accent);background:var(--surface);padding:0;cursor:crosshair;touch-action:none;opacity:.0;transition:opacity .12s}
+.block:hover .handle,.block.sel .handle{opacity:1}
+@media (hover:none){.block .handle{opacity:1}}
+.block .handle::after{content:"";position:absolute;inset:3px;border-radius:50%;background:var(--accent)}
+.block.target{box-shadow:0 0 0 3px var(--accent)}
+.hidden-by-view{display:none}
+.ghost{position:fixed;z-index:100;pointer-events:none;width:172px;height:62px;border-radius:10px;border:1.5px dashed var(--tc);background:color-mix(in srgb, var(--tc) 14%, var(--surface));padding:8px 10px;font-weight:600;box-shadow:var(--shadow);transform:translate(-50%,-50%)}
+.legend{position:sticky;left:0;bottom:0}
+.example-note{position:absolute;right:12px;top:10px;z-index:3;font-size:12px;background:var(--accent-soft);color:var(--ink);border-radius:20px;padding:4px 10px;pointer-events:none}
+
+/* Side panel */
+.side{display:flex;flex-direction:column;overflow:hidden}
+.tabs{display:flex;border-bottom:1px solid var(--line);padding:6px 6px 0;gap:2px}
+.tabs button{border:0;background:transparent;padding:8px 10px;border-radius:8px 8px 0 0;font-weight:600;color:var(--muted);border-bottom:2px solid transparent;display:flex;gap:6px;align-items:center}
+.tabs button[aria-selected="true"]{color:var(--ink);border-bottom-color:var(--accent)}
+.badge{font-family:var(--f-mono);font-size:10.5px;background:var(--watch);color:#1b1405;border-radius:10px;padding:0 6px;font-variant-numeric:tabular-nums}
+.tabpane{flex:1;min-height:0;overflow:auto;padding:14px}
+.tabpane[data-tab="helper"]{display:flex;flex-direction:column;padding:0;overflow:hidden}
+.field{display:grid;gap:4px;margin-bottom:12px}
+.field label,.flabel{font-size:12px;font-weight:600;color:var(--muted)}
+.field input,.field textarea,.field select{width:100%;border:1px solid var(--line);background:var(--surface);border-radius:8px;padding:7px 9px}
+.field textarea{resize:vertical;min-height:64px}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chip{border:1px solid var(--line);background:var(--surface);border-radius:20px;padding:4px 10px;font-size:12.5px}
+.chip[aria-pressed="true"]{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+.chip .d{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:5px;vertical-align:0}
+.paneh{font-family:var(--f-display);font-weight:600;font-size:17px;margin:0 0 4px;text-wrap:balance}
+.sub{color:var(--muted);margin:0 0 14px;font-size:13px}
+.conns{display:grid;gap:6px;margin:0;padding:0;list-style:none}
+.conns li{display:flex;gap:6px;align-items:center;background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:5px 6px 5px 10px;font-size:13px}
+.conns li span{flex:1;min-width:0}
+.conns li b{font-weight:600}
+.x{border:0;background:transparent;color:var(--muted);width:24px;height:24px;border-radius:6px;font-size:16px;line-height:1}
+.x:hover{background:var(--panel);color:var(--bad)}
+.row{display:flex;gap:8px;flex-wrap:wrap}
+.guide ol{padding-left:18px;margin:6px 0 16px;display:grid;gap:6px}
+.layers{display:grid;gap:8px;margin:8px 0 16px}
+.layers div{border-left:3px solid var(--tc);padding:2px 0 2px 10px}
+.layers b{display:block}
+.layers span{color:var(--muted);font-size:12.5px}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:16px}
+.stats div{background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:8px}
+.stats b{display:block;font-family:var(--f-display);font-size:20px;font-variant-numeric:tabular-nums}
+.stats span{font-size:11.5px;color:var(--muted)}
+/* Helper */
+.log{flex:1;min-height:0;overflow:auto;padding:14px;display:flex;flex-direction:column;gap:10px}
+.msg{max-width:100%;padding:9px 12px;border-radius:12px;white-space:pre-wrap;overflow-wrap:anywhere}
+.msg.me{align-self:flex-end;background:var(--accent);color:var(--accent-ink);border-bottom-right-radius:4px;max-width:88%}
+.msg.ai{align-self:flex-start;background:var(--surface);border:1px solid var(--line);border-bottom-left-radius:4px}
+.msg.note{align-self:center;color:var(--muted);font-size:12.5px;text-align:center;background:transparent;padding:4px}
+.msg.err{border-color:var(--bad)}
+.changes{margin-top:8px;border-top:1px solid var(--line);padding-top:8px;white-space:normal;display:grid;gap:6px}
+.changes ul{margin:0;padding-left:16px;font-size:12.5px;color:var(--muted)}
+.ask{border-top:1px solid var(--line);padding:10px;display:grid;gap:8px;background:var(--panel)}
+.ask textarea{width:100%;border:1px solid var(--line);border-radius:10px;padding:8px 10px;resize:none;min-height:60px;background:var(--surface)}
+.ask .row{justify-content:space-between;align-items:center}
+.ask small{color:var(--muted);font-size:11.5px}
+.quick{display:flex;gap:6px;flex-wrap:wrap}
+/* Checks */
+.checks{list-style:none;margin:0;padding:0;display:grid;gap:8px}
+.checks li button{width:100%;text-align:left;border:1px solid var(--line);background:var(--surface);border-radius:8px;padding:8px 10px 8px 12px;border-left:4px solid var(--watch)}
+.checks li.bad button{border-left-color:var(--bad)}
+.checks li.info button{border-left-color:var(--c-tech)}
+.checks li small{display:block;color:var(--muted);font-size:12px;margin-top:2px}
+.toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom, 0px));transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:9px 14px;border-radius:10px;z-index:200;display:flex;gap:12px;align-items:center;box-shadow:var(--shadow);max-width:calc(100% - 32px)}
+.toast button{border:0;background:transparent;color:var(--bg);text-decoration:underline;font-weight:600}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+
+@media (max-width:900px){
+  body{overflow:auto;display:block;height:auto}
+  html{height:auto}
+  .app{grid-template-columns:minmax(0,1fr);gap:10px}
+  .shelf{overflow:visible}
+  .pal{flex-direction:row;overflow-x:auto;padding-bottom:4px}
+  .pal-item{flex:0 0 150px}
+  .shelf .tip{display:none}
+  .viewport{height:62vh}
+  .side{max-height:none;overflow:visible}
+  .tabpane{overflow:visible}
+  .tabpane[data-tab="helper"]{height:70vh}
+}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+details.menu .drop{max-height:70vh;overflow:auto}
+details.menu .drop hr{border:0;border-top:1px solid var(--line);margin:4px 2px;width:auto}
+details.menu .drop .mh{font-family:var(--f-mono);font-size:10.5px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);padding:6px 10px 2px}
+details.menu .drop button.cur{font-weight:600;color:var(--accent)}
+details.menu .drop button small{display:block;color:var(--muted);font-size:11.5px;font-weight:400}
+details.menu .drop button.warn{color:var(--bad)}
+.savestate{font-size:12px;color:var(--muted);min-width:70px}
+.savestate.err{color:var(--bad)}
+</style>
+</head>
+<body>
+
+<header class="top">
+  <div class="brand"><i aria-hidden="true"><b style="background:var(--c-goal)"></b><b style="background:var(--c-ability)"></b><b style="background:var(--c-team)"></b><b style="background:var(--c-info)"></b><b style="background:var(--c-system)"></b><b style="background:var(--c-tech)"></b></i>Blockplan</div>
+  <label class="sr" for="mapName">Map name</label>
+  <input id="mapName" class="mapname" value="">
+  <span class="savestate" id="saveState" role="status"></span>
+  <div class="spacer"></div>
+  <div class="seg" role="group" aria-label="What to show">
+    <button data-view="all" aria-pressed="true" title="Show everything">Everything</button>
+    <button data-view="today" aria-pressed="false" title="Hide planned things">Today</button>
+    <button data-view="future" aria-pressed="false" title="Hide things being removed">Future</button>
+  </div>
+  <div class="tools">
+    <button class="btn" id="undoBtn" title="Undo (Ctrl+Z)">Undo</button>
+    <button class="btn" id="redoBtn" title="Redo (Ctrl+Shift+Z)">Redo</button>
+    <button class="btn" id="tidyBtn" title="Line blocks up neatly in each row">Tidy up</button>
+    <button class="btn" id="zoomOut" aria-label="Zoom out">−</button>
+    <span class="zoom" id="zoomLbl">100%</span>
+    <button class="btn" id="zoomIn" aria-label="Zoom in">+</button>
+    <details class="menu" id="fileMenu">
+      <summary class="btn">Map ▾</summary>
+      <div class="drop">
+        <div class="mh">Your maps</div>
+        <div id="mapList" style="display:grid"></div>
+        <hr>
+        <button id="newBtn">Start a new blank map</button>
+        <button id="exampleBtn">Add the example map</button>
+        <button id="dupBtn">Make a copy of this map</button>
+        <hr>
+        <button id="importBtn">Open a map file…</button>
+        <button id="exportBtn">Download this map as a file</button>
+        <hr>
+        <button id="delMapBtn" class="warn">Delete this map</button>
+      </div>
+    </details>
+    <input type="file" id="fileIn" accept=".json,application/json" hidden>
+  </div>
+</header>
+
+<main class="app">
+  <aside class="shelf" aria-label="Blocks">
+    <h2>Blocks</h2>
+    <div class="pal" id="pal"></div>
+    <p class="tip">Drag a block onto the map, or tap it to add. Drag from the round dot on a block to connect it to another.</p>
+  </aside>
+
+  <section class="viewport" id="vp" aria-label="Map">
+    <div class="sizer" id="sizer">
+      <div class="surface" id="surf">
+        <div id="lanes"></div>
+        <svg class="links" id="links"></svg>
+        <div id="labels"></div>
+        <div id="blocks"></div>
+      </div>
+    </div>
+  </section>
+
+  <aside class="side" aria-label="Panel">
+    <div class="tabs" role="tablist">
+      <button role="tab" data-t="details" aria-selected="true">Details</button>
+      <button role="tab" data-t="helper" aria-selected="false">AI helper</button>
+      <button role="tab" data-t="checks" aria-selected="false">Checks <span class="badge" id="checkCount" hidden>0</span></button>
+      <button role="tab" data-t="costs" aria-selected="false">Costs</button>
+    </div>
+    <div class="tabpane" data-tab="details" id="details"></div>
+    <div class="tabpane" data-tab="helper" hidden>
+      <div class="log" id="log"></div>
+      <div class="ask">
+        <div class="quick" id="quick"></div>
+        <label class="sr" for="prompt">Ask the helper</label>
+        <textarea id="prompt" placeholder="Ask anything, or tell it what to add. For example: add our payroll system and who uses it"></textarea>
+        <div class="row">
+          <small id="askHint">Enter to send, Shift+Enter for a new line</small>
+          <div class="row">
+            <button class="btn" id="stopBtn" hidden>Stop</button>
+            <button class="btn primary" id="sendBtn">Send</button>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="tabpane" data-tab="checks" id="checksPane" hidden></div>
+    <div class="tabpane" data-tab="costs" id="costsPane" hidden></div>
+  </aside>
+</main>
+
+<script>
+(() => {
+"use strict";
+const TYPES = [
+  {key:"goal",    name:"Goal",        plural:"Goals",       a:"a goal",        lane:"Why we do it",          hint:"Something the organisation wants to achieve.", ex:"Grow online sales"},
+  {key:"ability", name:"Activity",    plural:"Activities",  a:"an activity",    lane:"What we do",            hint:"Something the business does, whoever or whatever does it.", ex:"Take customer orders"},
+  {key:"team",    name:"Team",        plural:"Teams",       a:"a team",        lane:"Who does it",           hint:"A group of people, a role, or an outside partner.", ex:"Sales team"},
+  {key:"info",    name:"Information", plural:"Information", a:"some information", lane:"What we need to know",  hint:"Information the business keeps and relies on.", ex:"Customer details"},
+  {key:"system",  name:"System",      plural:"Systems",     a:"a system",      lane:"Systems we use",        hint:"Software or an app, spreadsheets included.", ex:"Order system"},
+  {key:"tech",    name:"Technology",  plural:"Technology",  a:"some technology",  lane:"What it runs on",       hint:"Where systems live: servers, cloud, devices, networks.", ex:"Cloud hosting"},
+];
+const T = Object.fromEntries(TYPES.map(t => [t.key, t]));
+const WHEN = {now:"In place today", planned:"Planned", retiring:"Being removed"};
+const HEALTH = {"":"Not checked", good:"Working well", watch:"Needs attention", bad:"Causing problems"};
+const BW = 172, BH = 62, LANE_H = 190, MIN_W = 2200;
+const LINK_WORDS = {
+  "ability>goal":"helps achieve", "team>ability":"does", "system>ability":"supports", "system>info":"holds",
+  "team>info":"looks after", "system>system":"sends information to", "system>tech":"runs on",
+  "tech>tech":"connects to", "ability>info":"uses", "team>system":"uses", "ability>ability":"leads to",
+  "goal>goal":"supports", "team>team":"works with", "info>info":"is part of", "team>goal":"is responsible for",
+  "tech>info":"stores"
+};
+const LABEL_SUGGEST = ["helps achieve","does","supports","holds","uses","sends information to","runs on","looks after","leads to","is responsible for","replaces","depends on","works with","relates to"];
+
+const $ = s => document.querySelector(s);
+const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const uid = p => p + Math.random().toString(36).slice(2, 8);
+const tc = k => `var(--c-${k})`;
+
+/* money: typed as 120000, 120k, £1.2m, 40,000 */
+const cur = () => S.currency || "£";
+function parseMoney(v){
+  const m = String(v ?? "").replace(/[£$€,\s]/g, "").match(/^(\d*\.?\d+)([kKmM]?)/);
+  if (!m) return 0;
+  return Math.round(parseFloat(m[1]) * (m[2] ? (m[2].toLowerCase() === "k" ? 1e3 : 1e6) : 1));
+}
+function money(n){
+  n = Math.round(+n || 0); const neg = n < 0; n = Math.abs(n);
+  let s;
+  if (n >= 1e6) s = (n / 1e6).toFixed(n >= 1e7 ? 0 : 1).replace(/\.0$/, "") + "m";
+  else if (n >= 1e3) s = (n / 1e3).toFixed(n >= 1e4 ? 0 : 1).replace(/\.0$/, "") + "k";
+  else s = String(n);
+  return (neg ? "-" : "") + cur() + s;
+}
+const moneyFull = n => cur() + Math.round(+n || 0).toLocaleString("en-GB");
+const num = v => Math.max(0, Math.round(+v || 0));
+
+/* ---------- state ---------- */
+function example(){
+  const b = (id,type,name,x,row,extra={}) => ({id,type,name,desc:"",owner:"",health:"",when:"now",cost:0,oneOff:0,x,y:TYPES.findIndex(t=>t.key===type)*LANE_H + (row? 112 : 36),...extra});
+  const blocks = [
+    b("g1","goal","Get orders to shops on time",40,0,{desc:"Customers get the right products on the promised day."}),
+    b("g2","goal","Cut waste in our factories",420,0),
+    b("a1","ability","Take customer orders",40,0),
+    b("a2","ability","Plan production",240,0),
+    b("a3","ability","Make products",440,0),
+    b("a4","ability","Check quality",640,0),
+    b("a5","ability","Deliver to customers",840,0),
+    b("t1","team","Sales team",40,0,{owner:"Head of Sales"}),
+    b("t2","team","Planning team",240,0),
+    b("t3","team","Factory staff",440,0),
+    b("t4","team","Quality team",640,0),
+    b("t5","team","Delivery partner",840,0,{desc:"Outside company that runs our lorries.",cost:950000}),
+    b("i1","info","Customer orders",40,0),
+    b("i2","info","Recipes and ingredients",330,0),
+    b("i3","info","Stock levels",620,0),
+    b("s1","system","Main business system",240,0,{desc:"The big system that runs orders, stock and finance.",health:"good",owner:"IT",cost:420000}),
+    b("s2","system","Order spreadsheet",40,1,{desc:"Shared spreadsheet the sales team still uses for large customers. Costs are staff time spent re-keying orders.",health:"bad",when:"retiring",cost:85000}),
+    b("s3","system","Factory floor system",500,0,{health:"watch",desc:"Tracks what each production line is making. Old and hard to support.",cost:180000}),
+    b("s4","system","Customer ordering website",40,0,{when:"planned",desc:"Lets shops place orders themselves.",cost:60000,oneOff:250000}),
+    b("s5","system","Warehouse scanner app",760,0,{health:"good",cost:24000}),
+    b("c1","tech","Cloud hosting",240,0,{cost:90000}),
+    b("c2","tech","Factory servers",520,0,{health:"watch",desc:"Servers in each factory. Due for replacement.",cost:75000}),
+    b("c3","tech","Handheld scanners",780,0,{cost:18000}),
+  ];
+  const L = (from,to,label) => ({id:uid("l"),from,to,label});
+  const links = [
+    L("a1","g1","helps achieve"), L("a5","g1","helps achieve"), L("a2","g2","helps achieve"), L("a4","g2","helps achieve"),
+    L("t1","a1","does"), L("t2","a2","does"), L("t3","a3","does"), L("t4","a4","does"), L("t5","a5","does"),
+    L("s1","a1","supports"), L("s2","a1","supports"), L("s4","a1","supports"), L("s1","a2","supports"), L("s3","a3","supports"), L("s5","a5","supports"),
+    L("s1","i1","holds"), L("s1","i3","holds"), L("s3","i2","holds"),
+    L("s1","c1","runs on"), L("s4","c1","runs on"), L("s3","c2","runs on"), L("s5","c3","runs on"),
+    L("s4","s1","sends information to"), L("s2","s1","sends information to"),
+  ];
+  return {name:"Example – snack maker", example:true, currency:"£", blocks, links};
+}
+function blank(){ return {name:"My organisation", example:false, currency:(S && S.currency) || "£", blocks:[], links:[]}; }
+
+function valid(s){ return s && Array.isArray(s.blocks) && Array.isArray(s.links); }
+
+/* ---------- server ---------- */
+async function api(method, url, body, extra = {}){
+  const r = await fetch(url, {method, credentials:"same-origin", headers: body ? {"content-type":"application/json"} : {}, body: body ? JSON.stringify(body) : undefined, ...extra});
+  let data = {}; try { data = await r.json(); } catch {}
+  if (!r.ok){ const e = new Error(data.detail || `The server answered ${r.status}`); e.status = r.status; e.data = data; throw e; }
+  return data;
+}
+const LAST = "blockplan.lastMap";
+const remember = id => { try { localStorage.setItem(LAST, id); } catch {} };
+const recalled = () => { try { return localStorage.getItem(LAST); } catch { return null; } };
+let mapId = null, mapRev = 0, saveTimer = null, saving = false, again = false, dirty = false, conflict = false;
+function setSaveState(t, err){ const el = $("#saveState"); el.textContent = t; el.classList.toggle("err", !!err); }
+function save(){
+  if (!mapId || conflict) return;
+  dirty = true; setSaveState("Saving…");
+  clearTimeout(saveTimer); saveTimer = setTimeout(flush, 700);
+}
+async function flush(){
+  clearTimeout(saveTimer); saveTimer = null;
+  if (!mapId || conflict || !dirty) return;
+  if (saving){ again = true; return; }
+  saving = true; dirty = false;
+  try {
+    const r = await api("PUT", `/api/maps/${mapId}`, {map:S, rev:mapRev});
+    mapRev = r.rev; setSaveState(dirty ? "Saving…" : "Saved");
+    refreshMapListSoon();
+  } catch (e) {
+    dirty = true;
+    if (e.status === 409){ conflict = true; setSaveState("Not saved", true); showConflict(); }
+    else if (e.status === 404){ setSaveState("Not saved", true); toast("This map was deleted elsewhere. Use Map → Make a copy of this map to keep it."); conflict = true; }
+    else { setSaveState("Not saved, retrying…", true); saveTimer = setTimeout(flush, 5000); }
+  } finally {
+    saving = false;
+    if (again){ again = false; flush(); }
+  }
+}
+window.addEventListener("pagehide", () => {
+  if (dirty && mapId && !conflict) fetch(`/api/maps/${mapId}`, {method:"PUT", keepalive:true, credentials:"same-origin", headers:{"content-type":"application/json"}, body:JSON.stringify({map:S, rev:mapRev})});
+});
+function showConflict(){
+  document.querySelector(".toast")?.remove(); clearTimeout(toastTimer);
+  const t = document.createElement("div"); t.className = "toast"; t.setAttribute("role", "alert");
+  t.innerHTML = `<span>Someone else saved this map while you were working on it.</span><button data-a="theirs">Load their version</button><button data-a="mine">Keep mine as a copy</button>`;
+  t.addEventListener("click", async e => {
+    const a = e.target.dataset.a; if (!a) return;
+    t.remove();
+    if (a === "theirs") await openMap(mapId);
+    else { const r = await api("POST", "/api/maps", {map:{...S, name:(S.name || "Map") + " (my copy)"}}); await openMap(r.id); toast("Your version is saved as a copy"); }
+  });
+  document.body.appendChild(t);
+}
+async function openMap(id){
+  await flush();
+  const r = await api("GET", `/api/maps/${id}`);
+  S = r.map; mapId = r.id; mapRev = r.rev; conflict = false; dirty = false;
+  hist = []; fut = []; sel = null; convo = [];
+  remember(id); setSaveState("Saved");
+  renderAll(); refreshMapList();
+  if (log.querySelector(".msg.me")) addMsg("note", `Now working on “${S.name}”. The helper starts fresh for this map.`);
+  vp.scrollLeft = 0; vp.scrollTop = 0;
+}
+async function createAndOpen(m, msg){
+  try { const r = await api("POST", "/api/maps", {map:m}); await openMap(r.id); if (msg) toast(msg); }
+  catch (e) { toast("Couldn't create the map. " + e.message); }
+}
+let maps = [];
+async function refreshMapList(){
+  try { maps = (await api("GET", "/api/maps")).maps; } catch { return; }
+  $("#mapList").innerHTML = maps.map(m => `<button data-open="${esc(m.id)}" class="${m.id === mapId ? "cur" : ""}">${esc(m.name)}<small>${m.blocks} block${m.blocks === 1 ? "" : "s"} · ${esc(when(m.updated_at))}</small></button>`).join("") || `<span class="sub" style="padding:6px 10px">No maps yet</span>`;
+}
+let listTimer; function refreshMapListSoon(){ clearTimeout(listTimer); listTimer = setTimeout(refreshMapList, 1500); }
+function when(ts){
+  const d = new Date(ts * 1000), now = new Date();
+  return d.toDateString() === now.toDateString() ? "today " + d.toLocaleTimeString("en-GB", {hour:"2-digit", minute:"2-digit"}) : d.toLocaleDateString("en-GB", {day:"numeric", month:"short", year: d.getFullYear() === now.getFullYear() ? undefined : "numeric"});
+}
+
+let S = {name:"", currency:"£", blocks:[], links:[]};
+let convo = [];
+let view = "all", sel = null, zoom = 1;
+let hist = [], fut = [];
+function commit(){ hist.push(JSON.stringify(S)); if (hist.length > 100) hist.shift(); fut = []; updUndo(); }
+function undo(){ if (!hist.length) return; fut.push(JSON.stringify(S)); S = JSON.parse(hist.pop()); afterSwap(); }
+function redo(){ if (!fut.length) return; hist.push(JSON.stringify(S)); S = JSON.parse(fut.pop()); afterSwap(); }
+function afterSwap(){ if (sel && !findSel()) sel = null; renderAll(); save(); }
+function updUndo(){ $("#undoBtn").disabled = !hist.length; $("#redoBtn").disabled = !fut.length; }
+
+const byId = id => S.blocks.find(b => b.id === id);
+const linkById = id => S.links.find(l => l.id === id);
+function findSel(){ return sel && (sel.kind === "block" ? byId(sel.id) : linkById(sel.id)); }
+const laneTop = type => TYPES.findIndex(t => t.key === type) * LANE_H;
+const clampY = (type, y) => Math.min(Math.max(y, laneTop(type) + 34), laneTop(type) + LANE_H - BH - 12);
+function visible(b){ return view === "all" || (view === "today" && b.when !== "planned") || (view === "future" && b.when !== "retiring"); }
+
+function freeSpot(type){
+  const top = laneTop(type), rows = [top + 36, top + 112];
+  let best = null;
+  for (const y of rows){
+    const inRow = S.blocks.filter(b => b.type === type && Math.abs(b.y - y) < BH);
+    const x = inRow.length ? Math.max(...inRow.map(b => b.x + BW)) + 28 : 40;
+    if (!best || x < best.x) best = {x, y};
+  }
+  return best;
+}
+function linkWord(a, b){
+  if (LINK_WORDS[a.type + ">" + b.type]) return {from:a, to:b, label:LINK_WORDS[a.type + ">" + b.type]};
+  if (LINK_WORDS[b.type + ">" + a.type]) return {from:b, to:a, label:LINK_WORDS[b.type + ">" + a.type]};
+  return {from:a, to:b, label:"relates to"};
+}
+function addLink(a, b, label){
+  if (!a || !b || a.id === b.id) return null;
+  if (S.links.some(l => (l.from === a.id && l.to === b.id) || (l.from === b.id && l.to === a.id))) return null;
+  const w = linkWord(a, b);
+  const l = {id:uid("l"), from:(label ? a : w.from).id, to:(label ? b : w.to).id, label: label || w.label};
+  S.links.push(l); return l;
+}
+function removeBlock(id){ S.blocks = S.blocks.filter(b => b.id !== id); S.links = S.links.filter(l => l.from !== id && l.to !== id); }
+
+/* ---------- rendering ---------- */
+const surf = $("#surf"), vp = $("#vp"), sizer = $("#sizer"), svg = $("#links"), labelsEl = $("#labels"), blocksEl = $("#blocks"), lanesEl = $("#lanes");
+function dims(){ const w = Math.max(MIN_W, ...S.blocks.map(b => b.x + BW + 400)); return {w, h: TYPES.length * LANE_H}; }
+function renderLanes(){
+  const {w, h} = dims();
+  surf.style.width = w + "px"; surf.style.height = h + "px"; surf.style.transform = `scale(${zoom})`;
+  sizer.style.width = w * zoom + "px"; sizer.style.height = h * zoom + "px";
+  svg.setAttribute("width", w); svg.setAttribute("height", h);
+  lanesEl.innerHTML = TYPES.map((t, i) => {
+    const has = S.blocks.some(b => b.type === t.key);
+    return `<div class="lane" style="top:${i*LANE_H}px;height:${LANE_H}px;--tc:${tc(t.key)}"><span class="lname">${esc(t.lane)} <small>${esc(t.plural)}</small></span>${has ? "" : `<div class="empty">Drag ${esc(t.a)} here, for example “${esc(t.ex)}”</div>`}</div>`;
+  }).join("") + (S.example ? `<div class="example-note">Example map. Start your own from the Map menu.</div>` : "");
+}
+function blockHTML(b){
+  const t = T[b.type];
+  const tag = b.when === "planned" ? "<em>· planned</em>" : b.when === "retiring" ? "<em>· being removed</em>" : "";
+  const isSel = sel && sel.kind === "block" && sel.id === b.id;
+  return `<div class="block h-${b.health || "none"} w-${b.when}${isSel ? " sel" : ""}${visible(b) ? "" : " hidden-by-view"}" data-id="${b.id}" style="left:${b.x}px;top:${b.y}px;--tc:${tc(b.type)}" tabindex="0" role="button" aria-label="${esc(t.name)}: ${esc(b.name)}">
+    <span class="kind">${esc(t.name)} ${tag}${b.cost ? `<span class="cost" title="${esc(moneyFull(b.cost))} a year">${esc(money(b.cost))}/yr</span>` : ""}</span><span class="nm">${esc(b.name)}</span>
+    ${b.health ? `<span class="hdot" title="${esc(HEALTH[b.health])}"></span>` : ""}
+    <button class="handle" tabindex="-1" aria-label="Connect ${esc(b.name)} to another block" title="Drag to another block to connect"></button></div>`;
+}
+function renderBlocks(){ blocksEl.innerHTML = S.blocks.map(blockHTML).join(""); }
+function anchor(a, b){
+  const ac = {x:a.x + BW/2, y:a.y + BH/2}, bc = {x:b.x + BW/2, y:b.y + BH/2};
+  const dx = bc.x - ac.x, dy = bc.y - ac.y;
+  if (Math.abs(dy) > BH && Math.abs(dy) * 2.2 > Math.abs(dx)) return {x:ac.x, y: dy > 0 ? a.y + BH : a.y, dx:0, dy:Math.sign(dy)};
+  return {x: dx > 0 ? a.x + BW : a.x, y:ac.y, dx:Math.sign(dx) || 1, dy:0};
+}
+function curve(p, q){
+  const k = Math.max(36, Math.hypot(q.x - p.x, q.y - p.y) * 0.35);
+  const c1 = {x:p.x + p.dx*k, y:p.y + p.dy*k}, c2 = {x:q.x + q.dx*k, y:q.y + q.dy*k};
+  return {d:`M${p.x},${p.y} C${c1.x},${c1.y} ${c2.x},${c2.y} ${q.x},${q.y}`, mid:{x:(p.x + 3*c1.x + 3*c2.x + q.x)/8, y:(p.y + 3*c1.y + 3*c2.y + q.y)/8}};
+}
+function renderLinks(){
+  let paths = `<defs><marker id="arr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="var(--muted)"/></marker><marker id="arrS" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="var(--accent)"/></marker></defs>`;
+  let labels = "";
+  for (const l of S.links){
+    const a = byId(l.from), b = byId(l.to);
+    if (!a || !b || !visible(a) || !visible(b)) continue;
+    const {d, mid} = curve(anchor(a, b), anchor(b, a));
+    const s = sel && sel.kind === "link" && sel.id === l.id;
+    const faded = a.when !== "now" || b.when !== "now";
+    paths += `<path class="l${s ? " sel" : ""}${faded ? " faded" : ""}" d="${d}" marker-end="url(#${s ? "arrS" : "arr"})"/><path class="hit" data-link="${l.id}" d="${d}"/>`;
+    labels += `<div class="llabel${s ? " sel" : ""}" data-link="${l.id}" style="left:${mid.x}px;top:${mid.y}px">${esc(l.label)}</div>`;
+  }
+  svg.innerHTML = paths + `<path class="tmp" id="tmpLink" d=""/>`;
+  labelsEl.innerHTML = labels;
+}
+function renderAll(){
+  $("#mapName").value = S.name || "";
+  renderLanes(); renderBlocks(); renderLinks(); renderDetails(); renderChecks(); renderCosts(); updUndo();
+  $("#zoomLbl").textContent = Math.round(zoom * 100) + "%";
+}
+
+/* ---------- palette ---------- */
+$("#pal").innerHTML = TYPES.map(t => `<button class="pal-item" data-type="${t.key}" style="--tc:${tc(t.key)}"><strong>${esc(t.name)}</strong><span>${esc(t.hint)}</span></button>`).join("");
+let palDrag = null;
+$("#pal").addEventListener("pointerdown", e => {
+  const it = e.target.closest(".pal-item"); if (!it) return;
+  e.preventDefault();
+  palDrag = {type: it.dataset.type, x0: e.clientX, y0: e.clientY, ghost: null};
+  it.setPointerCapture(e.pointerId);
+});
+$("#pal").addEventListener("pointermove", e => {
+  if (!palDrag) return;
+  if (!palDrag.ghost && Math.hypot(e.clientX - palDrag.x0, e.clientY - palDrag.y0) > 6){
+    const g = document.createElement("div"); g.className = "ghost"; g.style.setProperty("--tc", tc(palDrag.type));
+    g.textContent = "New " + T[palDrag.type].name.toLowerCase(); document.body.appendChild(g); palDrag.ghost = g;
+  }
+  if (palDrag.ghost){ palDrag.ghost.style.left = e.clientX + "px"; palDrag.ghost.style.top = e.clientY + "px"; }
+});
+function endPal(e){
+  if (!palDrag) return;
+  const d = palDrag; palDrag = null;
+  if (d.ghost){
+    d.ghost.remove();
+    const r = vp.getBoundingClientRect();
+    if (e.type === "pointerup" && e.clientX >= r.left && e.clientX <= r.right && e.clientY >= r.top && e.clientY <= r.bottom){
+      const sr = surf.getBoundingClientRect();
+      const x = Math.max(8, (e.clientX - sr.left) / zoom - BW/2);
+      createBlock(d.type, {x, y: clampY(d.type, (e.clientY - sr.top) / zoom - BH/2)});
+    }
+  } else if (e.type === "pointerup") {
+    createBlock(d.type, freeSpot(d.type), true);
+  }
+}
+$("#pal").addEventListener("pointerup", endPal);
+$("#pal").addEventListener("pointercancel", endPal);
+$("#pal").addEventListener("keydown", e => { const it = e.target.closest(".pal-item"); if (it && (e.key === "Enter" || e.key === " ")){ e.preventDefault(); createBlock(it.dataset.type, freeSpot(it.dataset.type), true); }});
+
+function createBlock(type, pos, scroll){
+  commit();
+  const b = {id:uid("b"), type, name:"New " + T[type].name.toLowerCase(), desc:"", owner:"", health:"", when:"now", cost:0, oneOff:0, x:Math.round(pos.x), y:Math.round(pos.y)};
+  if (S.example){ S.example = false; }
+  S.blocks.push(b); sel = {kind:"block", id:b.id};
+  if (view !== "all") setView("all");
+  renderAll(); save(); showTab("details");
+  if (scroll) scrollTo(b);
+  const n = $("#f-name"); if (n && matchMedia("(hover:hover)").matches){ n.focus(); n.select(); }
+}
+function scrollTo(b){
+  const x = b.x * zoom, y = b.y * zoom;
+  if (x < vp.scrollLeft || x + BW*zoom > vp.scrollLeft + vp.clientWidth) vp.scrollLeft = x - 60;
+  if (y < vp.scrollTop || y + BH*zoom > vp.scrollTop + vp.clientHeight) vp.scrollTop = y - 60;
+}
+
+/* ---------- canvas interactions ---------- */
+let act = null;
+const toCanvas = e => { const r = surf.getBoundingClientRect(); return {x:(e.clientX - r.left)/zoom, y:(e.clientY - r.top)/zoom}; };
+surf.addEventListener("pointerdown", e => {
+  if (e.button > 0) return;
+  const handle = e.target.closest(".handle"), blk = e.target.closest(".block"), lnk = e.target.closest("[data-link]");
+  if (handle && blk){
+    e.preventDefault();
+    act = {mode:"link", from: blk.dataset.id, target:null};
+    surf.setPointerCapture(e.pointerId);
+  } else if (blk){
+    e.preventDefault();
+    const b = byId(blk.dataset.id), p = toCanvas(e);
+    act = {mode:"move", id:b.id, ox:p.x - b.x, oy:p.y - b.y, x0:e.clientX, y0:e.clientY, moved:false, el:blk, snap:JSON.stringify(S)};
+    surf.setPointerCapture(e.pointerId);
+    select({kind:"block", id:b.id}, false);
+  } else if (lnk){
+    select({kind:"link", id:lnk.dataset.link});
+  } else {
+    select(null);
+    if (e.pointerType === "mouse"){ act = {mode:"pan", x0:e.clientX, y0:e.clientY, sl:vp.scrollLeft, st:vp.scrollTop}; vp.classList.add("panning"); surf.setPointerCapture(e.pointerId); }
+  }
+});
+surf.addEventListener("pointermove", e => {
+  if (!act) return;
+  if (act.mode === "pan"){ vp.scrollLeft = act.sl - (e.clientX - act.x0); vp.scrollTop = act.st - (e.clientY - act.y0); return; }
+  if (act.mode === "move"){
+    if (!act.moved && Math.hypot(e.clientX - act.x0, e.clientY - act.y0) < 4) return;
+    if (!act.moved){ act.moved = true; act.el.classList.add("drag"); }
+    const b = byId(act.id), p = toCanvas(e);
+    b.x = Math.max(4, Math.round(p.x - act.ox)); b.y = Math.round(p.y - act.oy);
+    act.el.style.left = b.x + "px"; act.el.style.top = b.y + "px";
+    renderLinks(); return;
+  }
+  if (act.mode === "link"){
+    const a = byId(act.from), p = toCanvas(e);
+    const s = anchor(a, {x:p.x - BW/2, y:p.y - BH/2});
+    $("#tmpLink")?.setAttribute("d", curve(s, {x:p.x, y:p.y, dx:0, dy:0}).d);
+    const over = document.elementFromPoint(e.clientX, e.clientY)?.closest(".block");
+    const tid = over && over.dataset.id !== act.from ? over.dataset.id : null;
+    if (tid !== act.target){ blocksEl.querySelector(".target")?.classList.remove("target"); if (tid) over.classList.add("target"); act.target = tid; }
+  }
+});
+function endAct(e){
+  if (!act) return;
+  const a = act; act = null; vp.classList.remove("panning");
+  if (a.mode === "move"){
+    if (a.moved){
+      const b = byId(a.id); b.y = clampY(b.type, b.y);
+      hist.push(a.snap); fut = []; save(); renderAll();
+    }
+  } else if (a.mode === "link"){
+    $("#tmpLink")?.setAttribute("d", "");
+    if (a.target && e.type === "pointerup"){
+      const snap = JSON.stringify(S);
+      const l = addLink(byId(a.from), byId(a.target));
+      if (l){ hist.push(snap); fut = []; sel = {kind:"link", id:l.id}; save(); renderAll(); toast(`Connected: ${byId(l.from).name} ${l.label} ${byId(l.to).name}`); }
+      else { toast("Those two are already connected."); renderAll(); }
+    } else renderLinks();
+  }
+}
+surf.addEventListener("pointerup", endAct);
+surf.addEventListener("pointercancel", endAct);
+blocksEl.addEventListener("keydown", e => { const blk = e.target.closest(".block"); if (blk && (e.key === "Enter" || e.key === " ")){ e.preventDefault(); select({kind:"block", id:blk.dataset.id}); showTab("details"); }});
+blocksEl.addEventListener("dblclick", e => { if (e.target.closest(".block")){ showTab("details"); const n = $("#f-name"); n?.focus(); n?.select(); }});
+
+function select(s, rerender = true){
+  sel = s;
+  blocksEl.querySelectorAll(".block.sel").forEach(el => el.classList.remove("sel"));
+  if (s?.kind === "block") blocksEl.querySelector(`[data-id="${s.id}"]`)?.classList.add("sel");
+  renderLinks(); renderDetails();
+  if (s && rerender !== null) showTab("details", true);
+}
+
+/* ---------- details panel ---------- */
+const det = $("#details");
+function connList(b){
+  const ls = S.links.filter(l => l.from === b.id || l.to === b.id);
+  if (!ls.length) return `<p class="sub">Not connected yet. Drag from the round dot on the block to another block.</p>`;
+  return `<ul class="conns">${ls.map(l => {
+    const out = l.from === b.id, o = byId(out ? l.to : l.from);
+    const txt = out ? `${esc(l.label)} <b>${esc(o?.name)}</b>` : `<b>${esc(o?.name)}</b> ${esc(l.label)} this`;
+    return `<li><span>${txt}</span><button class="x" data-unlink="${l.id}" aria-label="Remove connection" title="Remove connection">×</button></li>`;
+  }).join("")}</ul>`;
+}
+function renderDetails(){
+  const s = findSel();
+  if (!s){ det.innerHTML = overview(); return; }
+  if (sel.kind === "block"){
+    const b = s, t = T[b.type];
+    det.innerHTML = `
+      <p class="paneh" style="color:${tc(b.type)}">${esc(t.name)}</p>
+      <p class="sub">${esc(t.hint)}</p>
+      <div class="field"><label for="f-name">Name</label><input id="f-name" data-f="name" value="${esc(b.name)}"></div>
+      <div class="field"><label for="f-type">Kind of block</label><select id="f-type" data-f="type">${TYPES.map(x => `<option value="${x.key}"${x.key === b.type ? " selected" : ""}>${esc(x.name)} – ${esc(x.lane.toLowerCase())}</option>`).join("")}</select></div>
+      <div class="field"><label for="f-desc">What is it?</label><textarea id="f-desc" data-f="desc" placeholder="A sentence or two in plain words">${esc(b.desc)}</textarea></div>
+      <div class="field"><label for="f-owner">Who looks after it?</label><input id="f-owner" data-f="owner" value="${esc(b.owner)}" placeholder="A person or team"></div>
+      <div class="money" style="margin-bottom:12px">
+        <div class="field"><label for="f-cost">Running cost a year</label><input id="f-cost" data-money="cost" inputmode="decimal" value="${b.cost ? b.cost : ""}" placeholder="e.g. 40k"><small data-show="cost">${b.cost ? esc(moneyFull(b.cost)) : ""}</small></div>
+        <div class="field"><label for="f-oneoff">One-off cost</label><input id="f-oneoff" data-money="oneOff" inputmode="decimal" value="${b.oneOff ? b.oneOff : ""}" placeholder="to set up or change"><small data-show="oneOff">${b.oneOff ? esc(moneyFull(b.oneOff)) : ""}</small></div>
+      </div>
+      <div class="field"><span class="flabel">When</span><div class="chips" data-chips="when">${Object.entries(WHEN).map(([k,v]) => `<button class="chip" data-v="${k}" aria-pressed="${b.when === k}">${v}</button>`).join("")}</div></div>
+      <div class="field"><span class="flabel">How is it doing?</span><div class="chips" data-chips="health">${Object.entries(HEALTH).map(([k,v]) => `<button class="chip" data-v="${k}" aria-pressed="${(b.health||"") === k}">${k ? `<span class="d" style="background:var(--${k})"></span>` : ""}${v}</button>`).join("")}</div></div>
+      <div class="field"><span class="flabel">Connections</span>${connList(b)}</div>
+      <div class="row"><button class="btn" id="askAbout">Ask the helper about this</button><button class="btn danger" id="delBlock">Delete block</button></div>`;
+  } else {
+    const l = s, a = byId(l.from), b = byId(l.to);
+    det.innerHTML = `
+      <p class="paneh">Connection</p>
+      <p class="sub"><b>${esc(a?.name)}</b> ${esc(l.label)} <b>${esc(b?.name)}</b></p>
+      <div class="field"><label for="f-label">How are they connected?</label><input id="f-label" data-lf="label" list="labelList" value="${esc(l.label)}">
+      <datalist id="labelList">${LABEL_SUGGEST.map(x => `<option value="${esc(x)}">`).join("")}</datalist></div>
+      <div class="row"><button class="btn" id="swapLink">Swap direction</button><button class="btn danger" id="delLink">Delete connection</button></div>`;
+  }
+}
+function overview(){
+  const c = k => S.blocks.filter(b => b.type === k).length;
+  return `<div class="guide">
+    <p class="paneh">How Blockplan works</p>
+    <p class="sub">A map of how your organisation works, from why it exists down to what its systems run on. Nothing to learn first.</p>
+    <ol>
+      <li><b>Add blocks.</b> Drag one from the left onto the map, or tap it.</li>
+      <li><b>Connect them.</b> Drag from the round dot on one block to another. The words are filled in for you.</li>
+      <li><b>Describe them.</b> Click a block to name it, say who looks after it, what it costs, and how well it is working.</li>
+      <li><b>Ask for help.</b> The AI helper can build a starter map, explain it, or spot what is missing.</li>
+    </ol>
+    <div class="stats">${TYPES.map(t => `<div style="border-top:3px solid ${tc(t.key)}"><b>${c(t.key)}</b><span>${esc(t.plural)}</span></div>`).join("")}</div>
+    <p class="flabel">The six rows</p>
+    <div class="layers">${TYPES.map(t => `<div style="--tc:${tc(t.key)}"><b>${esc(t.lane)}</b><span>${esc(t.plural)}. ${esc(t.hint)} For example, “${esc(t.ex)}”.</span></div>`).join("")}</div>
+    <p class="flabel">Reading the map</p>
+    <p class="sub" style="margin-top:4px">A dashed outline means planned. Faded and crossed through means being removed. The dot in the corner shows how it is doing: green working well, amber needs attention, red causing problems. Use Today and Future at the top to see the map before and after the changes.</p>
+  </div>`;
+}
+let editSnap = null;
+det.addEventListener("focusin", e => { if (e.target.matches("input,textarea")) editSnap = JSON.stringify(S); });
+det.addEventListener("input", e => {
+  const s = findSel(); if (!s) return;
+  if (editSnap){ hist.push(editSnap); fut = []; editSnap = null; updUndo(); }
+  if (e.target.dataset.f){ s[e.target.dataset.f] = e.target.value; renderBlocks(); renderLinks(); }
+  if (e.target.dataset.money){
+    const k = e.target.dataset.money; s[k] = parseMoney(e.target.value);
+    const show = det.querySelector(`[data-show="${k}"]`); if (show) show.textContent = s[k] ? moneyFull(s[k]) : "";
+    renderBlocks(); renderLinks(); renderCostsSoon();
+  }
+  if (e.target.dataset.lf){ s.label = e.target.value; renderLinks(); }
+  save(); renderChecksSoon();
+});
+det.addEventListener("change", e => {
+  if (e.target.dataset.f === "type"){
+    const b = findSel(); commit(); b.type = e.target.value;
+    const spot = freeSpot(b.type); b.x = spot.x; b.y = spot.y;
+    renderAll(); save(); scrollTo(b);
+  }
+});
+det.addEventListener("click", e => {
+  const s = findSel();
+  const chip = e.target.closest("[data-chips] .chip");
+  if (chip && s){ commit(); s[chip.parentElement.dataset.chips] = chip.dataset.v; renderAll(); save(); return; }
+  const un = e.target.closest("[data-unlink]");
+  if (un){ commit(); S.links = S.links.filter(l => l.id !== un.dataset.unlink); renderAll(); save(); return; }
+  if (e.target.id === "delBlock") return deleteSel();
+  if (e.target.id === "delLink") return deleteSel();
+  if (e.target.id === "swapLink"){ commit(); [s.from, s.to] = [s.to, s.from]; renderAll(); save(); return; }
+  if (e.target.id === "askAbout"){ showTab("helper"); const p = $("#prompt"); p.value = `Tell me about "${s.name}": what should I check, and what might be missing around it?`; p.focus(); }
+});
+function deleteSel(){
+  const s = findSel(); if (!s) return;
+  commit();
+  if (sel.kind === "block"){ const n = s.name; removeBlock(s.id); toast(`Deleted ${n}`, true); }
+  else { S.links = S.links.filter(l => l.id !== s.id); toast("Connection deleted", true); }
+  sel = null; renderAll(); save();
+}
+
+/* ---------- checks ---------- */
+function runChecks(){
+  const out = [];
+  const anyCost = S.blocks.some(b => b.cost);
+  const links = S.links, has = (id, pred) => links.some(l => (l.from === id || l.to === id) && pred(l, byId(l.from === id ? l.to : l.from)));
+  for (const b of S.blocks){
+    const name = `“${b.name}”`;
+    if (b.health === "bad") out.push({lvl:"bad", id:b.id, t:`${name} is causing problems`, d:"Note what is wrong in its description, and think about whether it should be fixed, replaced or removed."});
+    if (b.type === "system" && b.when !== "retiring" && !has(b.id, (l,o) => o?.type === "ability")) out.push({lvl:"watch", id:b.id, t:`${name} isn't linked to anything the business does`, d:"Connect it to an activity it supports, or ask whether it is still needed."});
+    if (b.type === "system" && b.when !== "retiring" && !has(b.id, (l,o) => o?.type === "tech")) out.push({lvl:"info", id:b.id, t:`We don't know what ${name} runs on`, d:"Connect it to a technology block, such as cloud hosting or a server."});
+    if (b.type === "ability" && !has(b.id, (l,o) => o?.type === "team" || o?.type === "system")) out.push({lvl:"watch", id:b.id, t:`No team or system is shown doing ${name}`, d:"Connect the team that does it and any system that helps."});
+    if (b.type === "goal" && !has(b.id, (l,o) => o?.type === "ability")) out.push({lvl:"info", id:b.id, t:`Nothing on the map helps achieve ${name}`, d:"Connect the activities that move this goal forward."});
+    if (b.type === "info" && !has(b.id, (l,o) => o?.type === "system")) out.push({lvl:"info", id:b.id, t:`${name} isn't held in any system`, d:"If it lives in people's heads or on paper, that is worth knowing too."});
+    if (b.when === "planned"){
+      for (const l of links) if (l.from === b.id || l.to === b.id){
+        const o = byId(l.from === b.id ? l.to : l.from);
+        if (o?.when === "retiring") out.push({lvl:"bad", id:b.id, t:`${name} is planned but connected to “${o.name}”, which is being removed`, d:"Check the plan still works once it has gone."});
+      }
+    }
+    if (b.type === "ability"){
+      const sys = links.filter(l => l.to === b.id && byId(l.from)?.type === "system" && byId(l.from)?.when !== "retiring").map(l => byId(l.from).name);
+      if (sys.length > 1) out.push({lvl:"watch", id:b.id, t:`${sys.length} systems support ${name}`, d:`${sys.join(", ")}. They may overlap. Could one do the job?`});
+    }
+    if (anyCost && !b.cost && (b.type === "system" || b.type === "tech") && b.when !== "retiring") out.push({lvl:"info", id:b.id, t:`We don't know what ${name} costs`, d:"Add its yearly running cost so the totals in the Costs tab are complete."});
+  }
+  const order = {bad:0, watch:1, info:2};
+  return out.sort((a,b) => order[a.lvl] - order[b.lvl]);
+}
+let chkTimer;
+function renderChecksSoon(){ clearTimeout(chkTimer); chkTimer = setTimeout(renderChecks, 300); }
+function renderChecks(){
+  const c = runChecks(), n = c.filter(x => x.lvl !== "info").length;
+  const badge = $("#checkCount"); badge.hidden = !n; badge.textContent = n;
+  $("#checksPane").innerHTML = `<p class="paneh">Things to look at</p><p class="sub">Simple checks that run as you build. Click one to find it on the map.</p>` +
+    (c.length ? `<ul class="checks">${c.map(x => `<li class="${x.lvl}"><button data-go="${x.id}">${esc(x.t)}<small>${esc(x.d)}</small></button></li>`).join("")}</ul>` : `<p class="sub">Nothing to flag right now.</p>`);
+}
+$("#checksPane").addEventListener("click", e => { const g = e.target.closest("[data-go]"); if (!g) return; const b = byId(g.dataset.go); if (!b) return; if (!visible(b)) setView("all"); select({kind:"block", id:b.id}); scrollTo(b); });
+
+/* ---------- costs ---------- */
+const costPane = $("#costsPane");
+let costTimer;
+function renderCostsSoon(){ clearTimeout(costTimer); costTimer = setTimeout(renderCosts, 250); }
+function costSummary(){
+  const today = b => b.when !== "planned", future = b => b.when !== "retiring";
+  const sum = (f, k = "cost", list = S.blocks) => list.filter(f).reduce((a, b) => a + num(b[k]), 0);
+  const rows = TYPES.map(t => { const l = S.blocks.filter(b => b.type === t.key); return {t, today:sum(today, "cost", l), future:sum(future, "cost", l)}; });
+  return {today:sum(today), future:sum(future), oneOff:sum(() => true, "oneOff"), rows};
+}
+function renderCosts(){
+  const c = costSummary();
+  const curChips = `<div class="chips" data-cur style="margin-bottom:14px">${["£","€","$"].map(x => `<button class="chip" data-v="${x}" aria-pressed="${cur() === x}">${x}</button>`).join("")}</div>`;
+  if (!c.today && !c.future && !c.oneOff){
+    costPane.innerHTML = `<p class="paneh">Costs</p><p class="sub">No costs on the map yet. Click a block and fill in its running cost a year, and any one-off cost to set it up or change it. You can type amounts like 40k or 1.2m.</p><p class="flabel">Currency</p>${curChips}`;
+    return;
+  }
+  const diff = c.today - c.future;
+  let verdict;
+  if (diff > 0){
+    verdict = `The planned changes <b>save ${esc(money(diff))} a year</b>.`;
+    if (c.oneOff) { const yrs = c.oneOff / diff; verdict += ` With ${esc(money(c.oneOff))} of one-off costs, they pay for themselves in about <b>${yrs < 1 ? "less than a year" : (Math.round(yrs * 10) / 10) + " years"}</b>.`; }
+  } else if (diff < 0){
+    verdict = `The planned changes <b>add ${esc(money(-diff))} a year</b> to running costs${c.oneOff ? `, plus ${esc(money(c.oneOff))} of one-off costs` : ""}. Make sure the benefits are worth it.`;
+  } else verdict = c.oneOff ? `Running costs stay the same. The changes cost ${esc(money(c.oneOff))} one-off.` : `Running costs stay the same after the planned changes.`;
+  const max = Math.max(1, ...c.rows.flatMap(r => [r.today, r.future]));
+  const top = S.blocks.filter(b => b.cost).sort((a, b) => b.cost - a.cost).slice(0, 6);
+  const missing = S.blocks.filter(b => !b.cost && (b.type === "system" || b.type === "tech") && b.when !== "retiring").length;
+  costPane.innerHTML = `
+    <p class="paneh">Costs</p>
+    <p class="sub">Yearly running costs from the blocks on the map, before and after the planned changes.</p>
+    <div class="totals">
+      <div><b>${esc(money(c.today))}</b><span>a year today</span></div>
+      <div><b>${esc(money(c.future))}</b><span>a year in future</span></div>
+      <div><b>${esc(money(c.oneOff))}</b><span>one-off costs</span></div>
+      <div><b>${diff >= 0 ? esc(money(diff)) : "+" + esc(money(-diff))}</b><span>${diff >= 0 ? "saved a year" : "extra a year"}</span></div>
+    </div>
+    <div class="verdict">${verdict}</div>
+    <p class="flabel">By row</p>
+    <div class="key"><span><i></i>Today</span><span><i class="f"></i>Future</span></div>
+    <div class="bars">${c.rows.filter(r => r.today || r.future).map(r => `
+      <div class="bar-row" style="--tc:${tc(r.t.key)}">
+        <div class="bl"><b>${esc(r.t.lane)}</b><span>${esc(money(r.today))} → ${esc(money(r.future))}</span></div>
+        <div class="bar"><i style="width:${(r.today / max * 100).toFixed(1)}%"></i></div>
+        <div class="bar fut"><i style="width:${(r.future / max * 100).toFixed(1)}%"></i></div>
+      </div>`).join("")}</div>
+    <p class="flabel">Biggest yearly costs</p>
+    <ul class="toplist">${top.map(b => `<li><button data-go="${b.id}" style="--tc:${tc(b.type)}"><span>${esc(b.name)}${b.when !== "now" ? ` <small style="color:var(--muted)">(${esc(WHEN[b.when].toLowerCase())})</small>` : ""}</span><span>${esc(money(b.cost))}</span></button></li>`).join("")}</ul>
+    ${missing ? `<p class="sub">${missing} system${missing > 1 ? "s and technology blocks have" : " or technology block has"} no cost yet, so these totals may be low. See the Checks tab.</p>` : ""}
+    <p class="flabel">Currency</p>${curChips}
+    <button class="btn" id="askCosts">Ask the helper where we could save money</button>`;
+}
+costPane.addEventListener("click", e => {
+  const g = e.target.closest("[data-go]");
+  if (g){ const b = byId(g.dataset.go); if (b){ if (!visible(b)) setView("all"); select({kind:"block", id:b.id}); scrollTo(b); } return; }
+  const ch = e.target.closest("[data-cur] .chip");
+  if (ch){ commit(); S.currency = ch.dataset.v; renderAll(); save(); showTab("costs"); return; }
+  if (e.target.id === "askCosts") send("Where could we save money on this map? Look at the costs, overlaps and anything being kept that isn't needed.");
+});
+
+/* ---------- tabs, view, zoom, menu ---------- */
+function showTab(t, soft){
+  if (soft && window.innerWidth <= 900) return;
+  document.querySelectorAll(".tabs button").forEach(b => b.setAttribute("aria-selected", b.dataset.t === t));
+  document.querySelectorAll(".tabpane").forEach(p => p.hidden = p.dataset.tab !== t);
+}
+document.querySelector(".tabs").addEventListener("click", e => { const b = e.target.closest("button"); if (b) showTab(b.dataset.t); });
+function setView(v){ view = v; document.querySelectorAll("[data-view]").forEach(b => b.setAttribute("aria-pressed", b.dataset.view === v)); renderBlocks(); renderLinks(); }
+document.querySelectorAll("[data-view]").forEach(b => b.addEventListener("click", () => setView(b.dataset.view)));
+function setZoom(z){ zoom = Math.min(1.6, Math.max(0.4, Math.round(z*10)/10)); renderLanes(); $("#zoomLbl").textContent = Math.round(zoom*100) + "%"; }
+$("#zoomIn").onclick = () => setZoom(zoom + 0.1);
+$("#zoomOut").onclick = () => setZoom(zoom - 0.1);
+vp.addEventListener("wheel", e => { if (e.ctrlKey || e.metaKey){ e.preventDefault(); setZoom(zoom - Math.sign(e.deltaY) * 0.1); } }, {passive:false});
+$("#undoBtn").onclick = undo; $("#redoBtn").onclick = redo;
+$("#tidyBtn").onclick = () => {
+  commit();
+  for (const t of TYPES){
+    const bs = S.blocks.filter(b => b.type === t.key).sort((a,b) => (a.y - b.y) > 40 ? 1 : (b.y - a.y) > 40 ? -1 : a.x - b.x);
+    const perRow = bs.length > 9 ? Math.ceil(bs.length / 2) : bs.length;
+    bs.forEach((b, i) => { const r = Math.floor(i / Math.max(1, perRow)); b.x = 40 + (i % Math.max(1, perRow)) * (BW + 44); b.y = laneTop(t.key) + (r ? 112 : 36); });
+  }
+  renderAll(); save(); toast("Tidied up", true);
+};
+$("#mapName").addEventListener("focus", () => { editSnap = JSON.stringify(S); });
+$("#mapName").addEventListener("input", e => { if (editSnap){ hist.push(editSnap); fut = []; editSnap = null; updUndo(); } S.name = e.target.value; S.example = false; save(); });
+const menu = $("#fileMenu");
+document.addEventListener("click", e => { if (menu.open && !menu.contains(e.target)) menu.open = false; });
+$("#mapList").addEventListener("click", e => { const b = e.target.closest("[data-open]"); if (!b) return; menu.open = false; if (b.dataset.open !== mapId) openMap(b.dataset.open).catch(err => toast("Couldn't open that map. " + err.message)); });
+menu.addEventListener("toggle", () => { if (menu.open) refreshMapList(); else resetDel(); });
+$("#newBtn").onclick = () => { menu.open = false; createAndOpen(blank(), "New blank map started"); };
+$("#exampleBtn").onclick = () => { menu.open = false; createAndOpen(example(), "Example map added"); };
+$("#dupBtn").onclick = () => { menu.open = false; createAndOpen({...S, example:false, name:(S.name || "Map") + " (copy)"}, "Copy made. You're now working on the copy."); };
+let delArmed = false, delTimer;
+function resetDel(){ delArmed = false; clearTimeout(delTimer); $("#delMapBtn").textContent = "Delete this map"; }
+$("#delMapBtn").onclick = async () => {
+  if (!delArmed){ delArmed = true; $("#delMapBtn").textContent = `Click again to delete “${S.name || "this map"}” for everyone`; delTimer = setTimeout(resetDel, 5000); return; }
+  resetDel(); menu.open = false;
+  try {
+    clearTimeout(saveTimer); dirty = false;
+    await api("DELETE", `/api/maps/${mapId}`);
+    const name = S.name; mapId = null;
+    const rest = (await api("GET", "/api/maps")).maps;
+    if (rest.length) await openMap(rest[0].id); else await createAndOpen(blank());
+    toast(`Deleted “${name}”`);
+  } catch (e) { toast("Couldn't delete the map. " + e.message); }
+};
+$("#importBtn").onclick = () => { menu.open = false; $("#fileIn").click(); };
+$("#fileIn").addEventListener("change", async e => {
+  const f = e.target.files[0]; e.target.value = ""; if (!f) return;
+  try {
+    const s = JSON.parse(await f.text());
+    if (!valid(s)) throw 0;
+    s.blocks = s.blocks.filter(b => b && T[b.type]).map(b => ({id:String(b.id), type:b.type, name:String(b.name || "Untitled"), desc:String(b.desc || ""), owner:String(b.owner || ""), health: HEALTH[b.health] !== undefined ? b.health : "", when: WHEN[b.when] ? b.when : "now", cost:num(b.cost), oneOff:num(b.oneOff), x:+b.x || 40, y:clampY(b.type, +b.y || 0)}));
+    s.links = s.links.filter(l => l && s.blocks.some(b => b.id === l.from) && s.blocks.some(b => b.id === l.to)).map(l => ({id:String(l.id || uid("l")), from:String(l.from), to:String(l.to), label:String(l.label || "relates to")}));
+    await createAndOpen({name:String(s.name || f.name.replace(/\.json$/i, "")), example:false, currency:["£","€","$"].includes(s.currency) ? s.currency : "£", blocks:s.blocks, links:s.links}, "Map opened and saved to your maps");
+  } catch { toast("That file isn't a Blockplan map. Choose a file saved from this page."); }
+});
+$("#exportBtn").onclick = () => {
+  menu.open = false;
+  const data = JSON.stringify({app:"Blockplan", version:2, name:S.name, currency:cur(), blocks:S.blocks, links:S.links}, null, 2);
+  const fname = (S.name || "map").replace(/[^\w\- ]+/g, "").trim().replace(/\s+/g, "-").toLowerCase() + ".blockplan.json";
+  const url = URL.createObjectURL(new Blob([data], {type:"application/json"}));
+  const a = document.createElement("a"); a.href = url; a.download = fname; document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 2000);
+  toast("Map downloaded as " + fname);
+};
+document.addEventListener("keydown", e => {
+  const typing = e.target.matches("input,textarea,select");
+  if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "z" && !typing){ e.preventDefault(); e.shiftKey ? redo() : undo(); return; }
+  if (typing) return;
+  if ((e.key === "Delete" || e.key === "Backspace") && sel){ e.preventDefault(); deleteSel(); }
+  if (e.key === "Escape") select(null);
+});
+
+let toastTimer;
+function toast(msg, withUndo){
+  document.querySelector(".toast")?.remove(); clearTimeout(toastTimer);
+  const t = document.createElement("div"); t.className = "toast"; t.setAttribute("role", "status");
+  t.innerHTML = `<span>${esc(msg)}</span>${withUndo ? `<button>Undo</button>` : ""}`;
+  if (withUndo) t.querySelector("button").onclick = () => { undo(); t.remove(); };
+  document.body.appendChild(t); toastTimer = setTimeout(() => t.remove(), 4200);
+}
+
+/* ---------- AI helper ---------- */
+const log = $("#log"), promptEl = $("#prompt");
+let aiOn = false, busy = null;
+const QUICK = [
+  ["Build a starter map", "Build a starter map for an organisation that "],
+  ["What's missing?", "What's missing from this map? Suggest the most useful additions."],
+  ["Explain this map", "Explain this map in plain English, as if to someone new to the organisation."],
+  ["Biggest risks", "What are the biggest risks on this map, and what would you do first?"],
+  ["Overlapping systems", "Which systems overlap or do the same job? What could we simplify?"],
+  ["Save money", "Where could we save money on this map? Look at the costs, overlaps and anything being kept that isn't needed."],
+];
+$("#quick").innerHTML = QUICK.map((q, i) => `<button class="chip" data-q="${i}">${esc(q[0])}</button>`).join("");
+$("#quick").addEventListener("click", e => {
+  const c = e.target.closest("[data-q]"); if (!c) return;
+  const q = QUICK[+c.dataset.q];
+  if (q[1].endsWith(" ")){ promptEl.value = q[1]; promptEl.focus(); promptEl.setSelectionRange(q[1].length, q[1].length); }
+  else send(q[1]);
+});
+function addMsg(cls, text){ const m = document.createElement("div"); m.className = "msg " + cls; m.textContent = text; log.appendChild(m); log.scrollTop = log.scrollHeight; return m; }
+addMsg("note", "Ask a question in plain words, or tell the helper what to add or change. It will show you its changes before anything goes on the map.");
+
+async function checkAI(){
+  try {
+    const st = (await api("GET", "/api/status")).ai;
+    aiOn = !!st.available;
+    const who = st.claude.on ? `Claude (${st.claude.model})` + (st.local.on ? `, with ${st.local.model} on this machine as a fallback` : "") : st.local.on ? `${st.local.model}, running on this machine` : "";
+    $("#askHint").textContent = aiOn ? `Answers from ${who}. Enter to send.` : st.message;
+  } catch { aiOn = false; $("#askHint").textContent = "Couldn't reach the Blockplan server."; }
+  $("#sendBtn").disabled = !aiOn; promptEl.disabled = !aiOn;
+}
+
+async function send(text){
+  text = (text ?? promptEl.value).trim();
+  if (!text || busy || !aiOn) return;
+  showTab("helper");
+  promptEl.value = "";
+  addMsg("me", text);
+  const think = addMsg("ai", "Thinking…");
+  const ctl = new AbortController(); busy = ctl;
+  $("#sendBtn").disabled = true; $("#stopBtn").hidden = false;
+  const startedOn = mapId;
+  try {
+    const r = await api("POST", "/api/ai", {map:S, request:text, selected: sel?.kind === "block" ? sel.id : null, history:convo.slice(-6)}, {signal:ctl.signal});
+    const reply = typeof r?.reply === "string" && r.reply.trim() ? r.reply.trim() : "Done.";
+    think.textContent = reply;
+    convo.push({role:"user", text}, {role:"assistant", text:reply});
+    const ch = startedOn === mapId ? normalise(r?.changes) : null;
+    if (ch) changeCard(think, ch);
+  } catch (e) {
+    if (e?.name === "AbortError"){ think.textContent = "Stopped."; }
+    else { think.textContent = e?.data?.detail || "Couldn't reach the helper. Check the Blockplan server is running."; think.classList.add("err"); }
+  } finally {
+    busy = null; $("#sendBtn").disabled = !aiOn; $("#stopBtn").hidden = true;
+    log.scrollTop = log.scrollHeight;
+  }
+}
+$("#sendBtn").onclick = () => send();
+$("#stopBtn").onclick = () => busy?.abort();
+promptEl.addEventListener("keydown", e => { if (e.key === "Enter" && !e.shiftKey){ e.preventDefault(); send(); } });
+
+function normalise(c){
+  if (!c || typeof c !== "object") return null;
+  const arr = x => Array.isArray(x) ? x : [];
+  const out = {
+    add: arr(c.add).filter(a => a && T[a.type] && a.name).slice(0, 40),
+    link: arr(c.link).filter(l => l && l.from && l.to),
+    update: arr(c.update).filter(u => u && byId(String(u.id))),
+    remove: arr(c.remove).map(String).filter(id => byId(id)),
+  };
+  return (out.add.length + out.link.length + out.update.length + out.remove.length) ? out : null;
+}
+function changeCard(msgEl, ch){
+  const lines = [];
+  if (ch.add.length) lines.push(`Add ${ch.add.length} block${ch.add.length > 1 ? "s" : ""}: ${ch.add.slice(0, 8).map(a => a.name).join(", ")}${ch.add.length > 8 ? "…" : ""}`);
+  if (ch.link.length) lines.push(`Make ${ch.link.length} connection${ch.link.length > 1 ? "s" : ""}`);
+  if (ch.update.length) lines.push(`Change ${ch.update.map(u => byId(u.id).name).join(", ")}`);
+  if (ch.remove.length) lines.push(`Remove ${ch.remove.map(id => byId(id).name).join(", ")}`);
+  const box = document.createElement("div"); box.className = "changes";
+  box.innerHTML = `<b>Suggested changes</b><ul>${lines.map(l => `<li>${esc(l)}</li>`).join("")}</ul><div class="row"><button class="btn primary">Put on the map</button><button class="btn">Skip</button></div>`;
+  const [ok, skip] = box.querySelectorAll("button");
+  ok.onclick = () => { applyChanges(ch); box.querySelector(".row").innerHTML = `<span class="sub" style="margin:0">Added to the map.</span> <button class="btn">Undo</button>`; box.querySelector(".row button").onclick = () => { undo(); box.querySelector(".row").innerHTML = `<span class="sub" style="margin:0">Undone.</span>`; }; };
+  skip.onclick = () => { box.querySelector(".row").innerHTML = `<span class="sub" style="margin:0">Skipped.</span>`; };
+  msgEl.appendChild(box); log.scrollTop = log.scrollHeight;
+}
+function applyChanges(ch){
+  commit();
+  if (S.example) S.example = false;
+  const refs = {};
+  const resolve = x => { x = String(x); if (refs[x]) return refs[x]; if (byId(x)) return x; const n = S.blocks.find(b => b.name.toLowerCase() === x.toLowerCase()); return n ? n.id : null; };
+  for (const id of ch.remove) removeBlock(id);
+  for (const a of ch.add){
+    const spot = freeSpot(a.type);
+    const b = {id:uid("b"), type:a.type, name:String(a.name).slice(0, 80), desc:String(a.desc || ""), owner:String(a.owner || ""), health: HEALTH[a.health] !== undefined ? a.health : "", when: WHEN[a.when] ? a.when : "now", cost:num(a.cost), oneOff:num(a.oneOff), x:spot.x, y:spot.y};
+    S.blocks.push(b); if (a.ref) refs[String(a.ref)] = b.id;
+  }
+  for (const u of ch.update){
+    const b = byId(String(u.id)); if (!b) continue;
+    for (const k of ["name","desc","owner"]) if (typeof u[k] === "string") b[k] = u[k];
+    if (WHEN[u.when]) b.when = u.when;
+    for (const k of ["cost","oneOff"]) if (u[k] !== undefined && u[k] !== null && !isNaN(+u[k])) b[k] = num(u[k]);
+    if (HEALTH[u.health] !== undefined && u.health !== undefined) b.health = u.health;
+  }
+  for (const l of ch.link){
+    const f = byId(resolve(l.from)), t = byId(resolve(l.to));
+    if (f && t) addLink(f, t, typeof l.label === "string" && l.label.trim() ? l.label.trim() : null);
+  }
+  if (view !== "all") setView("all");
+  renderAll(); save();
+}
+
+async function boot(){
+  renderAll(); setSaveState("Loading…");
+  checkAI();
+  try {
+    const list = (await api("GET", "/api/maps")).maps;
+    if (!list.length){ await createAndOpen(example()); return; }
+    const last = recalled();
+    await openMap(list.some(m => m.id === last) ? last : list[0].id);
+  } catch (e) {
+    setSaveState("Offline", true);
+    toast(e.status === 401 ? "Please sign in to Blockplan." : "Couldn't reach the Blockplan server. Check it is running, then reload the page.");
+  }
+}
+boot();
+})();
+</script>
+</body>
+</html>
