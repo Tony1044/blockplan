@@ -111,3 +111,7 @@ Dockerfile, docker-compose.yml
 ## Fonts
 
 Bricolage Grotesque, Hanken Grotesk, and JetBrains Mono are included under the SIL Open Font Licence. The licence files are in `app/static/fonts/`.
+
+## Licence
+
+MIT. See `LICENSE`.
