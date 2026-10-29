@@ -20,7 +20,7 @@ img{max-width:100%}
 :root{
   --bg:#E9EEEC; --surface:#FFFFFF; --panel:#F5F7F6; --ink:#16211E; --muted:#56665F; --line:#CFD8D4;
   --accent:#1F5B4E; --accent-ink:#FFFFFF; --accent-soft:#DCEBE6;
-  --c-goal:#A86A12; --c-ability:#2A62A8; --c-team:#7E4A9E; --c-info:#0C7680; --c-system:#B0442A; --c-tech:#4B5867;
+  --c-goal:#A86A12; --c-ability:#2A62A8; --c-team:#7E4A9E; --c-info:#0C7680; --c-system:#B0442A; --c-tech:#4B5867; --c-person:#1F5B4E;
   --good:#2F8A4E; --watch:#C28A12; --bad:#C2372B;
   --f-display:"Bricolage Grotesque", "Segoe UI", system-ui, sans-serif;
   --f-body:"Hanken Grotesk", "Segoe UI", system-ui, sans-serif;
@@ -30,13 +30,13 @@ img{max-width:100%}
 @media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
   --bg:#101614; --surface:#1A2220; --panel:#151C1A; --ink:#E3ECE8; --muted:#94A49E; --line:#2D3935;
   --accent:#62C3A6; --accent-ink:#0D1F19; --accent-soft:#1D3530;
-  --c-goal:#E0A548; --c-ability:#6FA3E6; --c-team:#B88AD6; --c-info:#4CB8C2; --c-system:#E57C5F; --c-tech:#9AA8B8;
+  --c-goal:#E0A548; --c-ability:#6FA3E6; --c-team:#B88AD6; --c-info:#4CB8C2; --c-system:#E57C5F; --c-tech:#9AA8B8; --c-person:#62C3A6;
   --good:#5CC17E; --watch:#E3B04A; --bad:#EE6A5D;
   --shadow:0 1px 2px rgba(0,0,0,.4), 0 4px 14px rgba(0,0,0,.3); color-scheme:dark}}
 :root[data-theme="dark"]{
   --bg:#101614; --surface:#1A2220; --panel:#151C1A; --ink:#E3ECE8; --muted:#94A49E; --line:#2D3935;
   --accent:#62C3A6; --accent-ink:#0D1F19; --accent-soft:#1D3530;
-  --c-goal:#E0A548; --c-ability:#6FA3E6; --c-team:#B88AD6; --c-info:#4CB8C2; --c-system:#E57C5F; --c-tech:#9AA8B8;
+  --c-goal:#E0A548; --c-ability:#6FA3E6; --c-team:#B88AD6; --c-info:#4CB8C2; --c-system:#E57C5F; --c-tech:#9AA8B8; --c-person:#62C3A6;
   --good:#5CC17E; --watch:#E3B04A; --bad:#EE6A5D;
   --shadow:0 1px 2px rgba(0,0,0,.4), 0 4px 14px rgba(0,0,0,.3); color-scheme:dark}
 
@@ -207,6 +207,42 @@ svg.links path.tmp{fill:none;stroke:var(--accent);stroke-width:2;stroke-dasharra
 .toast button{border:0;background:transparent;color:var(--bg);text-decoration:underline;font-weight:600}
 .sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
 
+/* Stakeholders */
+body:not(.mode-people) .peopleonly{display:none!important}
+body.mode-people .maponly{display:none!important}
+.shelf .peopleonly{display:flex;flex-direction:column;gap:8px}
+.pview{position:relative;background:var(--surface);border:1px solid var(--line);border-radius:12px;min-height:0;overflow:auto;padding:14px 16px 16px;display:flex;flex-direction:column;gap:10px}
+.phead{display:flex;flex-wrap:wrap;gap:8px 20px;align-items:flex-end;justify-content:space-between}
+.phead .paneh{margin:0}
+.phead .sub{margin:2px 0 0;max-width:62ch}
+.fkey{display:flex;flex-wrap:wrap;gap:4px 12px;font-size:12px;color:var(--muted)}
+.fkey span{display:inline-flex;align-items:center;gap:5px}
+.fkey i{width:10px;height:10px;border-radius:50%;display:inline-block}
+.pwrap{flex:1;min-height:340px;display:grid;grid-template-columns:auto minmax(0,1fr);grid-template-rows:minmax(0,1fr) auto;gap:6px 8px}
+.yax,.xax{display:flex;justify-content:space-between;font-family:var(--f-mono);font-size:10.5px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+.yax{writing-mode:vertical-rl;transform:rotate(180deg)}
+.xax{grid-column:2}
+.pgrid{position:relative;display:grid;grid-template-columns:1fr 1fr;grid-template-rows:1fr 1fr;border:1px solid var(--line);border-radius:10px;overflow:hidden;min-height:320px}
+.quad{padding:10px 12px;display:flex;flex-direction:column;gap:2px;border:0 dashed var(--line)}
+.quad b{font-family:var(--f-display);font-weight:600;font-size:14px;color:var(--ink)}
+.quad span{font-size:12px;color:var(--muted)}
+.q-satisfied{border-right-width:1px;border-bottom-width:1px}
+.q-close{border-bottom-width:1px;text-align:right;align-items:flex-end;background:var(--accent-soft)}
+.q-checkin{border-right-width:1px;justify-content:flex-end}
+.q-informed{justify-content:flex-end;text-align:right;align-items:flex-end}
+.pchips{position:absolute;inset:0;pointer-events:none}
+.pchip{position:absolute;transform:translate(-50%,-50%);pointer-events:auto;display:flex;align-items:center;gap:6px;max-width:200px;padding:3px 11px 3px 3px;border:1.5px solid var(--fc);border-radius:20px;background:var(--surface);color:var(--ink);font-weight:600;font-size:13px;cursor:grab;touch-action:none;user-select:none;-webkit-user-select:none;box-shadow:0 1px 3px color-mix(in srgb, var(--ink) 18%, transparent)}
+.pchip i{flex:0 0 auto;width:24px;height:24px;border-radius:50%;background:var(--fc);color:var(--bg);display:grid;place-items:center;font-style:normal;font-family:var(--f-mono);font-size:10px}
+.pchip span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0}
+.pchip.sel{box-shadow:0 0 0 3px color-mix(in srgb, var(--accent) 45%, transparent)}
+.pchip.drag{cursor:grabbing;z-index:3}
+.pempty{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:min(300px,80%);text-align:center;font-size:13px;color:var(--muted);background:var(--surface);border:1.5px dashed var(--line);border-radius:10px;padding:14px 16px;pointer-events:none}
+.advice{display:grid;gap:2px;background:var(--accent-soft);border-radius:8px;padding:9px 11px;margin-bottom:12px;font-size:13px}
+.linkish{border:0;background:none;padding:0;font:inherit;font-weight:600;color:inherit;text-decoration:underline;text-decoration-color:var(--line);text-underline-offset:2px;cursor:pointer;text-align:left}
+.pdot{flex:0 0 auto;width:9px;height:9px;border-radius:50%;display:inline-block}
+.conns li small{color:var(--muted);font-size:12px}
+#f-bperson,#f-plink{margin-top:6px}
+.block .pcount{position:absolute;right:7px;bottom:5px;display:flex;align-items:center;gap:2px;font-family:var(--f-mono);font-size:10px;color:var(--muted);font-variant-numeric:tabular-nums}
 @media (max-width:900px){
   body{overflow:auto;display:block;height:auto}
   html{height:auto}
@@ -216,6 +252,7 @@ svg.links path.tmp{fill:none;stroke:var(--accent);stroke-width:2;stroke-dasharra
   .pal-item{flex:0 0 150px}
   .shelf .tip{display:none}
   .viewport{height:62vh}
+  .pview{min-height:72vh}
   .side{max-height:none;overflow:visible}
   .tabpane{overflow:visible}
   .tabpane[data-tab="helper"]{height:70vh}
@@ -239,7 +276,11 @@ details.menu .drop button.warn{color:var(--bad)}
   <input id="mapName" class="mapname" value="">
   <span class="savestate" id="saveState" role="status"></span>
   <div class="spacer"></div>
-  <div class="seg" role="group" aria-label="What to show">
+  <div class="seg" role="group" aria-label="View">
+    <button data-mode="map" aria-pressed="true" title="Show the map">Map</button>
+    <button data-mode="people" aria-pressed="false" title="Show who has a say and who is affected">Stakeholders</button>
+  </div>
+  <div class="seg maponly" role="group" aria-label="What to show">
     <button data-view="all" aria-pressed="true" title="Show everything">Everything</button>
     <button data-view="today" aria-pressed="false" title="Hide planned things">Today</button>
     <button data-view="future" aria-pressed="false" title="Hide things being removed">Future</button>
@@ -247,12 +288,12 @@ details.menu .drop button.warn{color:var(--bad)}
   <div class="tools">
     <button class="btn" id="undoBtn" title="Undo (Ctrl+Z)">Undo</button>
     <button class="btn" id="redoBtn" title="Redo (Ctrl+Shift+Z)">Redo</button>
-    <button class="btn" id="tidyBtn" title="Line blocks up neatly in each row">Tidy up</button>
-    <button class="btn" id="zoomOut" aria-label="Zoom out">−</button>
-    <span class="zoom" id="zoomLbl">100%</span>
-    <button class="btn" id="zoomIn" aria-label="Zoom in">+</button>
+    <button class="btn maponly" id="tidyBtn" title="Line blocks up neatly in each row">Tidy up</button>
+    <button class="btn maponly" id="zoomOut" aria-label="Zoom out">−</button>
+    <span class="zoom maponly" id="zoomLbl">100%</span>
+    <button class="btn maponly" id="zoomIn" aria-label="Zoom in">+</button>
     <details class="menu" id="fileMenu">
-      <summary class="btn">Map ▾</summary>
+      <summary class="btn">Maps ▾</summary>
       <div class="drop">
         <div class="mh">Your maps</div>
         <div id="mapList" style="display:grid"></div>
@@ -273,12 +314,17 @@ details.menu .drop button.warn{color:var(--bad)}
 
 <main class="app">
   <aside class="shelf" aria-label="Blocks">
-    <h2>Blocks</h2>
-    <div class="pal" id="pal"></div>
-    <p class="tip">Drag a block onto the map, or tap it to add. Drag from the round dot on a block to connect it to another.</p>
+    <h2 class="maponly">Blocks</h2>
+    <div class="pal maponly" id="pal"></div>
+    <p class="tip maponly">Drag a block onto the map, or tap it to add. Drag from the round dot on a block to connect it to another.</p>
+    <div class="peopleonly">
+      <h2>Add</h2>
+      <div class="pal" id="ppal"><button class="pal-item" data-type="person" style="--tc:var(--c-person)"><strong>Stakeholder</strong><span>A person, role, or group who has a say in the changes or is affected by them.</span></button></div>
+      <p class="tip">Drag onto the grid, or tap to add. Click someone to say how they feel and link them to what they care about on the map.</p>
+    </div>
   </aside>
 
-  <section class="viewport" id="vp" aria-label="Map">
+  <section class="viewport maponly" id="vp" aria-label="Map">
     <div class="sizer" id="sizer">
       <div class="surface" id="surf">
         <div id="lanes"></div>
@@ -286,6 +332,26 @@ details.menu .drop button.warn{color:var(--bad)}
         <div id="labels"></div>
         <div id="blocks"></div>
       </div>
+    </div>
+  </section>
+
+  <section class="pview peopleonly" aria-label="Stakeholders">
+    <div class="phead">
+      <div><p class="paneh">Stakeholders</p><p class="sub">Higher up means more say. Further right means the changes affect them more. Drag people to place them.</p></div>
+      <div class="fkey" aria-label="Colours"><span><i style="background:var(--good)"></i>For the changes</span><span><i style="background:var(--watch)"></i>Unsure</span><span><i style="background:var(--bad)"></i>Against</span><span><i style="background:var(--muted)"></i>Don't know yet</span></div>
+    </div>
+    <div class="pwrap">
+      <div class="yax" aria-hidden="true"><span>Less say</span><span>More say</span></div>
+      <div class="pgrid" id="pgrid">
+        <div class="quad q-satisfied"><b>Keep them satisfied</b><span>A lot of say, less affected</span></div>
+        <div class="quad q-close"><b>Work closely with them</b><span>A lot of say, affected a lot</span></div>
+        <div class="quad q-checkin"><b>Check in now and then</b><span>Less say, less affected</span></div>
+        <div class="quad q-informed"><b>Keep them informed</b><span>Less say, affected a lot</span></div>
+        <div class="pchips" id="pchips"></div>
+        <div class="pempty" id="pEmpty">Drag a stakeholder from the left onto the grid, or tap it to add one. For example, “Head of Sales”.</div>
+      </div>
+      <span></span>
+      <div class="xax" aria-hidden="true"><span>Less affected</span><span>More affected by the changes</span></div>
     </div>
   </section>
 
@@ -401,9 +467,18 @@ function example(){
     L("s1","c1","runs on"), L("s4","c1","runs on"), L("s3","c2","runs on"), L("s5","c3","runs on"),
     L("s4","s1","sends information to"), L("s2","s1","sends information to"),
   ];
-  return {name:"Example – snack maker", example:true, currency:"£", blocks, links};
+  const st = (id, name, role, feeling, say, impact, cares, plan, links) => ({id, name, role, feeling, say, impact, cares, plan, links});
+  const stakeholders = [
+    st("p1", "Head of Sales", "Sales", "for", 0.82, 0.8, "Large customers getting the right orders without phoning in.", "Fortnightly catch-up while the ordering website is built.", ["s4", "s2", "a1"]),
+    st("p2", "Sales team", "Sales staff", "unsure", 0.3, 0.85, "Losing the order spreadsheet they know well, and having to learn something new.", "", ["s2", "s4"]),
+    st("p3", "Finance Director", "Finance", "against", 0.9, 0.35, "The one-off cost of the ordering website, and how soon it pays back.", "", ["s4"]),
+    st("p4", "Largest shop customers", "Customers", "for", 0.56, 0.7, "Ordering at any time of day without ringing the sales team.", "Invite two of them to try the website before it goes live.", ["s4", "a1"]),
+    st("p5", "IT support", "IT", "unsure", 0.42, 0.62, "Another system to look after, and the ageing factory servers.", "", ["s4", "c1", "c2"]),
+    st("p6", "Factory managers", "Production", "", 0.62, 0.22, "Keeping the lines running while the servers are replaced.", "", ["s3", "c2"]),
+  ];
+  return {name:"Example – snack maker", example:true, currency:"£", blocks, links, stakeholders};
 }
-function blank(){ return {name:"My organisation", example:false, currency:(S && S.currency) || "£", blocks:[], links:[]}; }
+function blank(){ return {name:"My organisation", example:false, currency:(S && S.currency) || "£", blocks:[], links:[], stakeholders:[]}; }
 
 function valid(s){ return s && Array.isArray(s.blocks) && Array.isArray(s.links); }
 
@@ -436,7 +511,7 @@ async function flush(){
   } catch (e) {
     dirty = true;
     if (e.status === 409){ conflict = true; setSaveState("Not saved", true); showConflict(); }
-    else if (e.status === 404){ setSaveState("Not saved", true); toast("This map was deleted elsewhere. Use Map → Make a copy of this map to keep it."); conflict = true; }
+    else if (e.status === 404){ setSaveState("Not saved", true); toast("This map was deleted elsewhere. Use Maps → Make a copy of this map to keep it."); conflict = true; }
     else { setSaveState("Not saved, retrying…", true); saveTimer = setTimeout(flush, 5000); }
   } finally {
     saving = false;
@@ -495,7 +570,7 @@ function updUndo(){ $("#undoBtn").disabled = !hist.length; $("#redoBtn").disable
 
 const byId = id => S.blocks.find(b => b.id === id);
 const linkById = id => S.links.find(l => l.id === id);
-function findSel(){ return sel && (sel.kind === "block" ? byId(sel.id) : linkById(sel.id)); }
+function findSel(){ return sel && (sel.kind === "block" ? byId(sel.id) : sel.kind === "person" ? personById(sel.id) : linkById(sel.id)); }
 const laneTop = type => TYPES.findIndex(t => t.key === type) * LANE_H;
 const clampY = (type, y) => Math.min(Math.max(y, laneTop(type) + 34), laneTop(type) + LANE_H - BH - 12);
 function visible(b){ return view === "all" || (view === "today" && b.when !== "planned") || (view === "future" && b.when !== "retiring"); }
@@ -522,7 +597,7 @@ function addLink(a, b, label){
   const l = {id:uid("l"), from:(label ? a : w.from).id, to:(label ? b : w.to).id, label: label || w.label};
   S.links.push(l); return l;
 }
-function removeBlock(id){ S.blocks = S.blocks.filter(b => b.id !== id); S.links = S.links.filter(l => l.from !== id && l.to !== id); }
+function removeBlock(id){ S.blocks = S.blocks.filter(b => b.id !== id); S.links = S.links.filter(l => l.from !== id && l.to !== id); for (const p of P()) p.links = p.links.filter(x => x !== id); }
 
 /* ---------- rendering ---------- */
 const surf = $("#surf"), vp = $("#vp"), sizer = $("#sizer"), svg = $("#links"), labelsEl = $("#labels"), blocksEl = $("#blocks"), lanesEl = $("#lanes");
@@ -535,7 +610,7 @@ function renderLanes(){
   lanesEl.innerHTML = TYPES.map((t, i) => {
     const has = S.blocks.some(b => b.type === t.key);
     return `<div class="lane" style="top:${i*LANE_H}px;height:${LANE_H}px;--tc:${tc(t.key)}"><span class="lname">${esc(t.lane)} <small>${esc(t.plural)}</small></span>${has ? "" : `<div class="empty">Drag ${esc(t.a)} here, for example “${esc(t.ex)}”</div>`}</div>`;
-  }).join("") + (S.example ? `<div class="example-note">Example map. Start your own from the Map menu.</div>` : "");
+  }).join("") + (S.example ? `<div class="example-note">Example map. Start your own from the Maps menu.</div>` : "");
 }
 function blockHTML(b){
   const t = T[b.type];
@@ -544,6 +619,7 @@ function blockHTML(b){
   return `<div class="block h-${b.health || "none"} w-${b.when}${isSel ? " sel" : ""}${visible(b) ? "" : " hidden-by-view"}" data-id="${b.id}" style="left:${b.x}px;top:${b.y}px;--tc:${tc(b.type)}" tabindex="0" role="button" aria-label="${esc(t.name)}: ${esc(b.name)}">
     <span class="kind">${esc(t.name)} ${tag}${b.cost ? `<span class="cost" title="${esc(moneyFull(b.cost))} a year">${esc(money(b.cost))}/yr</span>` : ""}</span><span class="nm">${esc(b.name)}</span>
     ${b.health ? `<span class="hdot" title="${esc(HEALTH[b.health])}"></span>` : ""}
+    ${(n => n ? `<span class="pcount" title="${n} stakeholder${n > 1 ? "s care" : " cares"} about this">${PERSON_SVG}${n}</span>` : "")(caresAbout(b.id).length)}
     <button class="handle" tabindex="-1" aria-label="Connect ${esc(b.name)} to another block" title="Drag to another block to connect"></button></div>`;
 }
 function renderBlocks(){ blocksEl.innerHTML = S.blocks.map(blockHTML).join(""); }
@@ -575,30 +651,38 @@ function renderLinks(){
 }
 function renderAll(){
   $("#mapName").value = S.name || "";
-  renderLanes(); renderBlocks(); renderLinks(); renderDetails(); renderChecks(); renderCosts(); updUndo();
+  renderLanes(); renderBlocks(); renderLinks(); renderPeople(); renderDetails(); renderChecks(); renderCosts(); updUndo();
   $("#zoomLbl").textContent = Math.round(zoom * 100) + "%";
 }
 
 /* ---------- palette ---------- */
 $("#pal").innerHTML = TYPES.map(t => `<button class="pal-item" data-type="${t.key}" style="--tc:${tc(t.key)}"><strong>${esc(t.name)}</strong><span>${esc(t.hint)}</span></button>`).join("");
 let palDrag = null;
-$("#pal").addEventListener("pointerdown", e => {
+$(".shelf").addEventListener("pointerdown", e => {
   const it = e.target.closest(".pal-item"); if (!it) return;
   e.preventDefault();
   palDrag = {type: it.dataset.type, x0: e.clientX, y0: e.clientY, ghost: null};
   it.setPointerCapture(e.pointerId);
 });
-$("#pal").addEventListener("pointermove", e => {
+$(".shelf").addEventListener("pointermove", e => {
   if (!palDrag) return;
   if (!palDrag.ghost && Math.hypot(e.clientX - palDrag.x0, e.clientY - palDrag.y0) > 6){
     const g = document.createElement("div"); g.className = "ghost"; g.style.setProperty("--tc", tc(palDrag.type));
-    g.textContent = "New " + T[palDrag.type].name.toLowerCase(); document.body.appendChild(g); palDrag.ghost = g;
+    g.textContent = palDrag.type === "person" ? "New stakeholder" : "New " + T[palDrag.type].name.toLowerCase(); document.body.appendChild(g); palDrag.ghost = g;
   }
   if (palDrag.ghost){ palDrag.ghost.style.left = e.clientX + "px"; palDrag.ghost.style.top = e.clientY + "px"; }
 });
 function endPal(e){
   if (!palDrag) return;
   const d = palDrag; palDrag = null;
+  if (d.type === "person"){
+    if (d.ghost){
+      d.ghost.remove();
+      const r = pgrid.getBoundingClientRect();
+      if (e.type === "pointerup" && e.clientX >= r.left && e.clientX <= r.right && e.clientY >= r.top && e.clientY <= r.bottom) createPerson(gridFrac(e));
+    } else if (e.type === "pointerup") createPerson(freePersonSpot());
+    return;
+  }
   if (d.ghost){
     d.ghost.remove();
     const r = vp.getBoundingClientRect();
@@ -611,9 +695,9 @@ function endPal(e){
     createBlock(d.type, freeSpot(d.type), true);
   }
 }
-$("#pal").addEventListener("pointerup", endPal);
-$("#pal").addEventListener("pointercancel", endPal);
-$("#pal").addEventListener("keydown", e => { const it = e.target.closest(".pal-item"); if (it && (e.key === "Enter" || e.key === " ")){ e.preventDefault(); createBlock(it.dataset.type, freeSpot(it.dataset.type), true); }});
+$(".shelf").addEventListener("pointerup", endPal);
+$(".shelf").addEventListener("pointercancel", endPal);
+$(".shelf").addEventListener("keydown", e => { const it = e.target.closest(".pal-item"); if (it && (e.key === "Enter" || e.key === " ")){ e.preventDefault(); if (it.dataset.type === "person") createPerson(freePersonSpot()); else createBlock(it.dataset.type, freeSpot(it.dataset.type), true); }});
 
 function createBlock(type, pos, scroll){
   commit();
@@ -701,7 +785,7 @@ function select(s, rerender = true){
   sel = s;
   blocksEl.querySelectorAll(".block.sel").forEach(el => el.classList.remove("sel"));
   if (s?.kind === "block") blocksEl.querySelector(`[data-id="${s.id}"]`)?.classList.add("sel");
-  renderLinks(); renderDetails();
+  renderLinks(); renderPeople(); renderDetails();
   if (s && rerender !== null) showTab("details", true);
 }
 
@@ -735,7 +819,10 @@ function renderDetails(){
       <div class="field"><span class="flabel">When</span><div class="chips" data-chips="when">${Object.entries(WHEN).map(([k,v]) => `<button class="chip" data-v="${k}" aria-pressed="${b.when === k}">${v}</button>`).join("")}</div></div>
       <div class="field"><span class="flabel">How is it doing?</span><div class="chips" data-chips="health">${Object.entries(HEALTH).map(([k,v]) => `<button class="chip" data-v="${k}" aria-pressed="${(b.health||"") === k}">${k ? `<span class="d" style="background:var(--${k})"></span>` : ""}${v}</button>`).join("")}</div></div>
       <div class="field"><span class="flabel">Connections</span>${connList(b)}</div>
+      <div class="field"><span class="flabel">Stakeholders who care about this</span>${blockPeople(b)}</div>
       <div class="row"><button class="btn" id="askAbout">Ask the helper about this</button><button class="btn danger" id="delBlock">Delete block</button></div>`;
+  } else if (sel.kind === "person"){
+    det.innerHTML = personDetails(s);
   } else {
     const l = s, a = byId(l.from), b = byId(l.to);
     det.innerHTML = `
@@ -747,6 +834,7 @@ function renderDetails(){
   }
 }
 function overview(){
+  if (mode === "people") return peopleOverview();
   const c = k => S.blocks.filter(b => b.type === k).length;
   return `<div class="guide">
     <p class="paneh">How Blockplan works</p>
@@ -755,6 +843,7 @@ function overview(){
       <li><b>Add blocks.</b> Drag one from the left onto the map, or tap it.</li>
       <li><b>Connect them.</b> Drag from the round dot on one block to another. The words are filled in for you.</li>
       <li><b>Describe them.</b> Click a block to name it, say who looks after it, what it costs, and how well it is working.</li>
+      <li><b>Add stakeholders.</b> Choose Stakeholders at the top to note who has a say in the changes and who they affect.</li>
       <li><b>Ask for help.</b> The AI helper can build a starter map, explain it, or spot what is missing.</li>
     </ol>
     <div class="stats">${TYPES.map(t => `<div style="border-top:3px solid ${tc(t.key)}"><b>${c(t.key)}</b><span>${esc(t.plural)}</span></div>`).join("")}</div>
@@ -775,10 +864,18 @@ det.addEventListener("input", e => {
     const show = det.querySelector(`[data-show="${k}"]`); if (show) show.textContent = s[k] ? moneyFull(s[k]) : "";
     renderBlocks(); renderLinks(); renderCostsSoon();
   }
+  if (e.target.dataset.pf){ s[e.target.dataset.pf] = e.target.value; renderPeople(); }
   if (e.target.dataset.lf){ s.label = e.target.value; renderLinks(); }
   save(); renderChecksSoon();
 });
 det.addEventListener("change", e => {
+  if (e.target.id === "f-bperson" && e.target.value){
+    const b = findSel(), v = e.target.value;
+    if (v === "__new") createPerson(freePersonSpot(), [b.id]);
+    else { commit(); const p = personById(v); if (p && !p.links.includes(b.id)) p.links.push(b.id); renderAll(); save(); }
+    return;
+  }
+  if (e.target.id === "f-plink" && e.target.value){ const p = findSel(); commit(); if (!p.links.includes(e.target.value)) p.links.push(e.target.value); renderAll(); save(); return; }
   if (e.target.dataset.f === "type"){
     const b = findSel(); commit(); b.type = e.target.value;
     const spot = freeSpot(b.type); b.x = spot.x; b.y = spot.y;
@@ -787,8 +884,14 @@ det.addEventListener("change", e => {
 });
 det.addEventListener("click", e => {
   const s = findSel();
+  const gop = e.target.closest("[data-gop]"); if (gop){ if (mode !== "people") setMode("people"); select({kind:"person", id:gop.dataset.gop}); return; }
+  const gob = e.target.closest("[data-gob]"); if (gob){ const b = byId(gob.dataset.gob); if (!b) return; setMode("map"); if (!visible(b)) setView("all"); select({kind:"block", id:b.id}); scrollTo(b); return; }
+  const bu = e.target.closest("[data-bunlink]"); if (bu && s){ commit(); const p = personById(bu.dataset.bunlink); if (p) p.links = p.links.filter(x => x !== s.id); renderAll(); save(); return; }
+  const pu = e.target.closest("[data-punlink]"); if (pu && s){ commit(); s.links = s.links.filter(x => x !== pu.dataset.punlink); renderAll(); save(); return; }
+  if (e.target.id === "delPerson") return deleteSel();
+  if (e.target.id === "askPerson"){ showTab("helper"); const p = $("#prompt"); p.value = `How should we work with "${s.name}"${s.role ? ` (${s.role})` : ""}? What are they likely to worry about, and what should we tell them first?`; p.focus(); return; }
   const chip = e.target.closest("[data-chips] .chip");
-  if (chip && s){ commit(); s[chip.parentElement.dataset.chips] = chip.dataset.v; renderAll(); save(); return; }
+  if (chip && s){ commit(); const k = chip.parentElement.dataset.chips; s[k] = (k === "say" || k === "impact") ? +chip.dataset.v : chip.dataset.v; renderAll(); save(); return; }
   const un = e.target.closest("[data-unlink]");
   if (un){ commit(); S.links = S.links.filter(l => l.id !== un.dataset.unlink); renderAll(); save(); return; }
   if (e.target.id === "delBlock") return deleteSel();
@@ -800,6 +903,7 @@ function deleteSel(){
   const s = findSel(); if (!s) return;
   commit();
   if (sel.kind === "block"){ const n = s.name; removeBlock(s.id); toast(`Deleted ${n}`, true); }
+  else if (sel.kind === "person"){ S.stakeholders = P().filter(p => p.id !== s.id); toast(`Deleted ${s.name}`, true); }
   else { S.links = S.links.filter(l => l.id !== s.id); toast("Connection deleted", true); }
   sel = null; renderAll(); save();
 }
@@ -829,6 +933,18 @@ function runChecks(){
     }
     if (anyCost && !b.cost && (b.type === "system" || b.type === "tech") && b.when !== "retiring") out.push({lvl:"info", id:b.id, t:`We don't know what ${name} costs`, d:"Add its yearly running cost so the totals in the Costs tab are complete."});
   }
+  const ps = P();
+  if (ps.length){
+    for (const p of ps){
+      const n = `“${p.name}”`, q = quadOf(p);
+      if (p.feeling === "against" && p.say >= 0.5) out.push({lvl:"bad", pid:p.id, t:`${n} has a lot of say and is against the changes`, d:"Talk to them early about what worries them, and note in their plan how you will address it."});
+      else if (p.feeling === "against") out.push({lvl:"watch", pid:p.id, t:`${n} is against the changes`, d:"Find out why. People with little say can still slow things down."});
+      if (!p.feeling && q === "close") out.push({lvl:"watch", pid:p.id, t:`We don't know how ${n} feels about the changes`, d:"They have a lot of say and are affected a lot. Ask them."});
+      if (q === "close" && !p.plan.trim()) out.push({lvl:"info", pid:p.id, t:`No plan yet for working with ${n}`, d:"Note who will talk to them, how, and how often."});
+      if (!p.links.length) out.push({lvl:"info", pid:p.id, t:`${n} isn't linked to anything on the map`, d:"Link them to the things they care about, so you can see who each change affects."});
+    }
+    for (const b of S.blocks) if (b.when !== "now" && !ps.some(p => p.links.includes(b.id))) out.push({lvl:"watch", id:b.id, t:`No stakeholders are linked to “${b.name}”, which is ${b.when === "planned" ? "planned" : "being removed"}`, d:"Who will notice this change? Link the people it affects, or add them."});
+  }
   const order = {bad:0, watch:1, info:2};
   return out.sort((a,b) => order[a.lvl] - order[b.lvl]);
 }
@@ -838,9 +954,10 @@ function renderChecks(){
   const c = runChecks(), n = c.filter(x => x.lvl !== "info").length;
   const badge = $("#checkCount"); badge.hidden = !n; badge.textContent = n;
   $("#checksPane").innerHTML = `<p class="paneh">Things to look at</p><p class="sub">Simple checks that run as you build. Click one to find it on the map.</p>` +
-    (c.length ? `<ul class="checks">${c.map(x => `<li class="${x.lvl}"><button data-go="${x.id}">${esc(x.t)}<small>${esc(x.d)}</small></button></li>`).join("")}</ul>` : `<p class="sub">Nothing to flag right now.</p>`);
+    (c.length ? `<ul class="checks">${c.map(x => `<li class="${x.lvl}"><button ${x.pid ? `data-gop="${esc(x.pid)}"` : `data-go="${x.id}"`}>${esc(x.t)}<small>${esc(x.d)}</small></button></li>`).join("")}</ul>` : `<p class="sub">Nothing to flag right now.</p>`);
 }
-$("#checksPane").addEventListener("click", e => { const g = e.target.closest("[data-go]"); if (!g) return; const b = byId(g.dataset.go); if (!b) return; if (!visible(b)) setView("all"); select({kind:"block", id:b.id}); scrollTo(b); });
+$("#checksPane").addEventListener("click", e => { const g = e.target.closest("[data-gop]"); if (!g) return; setMode("people"); select({kind:"person", id:g.dataset.gop}); });
+$("#checksPane").addEventListener("click", e => { const g = e.target.closest("[data-go]"); if (!g) return; const b = byId(g.dataset.go); if (!b) return; setMode("map"); if (!visible(b)) setView("all"); select({kind:"block", id:b.id}); scrollTo(b); });
 
 /* ---------- costs ---------- */
 const costPane = $("#costsPane");
@@ -896,11 +1013,156 @@ function renderCosts(){
 }
 costPane.addEventListener("click", e => {
   const g = e.target.closest("[data-go]");
-  if (g){ const b = byId(g.dataset.go); if (b){ if (!visible(b)) setView("all"); select({kind:"block", id:b.id}); scrollTo(b); } return; }
+  if (g){ const b = byId(g.dataset.go); if (b){ setMode("map"); if (!visible(b)) setView("all"); select({kind:"block", id:b.id}); scrollTo(b); } return; }
   const ch = e.target.closest("[data-cur] .chip");
   if (ch){ commit(); S.currency = ch.dataset.v; renderAll(); save(); showTab("costs"); return; }
   if (e.target.id === "askCosts") send("Where could we save money on this map? Look at the costs, overlaps and anything being kept that isn't needed.");
 });
+
+/* ---------- stakeholders ---------- */
+const FEEL = {for:"For the changes", unsure:"Unsure", against:"Against", "":"Don't know yet"};
+const FEEL_C = {for:"var(--good)", unsure:"var(--watch)", against:"var(--bad)", "":"var(--muted)"};
+const LEVELS = [[0.2, "A little"], [0.5, "Some"], [0.85, "A lot"]];
+const QUADS = {
+  close:{t:"Work closely with them", d:"They have a lot of say and the changes affect them a lot. Involve them in decisions and talk to them often."},
+  satisfied:{t:"Keep them satisfied", d:"They have a lot of say but are less affected. Give them short, regular updates and check with them before big decisions."},
+  informed:{t:"Keep them informed", d:"The changes affect them a lot, but they have less say. Tell them early what is changing and listen to their worries."},
+  checkin:{t:"Check in now and then", d:"Less say and less affected. A light touch is enough, but watch in case that changes."},
+};
+const PERSON_SVG = `<svg viewBox="0 0 16 16" width="10" height="10" aria-hidden="true"><circle cx="8" cy="5" r="3" fill="currentColor"/><path d="M2 15c0-3.3 2.7-5.5 6-5.5s6 2.2 6 5.5z" fill="currentColor"/></svg>`;
+const P = () => Array.isArray(S.stakeholders) ? S.stakeholders : (S.stakeholders = []);
+const personById = id => P().find(p => p.id === id);
+const quadOf = p => p.say >= 0.5 ? (p.impact >= 0.5 ? "close" : "satisfied") : (p.impact >= 0.5 ? "informed" : "checkin");
+const caresAbout = id => P().filter(p => p.links.includes(id));
+const nearest = v => LEVELS.reduce((a, [l]) => Math.abs(l - v) < Math.abs(a - v) ? l : a, LEVELS[0][0]);
+const word = v => v >= 0.67 ? "high" : v >= 0.34 ? "some" : "low";
+function frac(v){
+  if (typeof v === "string"){
+    const w = {low:0.2, little:0.2, "a little":0.2, some:0.5, medium:0.5, high:0.85, "a lot":0.85}[v.trim().toLowerCase()];
+    if (w !== undefined) return w;
+    v = parseFloat(v);
+  }
+  if (typeof v !== "number" || isNaN(v)) return 0.5;
+  if (v > 1) v = v / 100;
+  return Math.min(0.97, Math.max(0.03, v));
+}
+function initials(n){
+  const w = String(n || "?").split(/\s+/).filter(x => x && !/^(of|the|and|for|&|-|–)$/i.test(x));
+  return ((w[0]?.[0] || "?") + (w[1]?.[0] || "")).toUpperCase();
+}
+function cleanPeople(list, blocks){
+  const ids = new Set((blocks || []).map(b => String(b.id)));
+  return (Array.isArray(list) ? list : []).filter(p => p && typeof p === "object").map(p => ({
+    id:String(p.id || uid("p")), name:String(p.name || "Unnamed").slice(0, 120), role:String(p.role || ""),
+    feeling: FEEL[p.feeling] !== undefined ? p.feeling : "", say:frac(p.say), impact:frac(p.impact),
+    cares:String(p.cares || ""), plan:String(p.plan || ""),
+    links:[...new Set((Array.isArray(p.links) ? p.links : []).map(String).filter(x => ids.has(x)))]}));
+}
+function personForAI(p){
+  const o = {id:p.id, name:p.name, say:word(p.say), impact:word(p.impact)};
+  if (p.role) o.role = p.role; if (p.feeling) o.feeling = p.feeling; if (p.cares) o.cares = p.cares; if (p.plan) o.plan = p.plan;
+  if (p.links.length) o.links = p.links;
+  return o;
+}
+let mode = "map";
+function setMode(m){
+  mode = m; document.body.classList.toggle("mode-people", m === "people");
+  document.querySelectorAll("[data-mode]").forEach(b => b.setAttribute("aria-pressed", b.dataset.mode === m));
+  renderPeople(); renderDetails();
+}
+document.querySelectorAll("[data-mode]").forEach(b => b.addEventListener("click", () => setMode(b.dataset.mode)));
+const pgrid = $("#pgrid"), pchips = $("#pchips");
+function renderPeople(){
+  const sid = sel?.kind === "person" ? sel.id : null;
+  pchips.innerHTML = P().map(p => `<button class="pchip${p.id === sid ? " sel" : ""}" data-pid="${esc(p.id)}" style="left:${(p.impact * 100).toFixed(2)}%;top:${((1 - p.say) * 100).toFixed(2)}%;--fc:${FEEL_C[p.feeling] || FEEL_C[""]}" title="${esc(p.name)}${p.role ? " – " + esc(p.role) : ""}. ${esc(FEEL[p.feeling] || FEEL[""])}." aria-label="${esc(p.name)}: ${esc(QUADS[quadOf(p)].t.toLowerCase())}, ${esc((FEEL[p.feeling] || FEEL[""]).toLowerCase())}"><i aria-hidden="true">${esc(initials(p.name))}</i><span>${esc(p.name)}</span></button>`).join("");
+  $("#pEmpty").hidden = P().length > 0;
+}
+function freePersonSpot(){ const n = P().length; return {say:0.5 + ((n % 3) - 1) * 0.09, impact:0.5 + ((Math.floor(n / 3) % 3) - 1) * 0.09}; }
+function createPerson(pos, links = []){
+  commit();
+  if (S.example) S.example = false;
+  const p = {id:uid("p"), name:"New stakeholder", role:"", feeling:"", say:frac(pos.say), impact:frac(pos.impact), cares:"", plan:"", links:[...links]};
+  P().push(p); sel = {kind:"person", id:p.id};
+  renderAll(); save(); showTab("details");
+  const n = $("#f-pname"); if (n && matchMedia("(hover:hover)").matches){ n.focus(); n.select(); }
+  return p;
+}
+let pact = null, pDragged = false;
+const gridFrac = e => { const r = pgrid.getBoundingClientRect(); return {impact:frac((e.clientX - r.left) / r.width), say:frac(1 - (e.clientY - r.top) / r.height)}; };
+pchips.addEventListener("pointerdown", e => {
+  const c = e.target.closest(".pchip"); if (!c || e.button > 0) return;
+  e.preventDefault(); c.focus({preventScroll:true}); pDragged = false;
+  pact = {id:c.dataset.pid, el:c, x0:e.clientX, y0:e.clientY, moved:false, snap:JSON.stringify(S)};
+  c.setPointerCapture(e.pointerId);
+});
+pchips.addEventListener("pointermove", e => {
+  if (!pact) return;
+  if (!pact.moved && Math.hypot(e.clientX - pact.x0, e.clientY - pact.y0) < 4) return;
+  if (!pact.moved){ pact.moved = true; pact.el.classList.add("drag"); }
+  const p = personById(pact.id), f = gridFrac(e); p.say = f.say; p.impact = f.impact;
+  pact.el.style.left = (p.impact * 100) + "%"; pact.el.style.top = ((1 - p.say) * 100) + "%";
+});
+function endPact(){
+  if (!pact) return;
+  const a = pact; pact = null;
+  if (a.moved){ pDragged = true; hist.push(a.snap); fut = []; sel = {kind:"person", id:a.id}; save(); renderAll(); showTab("details", true); }
+}
+pchips.addEventListener("pointerup", endPact);
+pchips.addEventListener("pointercancel", endPact);
+pchips.addEventListener("click", e => {
+  const c = e.target.closest(".pchip"); if (!c) return;
+  if (pDragged){ pDragged = false; return; }
+  select({kind:"person", id:c.dataset.pid});
+});
+pchips.addEventListener("keydown", e => {
+  const c = e.target.closest(".pchip"); if (!c) return;
+  const d = {ArrowUp:[0.05, 0], ArrowDown:[-0.05, 0], ArrowRight:[0, 0.05], ArrowLeft:[0, -0.05]}[e.key]; if (!d) return;
+  e.preventDefault();
+  const p = personById(c.dataset.pid); commit(); p.say = frac(p.say + d[0]); p.impact = frac(p.impact + d[1]);
+  sel = {kind:"person", id:p.id}; renderAll(); save();
+  pchips.querySelector(`[data-pid="${CSS.escape(p.id)}"]`)?.focus();
+});
+pgrid.addEventListener("pointerdown", e => { if (!e.target.closest(".pchip")) select(null); });
+function blockPeople(b){
+  const ps = caresAbout(b.id), others = P().filter(p => !p.links.includes(b.id));
+  return (ps.length ? `<ul class="conns">${ps.map(p => `<li><i class="pdot" style="background:${FEEL_C[p.feeling] || FEEL_C[""]}"></i><span><button class="linkish" data-gop="${esc(p.id)}">${esc(p.name)}</button>${p.role ? ` <small>${esc(p.role)}</small>` : ""}</span><button class="x" data-bunlink="${esc(p.id)}" aria-label="Unlink ${esc(p.name)}" title="Unlink">×</button></li>`).join("")}</ul>` : `<p class="sub" style="margin:0">No one linked yet.</p>`) +
+    `<select id="f-bperson" aria-label="Link a stakeholder"><option value="">Link a stakeholder…</option>${others.map(p => `<option value="${esc(p.id)}">${esc(p.name)}</option>`).join("")}<option value="__new">+ New stakeholder</option></select>`;
+}
+function personDetails(p){
+  const q = QUADS[quadOf(p)];
+  const lvl = (k, label) => `<div class="field"><span class="flabel">${label}</span><div class="chips" data-chips="${k}">${LEVELS.map(([v, t]) => `<button class="chip" data-v="${v}" aria-pressed="${nearest(p[k]) === v}">${t}</button>`).join("")}</div></div>`;
+  const opts = TYPES.map(t => { const bs = S.blocks.filter(b => b.type === t.key && !p.links.includes(b.id)); return bs.length ? `<optgroup label="${esc(t.lane)}">${bs.map(b => `<option value="${esc(b.id)}">${esc(b.name)}</option>`).join("")}</optgroup>` : ""; }).join("");
+  const linked = p.links.map(id => byId(id)).filter(Boolean);
+  return `
+    <p class="paneh" style="color:var(--c-person)">Stakeholder</p>
+    <p class="sub">A person, role, or group who has a say in the changes or is affected by them.</p>
+    <div class="field"><label for="f-pname">Name</label><input id="f-pname" data-pf="name" value="${esc(p.name)}" placeholder="For example, Head of Sales"></div>
+    <div class="field"><label for="f-prole">Role or group</label><input id="f-prole" data-pf="role" value="${esc(p.role)}" placeholder="For example, Sales, a customer, or a supplier"></div>
+    <div class="field"><span class="flabel">How do they feel about the changes?</span><div class="chips" data-chips="feeling">${["for", "unsure", "against", ""].map(k => `<button class="chip" data-v="${k}" aria-pressed="${(p.feeling || "") === k}"><span class="d" style="background:${FEEL_C[k]}"></span>${FEEL[k]}</button>`).join("")}</div></div>
+    ${lvl("say", "How much say do they have?")}
+    ${lvl("impact", "How much do the changes affect them?")}
+    <div class="advice"><b>${esc(q.t)}</b><span>${esc(q.d)}</span></div>
+    <div class="field"><label for="f-pcares">What do they care about most?</label><textarea id="f-pcares" data-pf="cares" placeholder="Their worries, their hopes, and what they need from the changes">${esc(p.cares)}</textarea></div>
+    <div class="field"><label for="f-pplan">How will we keep them on side?</label><textarea id="f-pplan" data-pf="plan" placeholder="Who talks to them, how, and how often">${esc(p.plan)}</textarea></div>
+    <div class="field"><span class="flabel">What they care about on the map</span>${linked.length ? `<ul class="conns">${linked.map(b => `<li><i class="pdot" style="background:${tc(b.type)}"></i><span><button class="linkish" data-gob="${esc(b.id)}">${esc(b.name)}</button> <small>${esc(T[b.type].name)}${b.when !== "now" ? ", " + esc(WHEN[b.when].toLowerCase()) : ""}</small></span><button class="x" data-punlink="${esc(b.id)}" aria-label="Unlink ${esc(b.name)}" title="Unlink">×</button></li>`).join("")}</ul>` : `<p class="sub" style="margin:0">Nothing linked yet.</p>`}
+      <select id="f-plink" aria-label="Link something on the map"><option value="">Link something on the map…</option>${opts}</select></div>
+    <div class="row"><button class="btn" id="askPerson">Ask the helper how to work with them</button><button class="btn danger" id="delPerson">Delete stakeholder</button></div>`;
+}
+function peopleOverview(){
+  const ps = P(), by = k => ps.filter(p => quadOf(p) === k), fc = k => ps.filter(p => (p.feeling || "") === k).length;
+  return `<div class="guide">
+    <p class="paneh">Stakeholders</p>
+    <p class="sub">The people and groups who have a say in the changes, or are affected by them. Knowing them early avoids surprises later.</p>
+    <ol>
+      <li><b>Add someone.</b> Drag Stakeholder from the left onto the grid, or tap it.</li>
+      <li><b>Place them.</b> Higher up means more say. Further right means the changes affect them more.</li>
+      <li><b>Say how they feel.</b> For, unsure, or against. The colour of their circle shows it.</li>
+      <li><b>Link them to the map.</b> Pick the things they care about, so you can see who each change affects.</li>
+    </ol>
+    <div class="stats" style="grid-template-columns:repeat(4,1fr)">${["for", "unsure", "against", ""].map(k => `<div style="border-top:3px solid ${FEEL_C[k]}"><b>${fc(k)}</b><span>${esc(FEEL[k])}</span></div>`).join("")}</div>
+    ${["close", "satisfied", "informed", "checkin"].map(k => `<p class="flabel">${esc(QUADS[k].t)}</p><p class="sub" style="margin:2px 0 6px">${esc(QUADS[k].d)}</p>${by(k).length ? `<ul class="conns" style="margin-bottom:14px">${by(k).map(p => `<li><i class="pdot" style="background:${FEEL_C[p.feeling] || FEEL_C[""]}"></i><span><button class="linkish" data-gop="${esc(p.id)}">${esc(p.name)}</button>${p.role ? ` <small>${esc(p.role)}</small>` : ""}</span></li>`).join("")}</ul>` : `<p class="sub" style="margin:0 0 14px">No one here yet.</p>`}`).join("")}
+  </div>`;
+}
 
 /* ---------- tabs, view, zoom, menu ---------- */
 function showTab(t, soft){
@@ -956,12 +1218,12 @@ $("#fileIn").addEventListener("change", async e => {
     if (!valid(s)) throw 0;
     s.blocks = s.blocks.filter(b => b && T[b.type]).map(b => ({id:String(b.id), type:b.type, name:String(b.name || "Untitled"), desc:String(b.desc || ""), owner:String(b.owner || ""), health: HEALTH[b.health] !== undefined ? b.health : "", when: WHEN[b.when] ? b.when : "now", cost:num(b.cost), oneOff:num(b.oneOff), x:+b.x || 40, y:clampY(b.type, +b.y || 0)}));
     s.links = s.links.filter(l => l && s.blocks.some(b => b.id === l.from) && s.blocks.some(b => b.id === l.to)).map(l => ({id:String(l.id || uid("l")), from:String(l.from), to:String(l.to), label:String(l.label || "relates to")}));
-    await createAndOpen({name:String(s.name || f.name.replace(/\.json$/i, "")), example:false, currency:["£","€","$"].includes(s.currency) ? s.currency : "£", blocks:s.blocks, links:s.links}, "Map opened and saved to your maps");
+    await createAndOpen({name:String(s.name || f.name.replace(/\.json$/i, "")), example:false, currency:["£","€","$"].includes(s.currency) ? s.currency : "£", blocks:s.blocks, links:s.links, stakeholders:cleanPeople(s.stakeholders, s.blocks)}, "Map opened and saved to your maps");
   } catch { toast("That file isn't a Blockplan map. Choose a file saved from this page."); }
 });
 $("#exportBtn").onclick = () => {
   menu.open = false;
-  const data = JSON.stringify({app:"Blockplan", version:2, name:S.name, currency:cur(), blocks:S.blocks, links:S.links}, null, 2);
+  const data = JSON.stringify({app:"Blockplan", version:2, name:S.name, currency:cur(), blocks:S.blocks, links:S.links, stakeholders:P()}, null, 2);
   const fname = (S.name || "map").replace(/[^\w\- ]+/g, "").trim().replace(/\s+/g, "-").toLowerCase() + ".blockplan.json";
   const url = URL.createObjectURL(new Blob([data], {type:"application/json"}));
   const a = document.createElement("a"); a.href = url; a.download = fname; document.body.appendChild(a); a.click(); a.remove();
@@ -995,6 +1257,7 @@ const QUICK = [
   ["Biggest risks", "What are the biggest risks on this map, and what would you do first?"],
   ["Overlapping systems", "Which systems overlap or do the same job? What could we simplify?"],
   ["Save money", "Where could we save money on this map? Look at the costs, overlaps and anything being kept that isn't needed."],
+  ["Who are the stakeholders?", "Suggest the main stakeholders for this map: who has a say in the planned changes, who is affected by them, and how they might feel. Link each one to what they care about on the map."],
 ];
 $("#quick").innerHTML = QUICK.map((q, i) => `<button class="chip" data-q="${i}">${esc(q[0])}</button>`).join("");
 $("#quick").addEventListener("click", e => {
@@ -1027,7 +1290,7 @@ async function send(text){
   $("#sendBtn").disabled = true; $("#stopBtn").hidden = false;
   const startedOn = mapId;
   try {
-    const r = await api("POST", "/api/ai", {map:S, request:text, selected: sel?.kind === "block" ? sel.id : null, history:convo.slice(-6)}, {signal:ctl.signal});
+    const r = await api("POST", "/api/ai", {map:S, request:text, selected: sel && sel.kind !== "link" ? sel.id : null, history:convo.slice(-6)}, {signal:ctl.signal});
     const reply = typeof r?.reply === "string" && r.reply.trim() ? r.reply.trim() : "Done.";
     think.textContent = reply;
     convo.push({role:"user", text}, {role:"assistant", text:reply});
@@ -1054,7 +1317,11 @@ function normalise(c){
     update: arr(c.update).filter(u => u && byId(String(u.id))),
     remove: arr(c.remove).map(String).filter(id => byId(id)),
   };
-  return (out.add.length + out.link.length + out.update.length + out.remove.length) ? out : null;
+  const sh = c.stakeholders && typeof c.stakeholders === "object" ? c.stakeholders : {};
+  out.padd = arr(sh.add).filter(p => p && p.name).slice(0, 30);
+  out.pupdate = arr(sh.update).filter(u => u && personById(String(u.id)));
+  out.premove = arr(sh.remove).map(String).filter(id => personById(id));
+  return (out.add.length + out.link.length + out.update.length + out.remove.length + out.padd.length + out.pupdate.length + out.premove.length) ? out : null;
 }
 function changeCard(msgEl, ch){
   const lines = [];
@@ -1062,6 +1329,9 @@ function changeCard(msgEl, ch){
   if (ch.link.length) lines.push(`Make ${ch.link.length} connection${ch.link.length > 1 ? "s" : ""}`);
   if (ch.update.length) lines.push(`Change ${ch.update.map(u => byId(u.id).name).join(", ")}`);
   if (ch.remove.length) lines.push(`Remove ${ch.remove.map(id => byId(id).name).join(", ")}`);
+  if (ch.padd.length) lines.push(`Add ${ch.padd.length} stakeholder${ch.padd.length > 1 ? "s" : ""}: ${ch.padd.slice(0, 8).map(p => p.name).join(", ")}${ch.padd.length > 8 ? "…" : ""}`);
+  if (ch.pupdate.length) lines.push(`Change ${ch.pupdate.map(u => personById(String(u.id)).name).join(", ")}`);
+  if (ch.premove.length) lines.push(`Remove ${ch.premove.map(id => personById(id).name).join(", ")}`);
   const box = document.createElement("div"); box.className = "changes";
   box.innerHTML = `<b>Suggested changes</b><ul>${lines.map(l => `<li>${esc(l)}</li>`).join("")}</ul><div class="row"><button class="btn primary">Put on the map</button><button class="btn">Skip</button></div>`;
   const [ok, skip] = box.querySelectorAll("button");
@@ -1091,6 +1361,22 @@ function applyChanges(ch){
     const f = byId(resolve(l.from)), t = byId(resolve(l.to));
     if (f && t) addLink(f, t, typeof l.label === "string" && l.label.trim() ? l.label.trim() : null);
   }
+  for (const id of ch.premove) S.stakeholders = P().filter(p => p.id !== id);
+  const plinks = x => [...new Set((Array.isArray(x) ? x : []).map(resolve).filter(Boolean))];
+  for (const a of ch.padd){
+    const pos = freePersonSpot();
+    P().push({id:uid("p"), name:String(a.name).slice(0, 120), role:String(a.role || ""), feeling: FEEL[a.feeling] !== undefined ? a.feeling : "",
+      say: a.say !== undefined ? frac(a.say) : pos.say, impact: a.impact !== undefined ? frac(a.impact) : pos.impact,
+      cares:String(a.cares || ""), plan:String(a.plan || ""), links:plinks(a.links)});
+  }
+  for (const u of ch.pupdate){
+    const p = personById(String(u.id)); if (!p) continue;
+    for (const k of ["name", "role", "cares", "plan"]) if (typeof u[k] === "string") p[k] = u[k];
+    if (u.feeling !== undefined && FEEL[u.feeling] !== undefined) p.feeling = u.feeling;
+    for (const k of ["say", "impact"]) if (u[k] !== undefined && u[k] !== null) p[k] = frac(u[k]);
+    if (Array.isArray(u.links)) p.links = plinks(u.links);
+  }
+  if (ch.padd.length && mode === "map") toast("Stakeholders added. Choose Stakeholders at the top to see them.");
   if (view !== "all") setView("all");
   renderAll(); save();
 }

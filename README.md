@@ -9,8 +9,9 @@ A simple, drag-and-drop way to map how an organisation works, with an AI helper 
 - **Today and future.** Mark anything as in place today, planned, or being removed, then switch between Today and Future to see the map before and after.
 - **Health.** Mark each block as working well, needing attention, or causing problems.
 - **Costs.** Add a yearly running cost and a one-off cost to any block. The Costs tab totals them, compares today with the future, and works out how long the changes take to pay for themselves.
+- **Stakeholders.** Choose Stakeholders at the top to see the people and groups who have a say in the changes or are affected by them, on a simple grid: more say towards the top, more affected towards the right. Note how each one feels, what they care about, and how you will keep them on side, and link them to the blocks they care about. Blocks show how many stakeholders care about them.
 - **Checks.** Simple rules flag gaps as you build, such as a system nothing uses, an activity no one does, or a plan that depends on something being removed.
-- **AI helper.** Build a starter map, explain the map, find what is missing, spot risks, overlaps, and savings. It always shows its suggested changes first, and you choose whether to put them on the map.
+- **AI helper.** Build a starter map, explain the map, find what is missing, spot risks, overlaps, and savings, and suggest stakeholders. It always shows its suggested changes first, and you choose whether to put them on the map.
 - **Shared maps.** Maps are saved on the Blockplan server, so everyone using it sees the same maps. If two people save the same map at once, the second person is told and can load the other version or keep theirs as a copy.
 
 ## Quick start
@@ -76,7 +77,7 @@ Maps are kept in `./data`. If Ollama runs on the host, the container reaches it 
 
 - Everything is in one file, `data/blockplan.db`.
 - `bash scripts/backup.sh` makes a dated copy in `backups/`, and is safe to run while Blockplan is running.
-- **Map → Download this map as a file** gives a `.blockplan.json` file. **Map → Open a map file** brings one back in, on this or another Blockplan.
+- **Maps → Download this map as a file** gives a `.blockplan.json` file. **Maps → Open a map file** brings one back in, on this or another Blockplan.
 
 ## Settings
 

@@ -15,6 +15,7 @@ TYPES = {"goal", "ability", "team", "info", "system", "tech"}
 WHEN = {"now", "planned", "retiring"}
 HEALTH = {"", "good", "watch", "bad"}
 CURRENCIES = {"£", "€", "$"}
+FEELINGS = {"", "for", "unsure", "against"}
 
 
 class Conflict(Exception):
@@ -57,6 +58,22 @@ def _num(v) -> int:
         return max(0, int(round(float(v))))
     except (TypeError, ValueError):
         return 0
+
+
+def _frac(v) -> float:
+    """A 0 to 1 position on the stakeholder grid. Words and percentages are accepted too."""
+    words = {"low": 0.2, "little": 0.2, "a little": 0.2, "some": 0.5, "medium": 0.5, "high": 0.85, "a lot": 0.85}
+    if isinstance(v, str) and v.strip().lower() in words:
+        return words[v.strip().lower()]
+    try:
+        f = float(v)
+    except (TypeError, ValueError):
+        return 0.5
+    if f != f:
+        return 0.5
+    if f > 1:
+        f = f / 100
+    return round(min(0.97, max(0.03, f)), 4)
 
 
 def _str(v, limit: int) -> str:
@@ -104,12 +121,37 @@ def clean(data: dict) -> dict:
             "to": t,
             "label": _str(l.get("label") or "relates to", 60),
         })
+    people, pids = [], set()
+    for p in (data.get("stakeholders") if isinstance(data.get("stakeholders"), list) else [])[:500]:
+        if not isinstance(p, dict):
+            continue
+        pid = _str(p.get("id"), 40) or uuid.uuid4().hex[:8]
+        if pid in pids:
+            continue
+        pids.add(pid)
+        cares_about = []
+        for x in (p.get("links") if isinstance(p.get("links"), list) else [])[:300]:
+            x = _str(x, 40)
+            if x in ids and x not in cares_about:
+                cares_about.append(x)
+        people.append({
+            "id": pid,
+            "name": _str(p.get("name") or "Unnamed", 120),
+            "role": _str(p.get("role"), 120),
+            "feeling": p.get("feeling") if p.get("feeling") in FEELINGS else "",
+            "say": _frac(p.get("say")),
+            "impact": _frac(p.get("impact")),
+            "cares": _str(p.get("cares"), 2000),
+            "plan": _str(p.get("plan"), 2000),
+            "links": cares_about,
+        })
     return {
         "name": _str(data.get("name") or "Untitled map", 120),
         "currency": data.get("currency") if data.get("currency") in CURRENCIES else "£",
         "example": bool(data.get("example")),
         "blocks": blocks,
         "links": links,
+        "stakeholders": people,
     }
 
 
