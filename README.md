@@ -40,7 +40,7 @@ Blockplan is for the first conversation, not a replacement for a full enterprise
 - **Plain words on top, ArchiMate underneath.** The six rows line up with ArchiMate's layers: goals with Motivation; activities, teams, and information with Business; systems with Application; and technology with Technology. A map started in a workshop exports as a valid ArchiMate model, ready for Archi or another architecture tool.
 - **Cost and payback next to the architecture.** Most tools treat these separately. Seeing "this change saves £25k a year and pays for itself in about ten years" beside the map is what gets a decision made.
 - **Stakeholders on the same page.** Changes more often fail because of people than because of technology. Blockplan records who has a say, who is affected, how they feel, and what they care about, and links them to the parts of the map they care about.
-- **It runs on your own server, with the AI you choose.** Use Claude, your organisation's Azure OpenAI, another AI service, or a model on your own machine. For government, defence, finance, or anyone else who needs it, `AI_MODE=local` means nothing about your maps leaves your network. Switch on HTTPS by dropping a certificate into a folder.
+- **It runs on your own server, with the AI you choose.** Use Claude, your organisation's Azure OpenAI, another AI service, or a model on your own machine. For government, defence, finance, or anyone else who needs it, `AI_MODE=local` means nothing about your maps leaves your network. It uses HTTPS from the first run, and a real certificate is a matter of dropping it into a folder.
 - **Free and open.** MIT licensed. No procurement, no licence conversation, so people can try it the same day.
 
 ## What it does
@@ -80,7 +80,9 @@ On Windows, double-click `run.bat` in the `blockplan` folder instead of running 
 
 Unzip `blockplan.zip`, then run `./run.sh` in the `blockplan` folder on macOS or Linux, or double-click `run.bat` on Windows.
 
-Then open http://localhost:8080. The first run sets everything up and creates an example map, a snack maker with costs, planned changes, and stakeholders, so you can see how it all fits together.
+Then open **https://localhost:8080**. Blockplan uses HTTPS from the start, with a self-signed certificate it makes on the first run, so your browser will warn you the first time. Choose **Advanced**, then **Continue** or **Proceed**, to open it. [HTTPS](#https) explains how to stop the warning, use your own certificate, or switch back to plain HTTP.
+
+The first run sets everything up and creates an example map, a snack maker with costs, planned changes, and stakeholders, so you can see how it all fits together.
 
 To switch on the AI helper, open the `.env` file the first run created, add a key for Claude or another AI service (see [The AI helper](#the-ai-helper)), and restart Blockplan.
 
@@ -220,7 +222,7 @@ To update, get the new files (`git pull`, or unzip the new version over the old 
 docker compose up -d --build
 ```
 
-Your maps, `.env`, and certificates are kept. When you update without Docker, `run.sh` and `run.bat` install anything new the next time they start. If the build fails with `NotFound: forwarding Ping: no such job`, that's a known Docker build problem rather than a Blockplan one. Restart Docker Desktop and try again. If it still fails, turn off Docker's newer build method for that window:
+Your maps, `.env`, and certificates are kept. From version 1.3.1, Blockplan opens on `https://localhost:8080` unless your `.env` says `HTTPS=off`. When you update without Docker, `run.sh` and `run.bat` install anything new the next time they start. If the build fails with `NotFound: forwarding Ping: no such job`, that's a known Docker build problem rather than a Blockplan one. Restart Docker Desktop and try again. If it still fails, turn off Docker's newer build method for that window:
 
 ```powershell
 $env:COMPOSE_BAKE = "false"     # PowerShell; in bash use: export COMPOSE_BAKE=false
@@ -231,7 +233,22 @@ docker compose up -d --build
 
 ## HTTPS
 
-Put your certificate in the `certs` folder and restart Blockplan. It switches to `https://` on the same port, and says so when it starts. Any one of these works:
+Blockplan uses HTTPS from the first run. If there's no certificate in the `certs` folder, it makes a self-signed one there, covering `localhost` and this computer's name, and keeps using it until it's about to expire. Open `https://localhost:8080`, not `http://`.
+
+When it starts, Blockplan says which certificate it's using, which names it covers, and when it expires. It warns you when there are 30 days or less left. If something's wrong, such as a key that doesn't match the certificate or a wrong password, it stops with a plain explanation instead of starting half-working.
+
+### The browser warning
+
+A self-signed certificate isn't vouched for by anyone your browser knows, so it warns you. You can choose **Advanced**, then **Continue** or **Proceed**, each time. To stop the warning on a computer, trust the certificate there:
+
+- **Windows:** copy `certs/self-signed-cert.pem` to the computer and rename it to `blockplan.crt`. Double-click it, choose **Install Certificate**, then **Local Machine**, then **Place all certificates in the following store**, and choose **Trusted Root Certification Authorities**. Restart the browser.
+- **macOS:** double-click `self-signed-cert.pem` to add it to Keychain Access. Open it in Keychain Access, expand **Trust**, and set **When using this certificate** to **Always Trust**. Restart the browser.
+
+If people reach Blockplan by another name or address, such as `blockplan.local` or `192.168.1.20`, add those to `HTTPS_HOSTNAMES`. Then delete the two `self-signed-` files in `certs` and restart, so a new certificate is made that includes them.
+
+### Using your own certificate
+
+For anything beyond testing, use a certificate from your IT team or a provider such as Let's Encrypt. Put it in the `certs` folder and restart Blockplan. It's used instead of the self-signed one. Any one of these works:
 
 - `cert.pem` and `key.pem`
 - `fullchain.pem` and `privkey.pem`, as Let's Encrypt makes them
@@ -240,18 +257,16 @@ Put your certificate in the `certs` folder and restart Blockplan. It switches to
 
 The certificate should include any intermediate certificates from your provider. If the key has a password, put it in `TLS_KEY_PASSWORD`. If your files are elsewhere, point `TLS_CERT` and `TLS_KEY` (or `TLS_PFX`) at them.
 
-When Blockplan starts, it checks the certificate and tells you which names it covers and when it expires. If something's wrong, such as a key that doesn't match the certificate or a wrong password, it stops with a plain explanation instead of starting half-working. It warns you when the certificate has 30 days or less left.
-
-**For testing**, set `HTTPS=self-signed`. Blockplan makes a certificate in the `certs` folder the first time it starts, covering `localhost` and this computer's name. Add other names or addresses with `HTTPS_HOSTNAMES`, for example `blockplan.local,192.168.1.20`. Browsers will warn about a self-signed certificate until it's trusted on each computer.
+### Choosing how HTTPS works
 
 | HTTPS | What happens |
 |---|---|
-| `auto` | HTTPS if there's a certificate in the `certs` folder, otherwise HTTP. This is the default. |
-| `on` | HTTPS, and Blockplan won't start without a certificate |
-| `self-signed` | Makes a test certificate if there isn't one |
-| `off` | Plain HTTP |
+| `self-signed` | Uses a certificate from the `certs` folder, or makes a self-signed one. This is the default. |
+| `auto` | HTTPS if there's a certificate in the `certs` folder, otherwise plain HTTP |
+| `on` | HTTPS, and Blockplan won't start without a certificate in the `certs` folder |
+| `off` | Plain HTTP, at `http://localhost:8080` |
 
-With Docker, the `certs` folder next to `docker-compose.yml` is used, so put the certificate there and run `docker compose up -d`. Files in `certs` are never added to Git.
+With Docker, the `certs` folder next to `docker-compose.yml` is used, so the self-signed certificate is kept there and survives rebuilds. Files in `certs` are never added to Git.
 
 To use the standard HTTPS port 443, either set `PORT=443` (on Linux this needs extra permissions) or map it in Docker by changing the ports line in `docker-compose.yml` to `"443:8080"`.
 
@@ -280,7 +295,7 @@ A map is the same JSON as a downloaded `.blockplan.json` file: `name`, `currency
 
 - **Saving uses revision numbers.** A save must send the `rev` it read, and is refused with `409` if someone else has saved since. Read, change, then save with the `rev` you got.
 - **The server tidies what it's sent.** Unknown block types, connections to missing blocks, and unknown fields are dropped, so a bad request can't break a map.
-- **Sign-in** applies to the API too. With `AUTH_USER` and `AUTH_PASSWORD` set, send them with every request, for example `curl -u name:password http://localhost:8080/api/maps`.
+- **Sign-in** applies to the API too. With `AUTH_USER` and `AUTH_PASSWORD` set, send them with every request, for example `curl -k -u name:password https://localhost:8080/api/maps`. The `-k` tells curl to accept the self-signed certificate; leave it out once you use a real one.
 
 ## Settings
 
@@ -298,7 +313,7 @@ All settings live in `.env`. See `.env.example` for the full list with notes. Th
 | `AZURE_OPENAI_ENDPOINT`, `AZURE_OPENAI_API_KEY`, `AZURE_OPENAI_DEPLOYMENT` | empty | Azure OpenAI |
 | `OPENAI_BASE_URL`, `OPENAI_API_KEY`, `OPENAI_MODEL`, `OPENAI_NAME` | OpenAI's address, then empty | OpenAI or any OpenAI-style service |
 | `OLLAMA_URL`, `OLLAMA_MODEL` | `http://localhost:11434`, `qwen2.5:7b` | A model on this machine |
-| `HTTPS` | `auto` | `auto`, `on`, `self-signed`, or `off` |
+| `HTTPS` | `self-signed` | `self-signed`, `auto`, `on`, or `off` |
 | `TLS_CERT`, `TLS_KEY`, `TLS_KEY_PASSWORD`, `TLS_PFX`, `TLS_PFX_PASSWORD` | empty | Only if the certificate isn't in `certs`, or has a password |
 | `HTTPS_HOSTNAMES` | empty | Extra names for a self-signed certificate |
 
@@ -328,6 +343,32 @@ Yes. The fonts and the PDF maker are included, so everything works offline excep
 - Importing ArchiMate models, as well as exporting them
 - Signing in to Microsoft 365 Copilot's Chat API, once it's out of preview
 - A hosted demo with the example map loaded, so people can try Blockplan without installing it
+
+## Version history
+
+**1.3.1**
+- HTTPS from the first run, with a self-signed certificate Blockplan makes and keeps in the `certs` folder. A real certificate in the folder is used instead.
+
+**1.3.0**
+- HTTPS: drop a certificate into the `certs` folder, as `.pem` files, `.crt` and `.key` files, or a Windows `.pfx`. Blockplan checks it at start-up and explains any problem.
+- More AI services: Azure OpenAI, and OpenAI or any service that accepts OpenAI-style requests, such as OpenRouter, Mistral, Google Gemini, Groq, and LM Studio. Set up several, and Blockplan tries them in order. The AI helper tab shows which will answer.
+- Microsoft 365 Copilot's Chat API isn't connected yet. It's still in preview, needs each person to sign in with their own Copilot licence, and by default mixes in results from your Microsoft 365 data and the web.
+- `run.sh` and `run.bat` install new requirements after an update.
+
+**Updates to 1.2.0**
+- macOS: `run.sh` finds Python 3.10 or newer, since the Python that comes with Apple's developer tools is usually 3.9, and explains how to install a newer one if there isn't one.
+- Connections whose labels don't fit in a downloaded picture are listed under the map.
+
+**1.2.0**
+- Import from a spreadsheet. Export a PDF report, a picture, a spreadsheet, or an ArchiMate model.
+- The selected connection turns red and is drawn above the boxes.
+- Things being removed have grey stripes.
+
+**1.1.0**
+- Stakeholders, with a grid of say against how affected they are, linked to the map.
+
+**1.0.0**
+- The map, costs, checks, shared maps, and the AI helper.
 
 ## Project layout
 

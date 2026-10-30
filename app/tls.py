@@ -62,6 +62,8 @@ def _find_files():
     pfx = sorted(p for p in d.iterdir() if p.suffix.lower() in (".pfx", ".p12"))
     if pfx:
         return ("pfx", pfx[0], None)
+    if (d / "self-signed-cert.pem").is_file() and (d / "self-signed-key.pem").is_file():
+        return ("pem", d / "self-signed-cert.pem", d / "self-signed-key.pem")
     return None
 
 
@@ -151,6 +153,13 @@ def setup() -> TLS | None:
     if mode == "off":
         return None
     found = _find_files()
+    if mode == "self-signed" and found and found[1].name == "self-signed-cert.pem":
+        try:
+            expires, _, _ = _describe(found[1])
+            if expires < dt.datetime.now(dt.timezone.utc) + dt.timedelta(days=7):
+                found = None  # about to expire: make a fresh one
+        except TLSError:
+            found = None
     if not found and mode == "self-signed":
         c, k = make_self_signed()
         found = ("pem", c, k)
@@ -197,5 +206,6 @@ def explain(t: TLS) -> list[str]:
     if t.names:
         lines.append("It covers: " + ", ".join(t.names[:8]) + ("…" if len(t.names) > 8 else ""))
     if t.self_signed:
-        lines.append("It's self-signed, so browsers will show a warning until it's trusted on each computer. Fine for testing.")
+        lines.append("It's self-signed, so browsers show a warning. Choose Advanced, then Continue or Proceed, to open Blockplan.")
+        lines.append("To stop the warning, trust the certificate on each computer, or put a real certificate in the certs folder. See the README.")
     return lines

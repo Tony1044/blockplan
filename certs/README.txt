@@ -10,7 +10,8 @@ Any one of these works:
 The certificate should include any intermediate certificates from your provider.
 If the key has a password, put it in TLS_KEY_PASSWORD in .env.
 
-For testing, set HTTPS=self-signed in .env instead. Blockplan makes a certificate
-here the first time it starts. Browsers will warn about it until it's trusted.
+Until you add one, Blockplan makes a self-signed certificate here the first time it
+starts (self-signed-cert.pem and self-signed-key.pem), so https:// works straight
+away. Browsers warn about it until it's trusted. A certificate you add is used instead.
 
 Files in this folder are never uploaded to GitHub.

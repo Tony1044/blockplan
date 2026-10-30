@@ -15,7 +15,7 @@ def _int(name: str, default: int) -> int:
         return default
 
 
-VERSION = "1.3.0"
+VERSION = "1.3.1"
 
 HOST = os.getenv("HOST", "0.0.0.0")
 PORT = _int("PORT", 8080)
@@ -68,11 +68,11 @@ def _path(name: str, default: Path | None = None) -> Path | None:
 
 
 # HTTPS
+#   self-signed - use a certificate from the certs folder, or make one for testing (default)
 #   auto        - use a certificate if one is in the certs folder, otherwise plain HTTP
 #   on          - use HTTPS, and stop with an explanation if there's no certificate
-#   self-signed - make a certificate for testing if there isn't one
 #   off         - plain HTTP
-HTTPS = os.getenv("HTTPS", "auto").strip().lower()
+HTTPS = os.getenv("HTTPS", "self-signed").strip().lower()
 CERT_DIR = _path("CERT_DIR", BASE_DIR / "certs")
 _c, _k, _x = _path("TLS_CERT"), _path("TLS_KEY"), _path("TLS_PFX")
 TLS_CERT = str(_c) if _c else ""
