@@ -14,6 +14,7 @@ done
 "$PY" -m venv .venv
 .venv/bin/pip install --quiet --upgrade pip
 .venv/bin/pip install --quiet -r requirements.txt
+cp requirements.txt .venv/.requirements
 [ -f .env ] || { cp .env.example .env; echo "Created .env – add your ANTHROPIC_API_KEY to it."; }
 mkdir -p data
 

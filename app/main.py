@@ -132,8 +132,21 @@ async def _json(request: Request) -> dict:
 
 
 def run():
+    import sys
     import uvicorn
-    uvicorn.run("app.main:app", host=config.HOST, port=config.PORT)
+    from . import tls
+    try:
+        t = tls.setup()
+    except tls.TLSError as e:
+        print("Blockplan couldn't start with HTTPS: " + str(e), file=sys.stderr)
+        sys.exit(1)
+    host = "localhost" if config.HOST in ("0.0.0.0", "::", "") else config.HOST
+    if t:
+        for line in tls.explain(t):
+            print(line)
+    print(f"Blockplan {config.VERSION} is running. Open {'https' if t else 'http'}://{host}:{config.PORT} in your browser.", flush=True)
+    kw = {"ssl_certfile": t.certfile, "ssl_keyfile": t.keyfile, "ssl_keyfile_password": t.password} if t else {}
+    uvicorn.run("app.main:app", host=config.HOST, port=config.PORT, **kw)
 
 
 if __name__ == "__main__":

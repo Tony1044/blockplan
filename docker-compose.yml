@@ -6,6 +6,7 @@ services:
     env_file: .env
     environment:
       DATA_DIR: /data
+      CERT_DIR: /certs
       PORT: "8080"
       # Reach Ollama running on the host machine.
       OLLAMA_URL: ${OLLAMA_URL_DOCKER:-http://host.docker.internal:11434}
@@ -13,4 +14,5 @@ services:
       - "host.docker.internal:host-gateway"
     volumes:
       - ./data:/data
+      - ./certs:/certs
     restart: unless-stopped

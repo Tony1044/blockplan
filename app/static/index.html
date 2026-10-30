@@ -1864,7 +1864,8 @@ async function checkAI(){
   try {
     const st = (await api("GET", "/api/status")).ai;
     aiOn = !!st.available;
-    const who = st.claude.on ? `Claude (${st.claude.model})` + (st.local.on ? `, with ${st.local.model} on this machine as a fallback` : "") : st.local.on ? `${st.local.model}, running on this machine` : "";
+    const on = (st.providers || []).filter(p => p.on), nm = p => `${p.name} (${p.model})`;
+    const who = on.length ? nm(on[0]) + (on.length > 1 ? `, with ${on.slice(1).map(nm).join(" then ")} if that doesn't answer` : "") : "";
     $("#askHint").textContent = aiOn ? `Answers from ${who}. Enter to send.` : st.message;
   } catch { aiOn = false; $("#askHint").textContent = "Couldn't reach the Blockplan server."; }
   $("#sendBtn").disabled = !aiOn; promptEl.disabled = !aiOn;

@@ -2,7 +2,7 @@
 
 **Map how your organisation works in an afternoon, in words everyone understands.**
 
-Blockplan is a simple, drag-and-drop way to map an organisation: what it's trying to achieve, what it does, who does it, the information it relies on, the systems it uses, and what those systems run on. It shows what things cost, what's changing, and who cares about the changes. An AI helper you can ask in plain English builds starter maps, explains them, and spots what's missing.
+Blockplan is a simple, drag-and-drop way to map an organisation: what it's trying to achieve, what it does, who does it, the information it relies on, the systems it uses, and what those systems run on. It shows what things cost, what's changing, and who cares about the changes. An AI helper you can ask in plain English builds starter maps, explains them, and spots what's missing. It works with Claude, Azure OpenAI, OpenAI, most other AI services, or a model on your own machine.
 
 It's built so that someone new to architecture work can use it on day one, and so that the business people in the room can follow the map without help. There are no framework names, no acronyms, and nothing to learn before you start. Underneath, it maps cleanly to ArchiMate, so the work isn't lost when it moves into a full architecture tool.
 
@@ -17,6 +17,7 @@ It's built so that someone new to architecture work can use it on day one, and s
 - [The AI helper](#the-ai-helper)
 - [Importing and exporting](#importing-and-exporting)
 - [Running it for a team](#running-it-for-a-team)
+- [HTTPS](#https)
 - [Your maps](#your-maps)
 - [The API](#the-api)
 - [Settings](#settings)
@@ -39,7 +40,7 @@ Blockplan is for the first conversation, not a replacement for a full enterprise
 - **Plain words on top, ArchiMate underneath.** The six rows line up with ArchiMate's layers: goals with Motivation; activities, teams, and information with Business; systems with Application; and technology with Technology. A map started in a workshop exports as a valid ArchiMate model, ready for Archi or another architecture tool.
 - **Cost and payback next to the architecture.** Most tools treat these separately. Seeing "this change saves £25k a year and pays for itself in about ten years" beside the map is what gets a decision made.
 - **Stakeholders on the same page.** Changes more often fail because of people than because of technology. Blockplan records who has a say, who is affected, how they feel, and what they care about, and links them to the parts of the map they care about.
-- **It runs on your own server, and the AI can stay local.** For government, defence, finance, or anyone else who needs it, `AI_MODE=local` means nothing about your maps leaves your network.
+- **It runs on your own server, with the AI you choose.** Use Claude, your organisation's Azure OpenAI, another AI service, or a model on your own machine. For government, defence, finance, or anyone else who needs it, `AI_MODE=local` means nothing about your maps leaves your network. Switch on HTTPS by dropping a certificate into a folder.
 - **Free and open.** MIT licensed. No procurement, no licence conversation, so people can try it the same day.
 
 ## What it does
@@ -81,24 +82,45 @@ Unzip `blockplan.zip`, then run `./run.sh` in the `blockplan` folder on macOS or
 
 Then open http://localhost:8080. The first run sets everything up and creates an example map, a snack maker with costs, planned changes, and stakeholders, so you can see how it all fits together.
 
-To switch on the AI helper, open the `.env` file the first run created, add your Claude API key after `ANTHROPIC_API_KEY=`, and restart Blockplan.
+To switch on the AI helper, open the `.env` file the first run created, add a key for Claude or another AI service (see [The AI helper](#the-ai-helper)), and restart Blockplan.
 
 ## The AI helper
 
-Blockplan can use Claude, a model running on your own machine through [Ollama](https://ollama.com), or both. Set `AI_MODE` in `.env`:
+Blockplan works with any of these. Set up one or more in `.env`:
+
+| Service | What to set | Notes |
+|---|---|---|
+| **Claude** | `ANTHROPIC_API_KEY` | Get a key at https://platform.claude.com/settings/keys. `CLAUDE_MODEL` defaults to `claude-sonnet-5-5`. `claude-haiku-5-5` is quicker and cheaper, and `claude-opus-5-5` is the most capable for large maps. Create the key for a single workspace; if it works across several, also set `ANTHROPIC_WORKSPACE_ID`. |
+| **Azure OpenAI** | `AZURE_OPENAI_ENDPOINT`, `AZURE_OPENAI_API_KEY`, `AZURE_OPENAI_DEPLOYMENT` | For organisations on Microsoft, including through Azure AI Foundry. The endpoint looks like `https://your-resource.openai.azure.com`, and the deployment is the name you gave the model in Azure. |
+| **OpenAI, and services that work the same way** | `OPENAI_BASE_URL`, `OPENAI_API_KEY`, `OPENAI_MODEL` | Works with OpenAI and with any service that accepts OpenAI-style requests. See the addresses below. |
+| **A model on this machine** | `OLLAMA_MODEL` | Install [Ollama](https://ollama.com), then run `ollama pull qwen2.5:7b`. Larger models such as `qwen2.5:14b` give better answers if the machine has the memory. |
+
+Addresses for `OPENAI_BASE_URL`:
+
+| Service | `OPENAI_BASE_URL` |
+|---|---|
+| OpenAI | `https://api.openai.com/v1` (the default) |
+| OpenRouter, for hundreds of models with one key | `https://openrouter.ai/api/v1` |
+| Mistral | `https://api.mistral.ai/v1` |
+| Google Gemini | `https://generativelanguage.googleapis.com/v1beta/openai` |
+| Groq | `https://api.groq.com/openai/v1` |
+| LM Studio, vLLM, or another AI server on your own machine | for example `http://localhost:1234/v1`, with no key needed |
+
+`OPENAI_MODEL` is any chat model the service offers, for example `gpt-5.5` on OpenAI. `OPENAI_NAME` sets the name the page shows for it.
+
+**What about Copilot?** Microsoft 365 Copilot has a Chat API, but it's still in preview. It also needs each person to sign in with their own Microsoft 365 Copilot licence, and by default it mixes in results from your Microsoft 365 data and the web. Blockplan doesn't connect to it yet. For now, organisations on Microsoft can use the same family of models through Azure OpenAI.
+
+**Choosing between them.** `AI_MODE` decides which is used:
 
 | AI_MODE | What happens |
 |---|---|
-| `auto` | Claude first. If Claude is not set up or does not answer, the local model is used. This is the default. |
-| `claude` | Claude only. |
-| `local` | The local model only. Nothing about your maps leaves this machine. |
+| `auto` | Tries each service that's set up, in the order in `AI_ORDER` (Claude, then Azure OpenAI, then OpenAI, then the local model). If one doesn't answer, the next is tried. This is the default. |
+| `claude`, `azure`, `openai`, or `local` | Uses only that one. |
 | `off` | No AI helper. Everything else still works. |
 
-**Claude.** Get an API key at https://platform.claude.com/settings/keys and put it in `ANTHROPIC_API_KEY`. Create the key for a single workspace; if it works across several, also set `ANTHROPIC_WORKSPACE_ID`. `CLAUDE_MODEL` defaults to `claude-sonnet-5-5`. `claude-haiku-5-5` is quicker and cheaper, and `claude-opus-5-5` is the most capable for large maps.
+The AI helper tab shows which service will answer, and which is next if it doesn't.
 
-**Local model.** Install Ollama, then run `ollama pull qwen2.5:7b`. Larger models such as `qwen2.5:14b` give better answers if the machine has the memory. Set `OLLAMA_MODEL` to match. A local model is slower than Claude and less reliable on big requests, so ask for one part of the map at a time.
-
-When the helper is used, the map's names, descriptions, owners, statuses, costs, and stakeholders are sent to the model with the question. Use `AI_MODE=local` if that information must stay on your network. The helper is told to name stakeholders by role, such as "Head of Finance", and never to invent personal names.
+When the helper is used, the map's names, descriptions, owners, statuses, costs, and stakeholders are sent with the question to the service that answers. Use `AI_MODE=local` if that information must stay on your network. A local model is slower and less reliable on big requests, so ask for one part of the map at a time. The helper is told to name stakeholders by role, such as "Head of Finance", and never to invent personal names.
 
 ## Importing and exporting
 
@@ -198,14 +220,40 @@ To update, get the new files (`git pull`, or unzip the new version over the old 
 docker compose up -d --build
 ```
 
-Your maps and `.env` are kept. If the build fails with `NotFound: forwarding Ping: no such job`, that's a known Docker build problem rather than a Blockplan one. Restart Docker Desktop and try again. If it still fails, turn off Docker's newer build method for that window:
+Your maps, `.env`, and certificates are kept. When you update without Docker, `run.sh` and `run.bat` install anything new the next time they start. If the build fails with `NotFound: forwarding Ping: no such job`, that's a known Docker build problem rather than a Blockplan one. Restart Docker Desktop and try again. If it still fails, turn off Docker's newer build method for that window:
 
 ```powershell
 $env:COMPOSE_BAKE = "false"     # PowerShell; in bash use: export COMPOSE_BAKE=false
 docker compose up -d --build
 ```
 
-**Sign-in.** Set `AUTH_USER` and `AUTH_PASSWORD` in `.env` to ask everyone for a username and password. This is a simple shared login. If Blockplan is reachable from outside your network, put it behind HTTPS, for example with a reverse proxy, a VPN, or Tailscale.
+**Sign-in.** Set `AUTH_USER` and `AUTH_PASSWORD` in `.env` to ask everyone for a username and password. This is a simple shared login, so switch on [HTTPS](#https) as well, so the password isn't sent in plain text. If Blockplan is reachable from outside your network, also consider a VPN or Tailscale.
+
+## HTTPS
+
+Put your certificate in the `certs` folder and restart Blockplan. It switches to `https://` on the same port, and says so when it starts. Any one of these works:
+
+- `cert.pem` and `key.pem`
+- `fullchain.pem` and `privkey.pem`, as Let's Encrypt makes them
+- a `.crt` (or `.cer`) file and a `.key` file with the same name
+- one `.pfx` or `.p12` file, as Windows and many IT teams export them, with its password in `TLS_PFX_PASSWORD`
+
+The certificate should include any intermediate certificates from your provider. If the key has a password, put it in `TLS_KEY_PASSWORD`. If your files are elsewhere, point `TLS_CERT` and `TLS_KEY` (or `TLS_PFX`) at them.
+
+When Blockplan starts, it checks the certificate and tells you which names it covers and when it expires. If something's wrong, such as a key that doesn't match the certificate or a wrong password, it stops with a plain explanation instead of starting half-working. It warns you when the certificate has 30 days or less left.
+
+**For testing**, set `HTTPS=self-signed`. Blockplan makes a certificate in the `certs` folder the first time it starts, covering `localhost` and this computer's name. Add other names or addresses with `HTTPS_HOSTNAMES`, for example `blockplan.local,192.168.1.20`. Browsers will warn about a self-signed certificate until it's trusted on each computer.
+
+| HTTPS | What happens |
+|---|---|
+| `auto` | HTTPS if there's a certificate in the `certs` folder, otherwise HTTP. This is the default. |
+| `on` | HTTPS, and Blockplan won't start without a certificate |
+| `self-signed` | Makes a test certificate if there isn't one |
+| `off` | Plain HTTP |
+
+With Docker, the `certs` folder next to `docker-compose.yml` is used, so put the certificate there and run `docker compose up -d`. Files in `certs` are never added to Git.
+
+To use the standard HTTPS port 443, either set `PORT=443` (on Linux this needs extra permissions) or map it in Docker by changing the ports line in `docker-compose.yml` to `"443:8080"`.
 
 ## Your maps
 
@@ -244,11 +292,15 @@ All settings live in `.env`. See `.env.example` for the full list with notes. Th
 | `HOST` | `0.0.0.0` | Use `127.0.0.1` to allow this computer only |
 | `DATA_DIR` | `./data` | Where maps are stored |
 | `AUTH_USER`, `AUTH_PASSWORD` | empty | Set both to require sign-in |
-| `AI_MODE` | `auto` | `auto`, `claude`, `local`, or `off` |
-| `ANTHROPIC_API_KEY` | empty | Needed for Claude |
-| `ANTHROPIC_WORKSPACE_ID` | empty | Only for keys that work across several workspaces |
-| `CLAUDE_MODEL` | `claude-sonnet-5-5` | Any Claude model name |
-| `OLLAMA_URL`, `OLLAMA_MODEL` | `http://localhost:11434`, `qwen2.5:7b` | Local model |
+| `AI_MODE`, `AI_ORDER` | `auto`, `claude,azure,openai,local` | Which AI service to use, and the order to try them in |
+| `ANTHROPIC_API_KEY`, `CLAUDE_MODEL` | empty, `claude-sonnet-5-5` | Claude |
+| `ANTHROPIC_WORKSPACE_ID` | empty | Only for Claude keys that work across several workspaces |
+| `AZURE_OPENAI_ENDPOINT`, `AZURE_OPENAI_API_KEY`, `AZURE_OPENAI_DEPLOYMENT` | empty | Azure OpenAI |
+| `OPENAI_BASE_URL`, `OPENAI_API_KEY`, `OPENAI_MODEL`, `OPENAI_NAME` | OpenAI's address, then empty | OpenAI or any OpenAI-style service |
+| `OLLAMA_URL`, `OLLAMA_MODEL` | `http://localhost:11434`, `qwen2.5:7b` | A model on this machine |
+| `HTTPS` | `auto` | `auto`, `on`, `self-signed`, or `off` |
+| `TLS_CERT`, `TLS_KEY`, `TLS_KEY_PASSWORD`, `TLS_PFX`, `TLS_PFX_PASSWORD` | empty | Only if the certificate isn't in `certs`, or has a password |
+| `HTTPS_HOSTNAMES` | empty | Extra names for a self-signed certificate |
 
 ## Common questions
 
@@ -264,13 +316,17 @@ Yes, in several ways: as an ArchiMate model, a spreadsheet, a PDF, a picture, th
 **Do I need to know ArchiMate or TOGAF?**
 No. Blockplan uses plain words throughout. The ArchiMate export is there for when someone who does know it needs the model.
 
+**Does it work with OpenAI, Copilot, or our own AI?**
+It works with Claude, Azure OpenAI, OpenAI, most other AI services that accept OpenAI-style requests, and models on your own machine. Microsoft 365 Copilot's own API is still in preview and needs every user to sign in with a Copilot licence, so Blockplan doesn't connect to it yet; Azure OpenAI gives organisations on Microsoft the same family of models. See [The AI helper](#the-ai-helper).
+
 **Does it work without the internet?**
-Yes. The fonts and the PDF maker are included, so everything works offline except the AI helper when it uses Claude.
+Yes. The fonts and the PDF maker are included, so everything works offline except the AI helper when it uses an online service. With a model on your own machine, that works offline too.
 
 ## What's next
 
 - A documented, versioned API with its own keys, and requests for changing single blocks and stakeholders
 - Importing ArchiMate models, as well as exporting them
+- Signing in to Microsoft 365 Copilot's Chat API, once it's out of preview
 - A hosted demo with the example map loaded, so people can try Blockplan without installing it
 
 ## Project layout
@@ -278,11 +334,13 @@ Yes. The fonts and the PDF maker are included, so everything works offline excep
 ```
 app/main.py          web server: the page, saving maps, the AI helper, sign-in
 app/storage.py       maps in SQLite, with a check that stops people overwriting each other
-app/llm.py           Claude first, local model as a fallback
+app/llm.py           the AI services: Claude, Azure OpenAI, OpenAI-style services, and Ollama
+app/tls.py           HTTPS: finds and checks certificates, or makes a self-signed one
 app/prompts.py       what the AI helper is told, kept in one place
 app/config.py        reads .env
 app/static/          the page itself, its fonts, and the PDF maker
 docs/                screenshots and an example PDF report
+certs/               put a certificate here to switch on HTTPS
 deploy/              Linux service setup
 scripts/backup.sh    copies all maps to backups/
 run.sh, run.bat      start it on macOS, Linux, or Windows

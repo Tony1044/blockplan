@@ -14,11 +14,19 @@ if not exist .venv (
   python -m venv .venv
   .venv\Scripts\python -m pip install --quiet --upgrade pip
   .venv\Scripts\python -m pip install --quiet -r requirements.txt
+  copy /y requirements.txt .venv\.requirements >nul
+)
+
+rem After an update, install anything new.
+fc /b requirements.txt .venv\.requirements >nul 2>nul
+if errorlevel 1 (
+  echo Installing updates...
+  .venv\Scripts\python -m pip install --quiet -r requirements.txt
+  copy /y requirements.txt .venv\.requirements >nul
 )
 
 if not exist .env copy .env.example .env >nul
 
-echo Blockplan is starting. Open http://localhost:8080 in your browser.
-echo Close this window to stop it.
+echo Blockplan is starting. Close this window to stop it.
 .venv\Scripts\python -m app.main
 pause

@@ -31,11 +31,17 @@ if [ ! -d .venv ]; then
   "$PY" -m venv .venv
   .venv/bin/pip install --quiet --upgrade pip
   .venv/bin/pip install --quiet -r requirements.txt
+  cp requirements.txt .venv/.requirements
+fi
+
+# After an update, install anything new.
+if ! cmp -s requirements.txt .venv/.requirements; then
+  echo "Installing updates..."
+  .venv/bin/pip install --quiet -r requirements.txt
+  cp requirements.txt .venv/.requirements
 fi
 
 [ -f .env ] || cp .env.example .env
 
-PORT=$(grep -E '^PORT=' .env | cut -d= -f2 || true)
-echo "Blockplan is starting. Open http://localhost:${PORT:-8080} in your browser."
-echo "Press Ctrl+C to stop."
+echo "Blockplan is starting. Press Ctrl+C to stop."
 exec .venv/bin/python -m app.main
