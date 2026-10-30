@@ -55,7 +55,7 @@ Blockplan is for the first conversation, not a replacement for a full enterprise
 - **Checks.** Simple rules flag gaps as you build. They include a system nothing uses, an activity no one does, a plan that depends on something being removed, a stakeholder with a lot of say who is against the changes, and a change nobody has been linked to.
 - **AI helper.** Build a starter map, explain the map, find what's missing, spot risks, overlaps, and savings, and suggest stakeholders. It always shows its suggested changes first, and you choose whether to put them on the map.
 - **Bring in what you already have.** Import a spreadsheet (CSV), such as an application list from a CMDB.
-- **Share it.** Download a PDF report, a picture of the map or the stakeholder grid for slides, a spreadsheet, or an ArchiMate model.
+- **Share it.** Download a PDF report, a PowerPoint deck, a picture of the map or the stakeholder grid, a spreadsheet, or an ArchiMate model. Export the map as an editable diagram for Visio or draw.io.
 - **Shared maps.** Maps are saved on the Blockplan server, so everyone using it sees the same maps. If two people save the same map at once, the second person is told and can load the other version or keep theirs as a copy.
 
 ![The stakeholder grid, with the Finance Director selected](docs/images/stakeholders.png)
@@ -69,7 +69,7 @@ On a Mac, the Python that comes with Apple's developer tools is usually 3.9, whi
 **From GitHub**
 
 ```bash
-git clone https://github.com/Tony1044/blockplan
+git clone https://github.com/Tonyscodehub/blockplan
 cd blockplan
 ./run.sh
 ```
@@ -152,12 +152,45 @@ You see a preview first and can change any match before importing. Rows without 
 A landscape A4 report, ready to send or print. [See an example](docs/example-report.pdf). It contains:
 
 1. A summary with counts, yearly costs today and in future, payback, what's planned and being removed, and how stakeholders feel
-2. The map, split across pages if it's wide
+2. The map. See [Large maps](#large-maps) for how wide maps are split.
 3. The stakeholder grid
 4. Stakeholders in detail, with how to work with each one
 5. Costs by row, and the biggest costs
 6. Things to look at, from the checks
 7. Everything on the map, grouped by row
+
+### PowerPoint
+
+A widescreen deck, ready to present or edit:
+
+1. A title slide
+2. A summary, with counts, costs, payback, and the main points
+3. The map, as a picture, split across slides if it's wide
+4. The stakeholder grid
+5. Stakeholders in detail, as an editable table
+6. Costs, as an editable table
+7. Things to look at, as an editable table
+8. Everything on the map, as an editable table
+
+Long tables carry on across as many slides as they need, with the header row repeated. Each map slide has notes listing what's planned and what's being removed.
+
+### Visio and draw.io
+
+The map as an editable diagram: every block is a shape you can move, and every connection is a connector with its words on it. Blocks keep their colours, planned blocks are dashed, and blocks being removed are grey with the name crossed through. Each row of the map is a background panel.
+
+Each block also carries its details as data you can see and edit: kind, description, who looks after it, status, health, and costs. In Visio, right-click a shape and choose **Data → Shape Data**. In draw.io, select a shape and choose **Edit Data**. Both files also have a second page with the stakeholder grid, where each stakeholder carries their role, feeling, approach, what they care about, and the plan.
+
+- **Visio:** a `.vsdx` file for Microsoft Visio or Visio for the web.
+- **draw.io:** a `.drawio` file. Open it at https://app.diagrams.net (**File → Open from → Device**) or in the draw.io desktop app.
+
+### Large maps
+
+The PDF and PowerPoint fit the map on one page whenever its text stays readable, and use landscape pages where they can. If a map is too wide for that, it's split into parts:
+
+- Splits fall in the gaps between blocks, never through one.
+- Each part repeats the row names, so every page makes sense on its own.
+- Where a connection crosses a split, it ends in an off-page connector, the pointed box used in flowcharts. The connector is labelled with the split's letter and a number, such as **A-1**, and the same label appears where the connection carries on in the next part. The first split's connectors are A-1, A-2, and so on, the next split's are B-1, B-2, and so on.
+- The heading on each page says which part it is, such as "The map (part 2 of 3)".
 
 ### Picture
 
@@ -350,7 +383,7 @@ No. Blockplan uses plain words throughout. The ArchiMate export is there for whe
 It works with Claude, Azure OpenAI, OpenAI, most other AI services that accept OpenAI-style requests, and models on your own machine. Microsoft 365 Copilot's own API is still in preview and needs every user to sign in with a Copilot licence, so Blockplan doesn't connect to it yet; Azure OpenAI gives organisations on Microsoft the same family of models. See [The AI helper](#the-ai-helper).
 
 **Does it work without the internet?**
-Yes. The fonts and the PDF maker are included, so everything works offline except the AI helper when it uses an online service. With a model on your own machine, that works offline too.
+Yes. The fonts and the PDF and PowerPoint makers are included, so everything works offline except the AI helper when it uses an online service. With a model on your own machine, that works offline too.
 
 ## What's next
 
@@ -360,6 +393,11 @@ Yes. The fonts and the PDF maker are included, so everything works offline excep
 - A hosted demo with the example map loaded, so people can try Blockplan without installing it
 
 ## Version history
+
+**1.4.0**
+- Export to PowerPoint, with editable tables.
+- Export the map as an editable diagram for Visio or draw.io, with each block's details as data.
+- Wide maps in the PDF and PowerPoint fit one page when the text stays readable, in landscape where possible. Otherwise they're split between blocks, with flowchart-style off-page connectors labelled the same on both pages, such as A-1.
 
 **1.3.2**
 - Docker serves Blockplan on 443, the standard HTTPS port, so the address is `https://localhost`. Change it with `BLOCKPLAN_PORT` in `.env`, with no need to edit `docker-compose.yml`.
@@ -398,7 +436,7 @@ app/llm.py           the AI services: Claude, Azure OpenAI, OpenAI-style service
 app/tls.py           HTTPS: finds and checks certificates, or makes a self-signed one
 app/prompts.py       what the AI helper is told, kept in one place
 app/config.py        reads .env
-app/static/          the page itself, its fonts, and the PDF maker
+app/static/          the page itself, its fonts, and the PDF and PowerPoint makers
 docs/                screenshots and an example PDF report
 certs/               put a certificate here to switch on HTTPS
 deploy/              Linux service setup
@@ -411,4 +449,4 @@ Dockerfile, docker-compose.yml
 
 Blockplan is MIT licensed. See `LICENSE`.
 
-Bricolage Grotesque, Hanken Grotesk, and JetBrains Mono are included under the SIL Open Font Licence, with their licence files in `app/static/fonts/`. jsPDF and jsPDF-AutoTable are included under the MIT licence, with their licence files in `app/static/vendor/`.
+Bricolage Grotesque, Hanken Grotesk, and JetBrains Mono are included under the SIL Open Font Licence, with their licence files in `app/static/fonts/`. jsPDF, jsPDF-AutoTable, and PptxGenJS are included under the MIT licence, with their licence files in `app/static/vendor/`.

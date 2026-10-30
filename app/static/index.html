@@ -330,6 +330,9 @@ details.menu .drop button.warn{color:var(--bad)}
         <button id="pngBtn">Download a picture of this view<small>A PNG of the map or the stakeholder grid, for slides</small></button>
         <button id="amBtn">Export for ArchiMate tools<small>Open Group exchange format, for Archi and others</small></button>
         <button id="csvOutBtn">Download as a spreadsheet<small>A CSV file with one row per block</small></button>
+        <button id="pptxBtn">Download as PowerPoint<small>Slides with the summary, map, stakeholders, and editable tables</small></button>
+        <button id="vsdxBtn">Export for Visio<small>An editable diagram, with each block's details as shape data</small></button>
+        <button id="drawioBtn">Export for draw.io<small>An editable diagram for diagrams.net and the draw.io app</small></button>
         <hr>
         <button id="delMapBtn" class="warn">Delete this map</button>
       </div>
@@ -1194,7 +1197,7 @@ function peopleOverview(){
   </div>`;
 }
 
-const VENDOR = {jspdf:"/static/vendor/jspdf.umd.min.js", autotable:"/static/vendor/jspdf.plugin.autotable.min.js"};
+const VENDOR = {pptx:"/static/vendor/pptxgen.bundle.js", jspdf:"/static/vendor/jspdf.umd.min.js", autotable:"/static/vendor/jspdf.plugin.autotable.min.js"};
 /* ---------- import and export ---------- */
 const loadedScripts = {};
 function loadScript(src){
@@ -1501,37 +1504,37 @@ function wrapText(s, font, max, lines){
 }
 const sx = s => xesc(s);
 const VIEW_NAME = {all:"Everything", today:"Today", future:"Future"};
-function mapSVG(v = view){
+/* The map drawn for pictures, PDF and PowerPoint. mapParts gives the pieces; mapSVG puts them
+   together as one picture, and mapPages cuts them into readable pages with off-page markers. */
+function mapParts(v = view, bare = false){
   const vis = b => v === "all" || (v === "today" && b.when !== "planned") || (v === "future" && b.when !== "retiring");
-  const blocks = S.blocks.filter(vis), TOP = 74, FOOT = 46;
+  const blocks = S.blocks.filter(vis), TOP = bare ? 14 : 74;
   const lanes = TYPES.filter(t => blocks.some(b => b.type === t.key));
   const offs = {}; lanes.forEach((t, i) => { offs[t.key] = TOP + i * LANE_H - laneTop(t.key); });
   const pb = blocks.map(b => ({...b, y: b.y + offs[b.type]})), byP = Object.fromEntries(pb.map(b => [b.id, b]));
-  const W = Math.max(900, ...pb.map(b => b.x + BW + 48)), Hh = TOP + Math.max(1, lanes.length) * LANE_H + FOOT;
-  let s = `<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="__H__" viewBox="0 0 ${W} __H__" font-family="${XF}">
-<defs><marker id="ar" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="${EXP.muted}"/></marker><pattern id="gone" width="14" height="14" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><rect width="14" height="14" fill="#FFFFFF"/><rect width="7" height="14" fill="${EXP.goneBg}"/></pattern></defs>
-<rect width="${W}" height="__H__" fill="${EXP.bg}"/>
-<text x="24" y="34" font-size="22" font-weight="700" fill="${EXP.ink}">${sx(S.name || "Map")}</text>
-<text x="24" y="56" font-size="13" fill="${EXP.muted}">${sx(`How the organisation works – ${VIEW_NAME[v]} – ${todayGB()}`)}</text>`;
-  let laneTitles = "";
-  const boxes = [];
+  const W = Math.max(bare ? 600 : 900, ...pb.map(b => b.x + BW + 48)), HB = TOP + Math.max(1, lanes.length) * LANE_H;
+  const defs = `<defs><marker id="ar" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="${EXP.muted}"/></marker>` +
+    `<pattern id="gone" width="14" height="14" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><rect width="14" height="14" fill="#FFFFFF"/><rect width="7" height="14" fill="${EXP.goneBg}"/></pattern></defs>`;
+  let body = "";
+  const laneInfo = [];
   lanes.forEach((t, i) => {
     const y = TOP + i * LANE_H, bg = i % 2 ? EXP.bg : EXP.panel;
-    s += `<rect x="0" y="${y}" width="${W}" height="${LANE_H}" fill="${bg}"/><line x1="0" x2="${W}" y1="${y + LANE_H}" y2="${y + LANE_H}" stroke="${EXP.line}" stroke-dasharray="4 4"/>`;
-    const w1 = tw(t.lane, `700 14px ${XF}`), w2 = tw(t.plural.toUpperCase(), `10.5px ${XF}`) + t.plural.length * 0.6, tw0 = w1 + 8 + w2 + 16;
-    laneTitles += `<rect x="8" y="${y + 6}" width="${tw0.toFixed(1)}" height="24" rx="6" fill="${bg}"/><text x="16" y="${y + 22}" font-size="14" font-weight="700" fill="${EXP[t.key]}">${sx(t.lane)}<tspan font-size="10.5" font-weight="400" fill="${EXP.muted}" dx="8" letter-spacing="0.6">${sx(t.plural.toUpperCase())}</tspan></text>`;
-    boxes.push({x:8, y:y + 6, w:tw0, h:24});
+    body += `<rect x="0" y="${y}" width="${W}" height="${LANE_H}" fill="${bg}"/><line x1="0" x2="${W}" y1="${y + LANE_H}" y2="${y + LANE_H}" stroke="${EXP.line}" stroke-dasharray="4 4"/>`;
+    const w1 = tw(t.lane, `700 14px ${XF}`), w2 = tw(t.plural.toUpperCase(), `10.5px ${XF}`) + t.plural.length * 0.6;
+    laneInfo.push({t, y, bg, w: w1 + 8 + w2 + 16});
   });
-  if (!lanes.length) s += `<text x="24" y="${TOP + 40}" font-size="14" fill="${EXP.muted}">Nothing on the map yet.</text>`;
+  const laneTitles = (x0 = 0) => laneInfo.map(({t, y, bg, w}) => `<rect x="${x0 + 8}" y="${y + 6}" width="${w.toFixed(1)}" height="24" rx="6" fill="${bg}"/><text x="${x0 + 16}" y="${y + 22}" font-size="14" font-weight="700" fill="${EXP[t.key]}">${sx(t.lane)}<tspan font-size="10.5" font-weight="400" fill="${EXP.muted}" dx="8" letter-spacing="0.6">${sx(t.plural.toUpperCase())}</tspan></text>`).join("");
+  const boxes = laneInfo.map(({y, w}) => ({x:8, y:y + 6, w, h:24}));
   for (const b of pb) boxes.push({x:b.x - 4, y:b.y - 4, w:BW + 8, h:BH + 8});
   const hits = r => boxes.some(o => r.x < o.x + o.w && r.x + r.w > o.x && r.y < o.y + o.h && r.y + r.h > o.y);
   const at = (p, c1, c2, q, t) => { const u = 1 - t; return {x:u*u*u*p.x + 3*u*u*t*c1.x + 3*u*t*t*c2.x + t*t*t*q.x, y:u*u*u*p.y + 3*u*u*t*c1.y + 3*u*t*t*c2.y + t*t*t*q.y}; };
-  let labels = ""; const missed = [];
+  let labels = ""; const missed = [], geoms = [];
   for (const l of S.links){
     const a = byP[l.from], b = byP[l.to]; if (!a || !b) continue;
     const p = anchor(a, b), q = anchor(b, a), {d} = curve(p, q), faded = a.when !== "now" || b.when !== "now";
-    s += `<path d="${d}" fill="none" stroke="${EXP.muted}" stroke-width="1.6"${faded ? ` stroke-dasharray="5 4" opacity="0.75"` : ""} marker-end="url(#ar)"/>`;
+    body += `<path d="${d}" fill="none" stroke="${EXP.muted}" stroke-width="1.6"${faded ? ` stroke-dasharray="5 4" opacity="0.75"` : ""} marker-end="url(#ar)"/>`;
     const k = Math.max(36, Math.hypot(q.x - p.x, q.y - p.y) * 0.35), c1 = {x:p.x + p.dx*k, y:p.y + p.dy*k}, c2 = {x:q.x + q.dx*k, y:q.y + q.dy*k};
+    geoms.push({l, a, b, pt: t => at(p, c1, c2, q, t)});
     const lf = `11.5px ${XF}`, txt = wrapText(l.label, lf, 170, 1)[0], w = tw(txt, lf) + 14;
     let spot = null;
     for (const t of [0.5, 0.4, 0.6, 0.3, 0.7, 0.22, 0.78]){ const m = at(p, c1, c2, q, t), r = {x:m.x - w / 2, y:m.y - 10, w, h:20}; if (!hits(r)){ spot = m; break; } }
@@ -1539,7 +1542,7 @@ function mapSVG(v = view){
     boxes.push({x:spot.x - w / 2 - 2, y:spot.y - 11, w:w + 4, h:22});
     labels += `<rect x="${(spot.x - w / 2).toFixed(1)}" y="${(spot.y - 10).toFixed(1)}" width="${w.toFixed(1)}" height="20" rx="10" fill="${EXP.bg}" stroke="${EXP.line}"/><text x="${spot.x.toFixed(1)}" y="${(spot.y + 4).toFixed(1)}" font-size="11.5" text-anchor="middle" fill="${EXP.muted}">${sx(txt)}</text>`;
   }
-  s += labels;
+  body += labels;
   for (const b of pb){
     const c = EXP[b.type], planned = b.when === "planned", ret = b.when === "retiring", n = caresAbout(b.id).length;
     const nf = `600 13.5px ${XF}`, kf = `700 9.5px ${XF}`, cf = `10px ${XF}`;
@@ -1550,7 +1553,7 @@ function mapSVG(v = view){
     const first = wrapText(b.name, nf, BW - 36, 2);
     const lines = first.length === 2 && countTxt ? [first[0], ...wrapText(b.name.slice(first[0].length).trim(), nf, BW - 30 - tw(countTxt, cf), 1)] : first;
     const ny = lines.length === 1 ? 44 : 37;
-    s += `<g transform="translate(${b.x},${b.y})">
+    body += `<g transform="translate(${b.x},${b.y})">
 <rect x="0.75" y="0.75" width="${BW - 1.5}" height="${BH - 1.5}" rx="10" fill="${planned ? EXP.bg : ret ? "url(#gone)" : mix(c, "#FFFFFF", 0.09)}" stroke="${ret ? EXP.gone : mix(c, EXP.line, 0.55)}" stroke-width="1.5"${planned ? ` stroke-dasharray="6 4"` : ""}/>
 <text x="10" y="19" font-size="9.5" font-weight="700" letter-spacing="0.5" fill="${ret ? EXP.gone : c}">${sx(kind)}</text>
 ${costTxt ? `<text x="${BW - (b.health ? 24 : 10)}" y="19" font-size="10" text-anchor="end" fill="${EXP.ink}">${sx(costTxt)}</text>` : ""}
@@ -1559,26 +1562,90 @@ ${b.health ? `<circle cx="${BW - 12}" cy="15" r="4.5" fill="${EXP[b.health]}"/>`
 ${countTxt ? `<text x="${BW - 8}" y="${BH - 8}" font-size="10" text-anchor="end" fill="${EXP.muted}">${countTxt}</text>` : ""}
 </g>`;
   }
-  s += laneTitles;
-  let H2 = Hh;
-  if (missed.length){
-    const mapBottom = TOP + Math.max(1, lanes.length) * LANE_H, nf = `12px ${XF}`, lines = [];
-    let line = "";
-    for (const l of missed){
-      const it = `${byP[l.from].name} ${l.label} ${byP[l.to].name}`, t = line ? line + "   ·   " + it : it;
-      if (tw(t, nf) <= W - 48 || !line) line = t; else { lines.push(line); line = it; }
-    }
+  /* things drawn under the map: connections whose labels didn't fit, and the key */
+  const missedItems = missed.map(l => `${byP[l.from].name} ${l.label} ${byP[l.to].name}`);
+  const notes = (x0, w) => {
+    if (!missedItems.length) return {svg:"", h:0};
+    const nf = `12px ${XF}`, lines = []; let line = "";
+    for (const it of missedItems){ const t = line ? line + "   ·   " + it : it; if (tw(t, nf) <= w - 48 || !line) line = t; else { lines.push(line); line = it; } }
     if (line) lines.push(line);
-    s += `<text x="24" y="${mapBottom + 26}" font-size="12" font-weight="700" fill="${EXP.ink}">Also connected (no room for these labels on the map)</text>` +
-      lines.map((ln, i) => `<text x="24" y="${mapBottom + 46 + i * 18}" font-size="12" fill="${EXP.muted}">${sx(ln)}</text>`).join("");
-    H2 = Hh + 40 + lines.length * 18;
+    return {h: 40 + lines.length * 18, svg: (y) => `<text x="${x0 + 24}" y="${y + 26}" font-size="12" font-weight="700" fill="${EXP.ink}">Also connected (no room for these labels on the map)</text>` +
+      lines.map((ln, i) => `<text x="${x0 + 24}" y="${y + 46 + i * 18}" font-size="12" fill="${EXP.muted}">${sx(ln)}</text>`).join("")};
+  };
+  const key = (x0, w, fy) => `<g font-size="11.5" fill="${EXP.muted}"><rect x="${x0 + 24}" y="${fy - 11}" width="22" height="13" rx="3" fill="none" stroke="${EXP.muted}" stroke-dasharray="4 3"/><text x="${x0 + 52}" y="${fy}">Planned</text>
+<rect x="${x0 + 120}" y="${fy - 11}" width="22" height="13" rx="3" fill="url(#gone)" stroke="${EXP.gone}"/><text x="${x0 + 148}" y="${fy}">Being removed</text>
+${[["good", "Working well"], ["watch", "Needs attention"], ["bad", "Causing problems"]].map(([k, t], i) => `<circle cx="${x0 + 262 + i * 140}" cy="${fy - 4}" r="4.5" fill="${EXP[k]}"/><text x="${x0 + 272 + i * 140}" y="${fy}">${t}</text>`).join("")}
+${w >= 900 ? `<text x="${x0 + w - 24}" y="${fy}" text-anchor="end">Made with Blockplan</text>` : ""}</g>`;
+  return {W, HB, TOP, pb, lanes, defs, body, laneTitles, geoms, notes, key, empty:!lanes.length};
+}
+function mapSVG(v = view){
+  const m = mapParts(v, false), FOOT = 46, n = m.notes(0, m.W), H = m.HB + n.h + FOOT;
+  let s = `<svg xmlns="http://www.w3.org/2000/svg" width="${m.W}" height="${H}" viewBox="0 0 ${m.W} ${H}" font-family="${XF}">${m.defs}
+<rect width="${m.W}" height="${H}" fill="${EXP.bg}"/>
+<text x="24" y="34" font-size="22" font-weight="700" fill="${EXP.ink}">${sx(S.name || "Map")}</text>
+<text x="24" y="56" font-size="13" fill="${EXP.muted}">${sx(`How the organisation works – ${VIEW_NAME[v]} – ${todayGB()}`)}</text>`;
+  if (m.empty) s += `<text x="24" y="${m.TOP + 40}" font-size="14" fill="${EXP.muted}">Nothing on the map yet.</text>`;
+  s += m.body + m.laneTitles(0) + (n.h ? n.svg(m.HB) : "") + m.key(0, m.W, H - 18) + `</svg>`;
+  return {svg:s, w:m.W, h:H};
+}
+/* Cut the map into pages that fit areas (in mm) without the text getting too small.
+   areas: page shapes to try, best first, e.g. [{name:"landscape", w:277, h:180}, {name:"portrait", w:190, h:265}].
+   Returns {area, scale (mm per px), pages:[{svg, w, h, x0}]}. */
+function mapPages(v, areas, minPt = 5.5){
+  const m = mapParts(v, true), FOOT = 40, PAD = 64, smin = minPt * 0.3528 / 13.5;
+  const notes0 = m.notes(0, Math.min(m.W, 1400)), H = m.HB + notes0.h + FOOT;
+  /* one page: [x0, x1] of the map, with a margin strip for off-page markers at each cut edge */
+  const page = (x0, x1, idx, count, left, right) => {
+    const w = x1 - x0, lp = idx > 0 ? PAD : 0, rp = idx < count - 1 ? PAD : 0, n = idx === count - 1 ? m.notes(x0, Math.max(w, 600)) : {h:0};
+    let s = `<svg xmlns="http://www.w3.org/2000/svg" width="${w + lp + rp}" height="${H}" viewBox="${x0 - lp} 0 ${w + lp + rp} ${H}" font-family="${XF}">${m.defs}<rect x="${x0 - lp}" y="0" width="${w + lp + rp}" height="${H}" fill="${EXP.bg}"/>`;
+    if (m.empty) s += `<text x="${x0 + 24}" y="${m.TOP + 40}" font-size="14" fill="${EXP.muted}">Nothing on the map yet.</text>`;
+    s += m.body + m.laneTitles(x0);
+    const strip = (sx0, label, anchor) => `<rect x="${sx0}" y="0" width="${PAD}" height="${H}" fill="${EXP.bg}"/><line x1="${anchor}" x2="${anchor}" y1="${m.TOP}" y2="${m.HB}" stroke="${EXP.line}" stroke-dasharray="3 4"/><text x="${sx0 + PAD / 2}" y="${m.TOP + 12}" font-size="9.5" text-anchor="middle" fill="${EXP.muted}">${label}</text>`;
+    if (lp) s += strip(x0 - lp, `from part ${idx}`, x0) + left;
+    if (rp) s += strip(x1, `to part ${idx + 2}`, x1) + right;
+    s += (n.h ? n.svg(m.HB) : "") + m.key(x0, w, H - 14) + `</svg>`;
+    return {svg:s, w:w + lp + rp, h:H, x0};
+  };
+  for (const a of areas){
+    const s = Math.min(a.w / m.W, a.h / H);
+    if (s >= smin) return {area:a, scale:s, pages:[page(0, m.W, 0, 1, "", "")]};
   }
-  const fy = H2 - 18;
-  s += `<g font-size="11.5" fill="${EXP.muted}"><rect x="24" y="${fy - 11}" width="22" height="13" rx="3" fill="none" stroke="${EXP.muted}" stroke-dasharray="4 3"/><text x="52" y="${fy}">Planned</text>
-<rect x="120" y="${fy - 11}" width="22" height="13" rx="3" fill="url(#gone)" stroke="${EXP.gone}"/><text x="148" y="${fy}">Being removed</text>
-${[["good", "Working well"], ["watch", "Needs attention"], ["bad", "Causing problems"]].map(([k, t], i) => `<circle cx="${262 + i * 140}" cy="${fy - 4}" r="4.5" fill="${EXP[k]}"/><text x="${272 + i * 140}" y="${fy}">${t}</text>`).join("")}
-<text x="${W - 24}" y="${fy}" text-anchor="end">Made with Blockplan</text></g></svg>`;
-  return {svg:s.replaceAll("__H__", H2), w:W, h:H2};
+  const a = areas.find(x => H * smin <= x.h) || areas.reduce((p, x) => x.h > p.h ? x : p, areas[0]);
+  const s = Math.min(a.h / H, 0.3), tileW = a.w / s - PAD * 2;
+  /* cut in the gaps between blocks, never through one */
+  const inBlock = x => m.pb.some(b => x > b.x - 6 && x < b.x + BW + 6);
+  const cuts = [0];
+  while (m.W - cuts[cuts.length - 1] > tileW + PAD){
+    const start = cuts[cuts.length - 1], want = start + tileW;
+    let x = Math.floor(want);
+    while (x > start + tileW * 0.45 && inBlock(x)) x -= 2;
+    cuts.push(inBlock(x) ? Math.floor(want) : x);
+  }
+  cuts.push(m.W);
+  const count = cuts.length - 1, rights = Array(count).fill(""), lefts = Array(count).fill("");
+  /* off-page connectors: the same label (A-1, A-2, ... for the first split, B-1 ... for the next) where a line leaves one part and where it carries on in the next */
+  const cutName = i => { let s2 = ""; i++; while (i > 0){ i--; s2 = String.fromCharCode(65 + i % 26) + s2; i = Math.floor(i / 26); } return s2; };
+  const opc = (cx, y, label) => `<path d="M${cx - 23},${y - 13} H${cx + 23} V${y + 4} L${cx},${y + 13} L${cx - 23},${y + 4} Z" fill="${EXP.bg}" stroke="${EXP.accent}" stroke-width="1.6"/><text x="${cx}" y="${y + 1.5}" font-size="11" font-weight="700" text-anchor="middle" fill="${EXP.accent}">${label}</text>`;
+  for (let c = 1; c < count; c++){
+    const X = cuts[c], ys = [];
+    for (const g of m.geoms){
+      let prev = g.pt(0);
+      for (let i = 1; i <= 200; i++){
+        const cur = g.pt(i / 200);
+        if ((prev.x - X) * (cur.x - X) < 0) ys.push({yc: prev.y + (cur.y - prev.y) * (X - prev.x) / (cur.x - prev.x), g});
+        prev = cur;
+      }
+    }
+    ys.sort((p, q) => p.yc - q.yc);
+    let last = m.TOP + 12;
+    for (const it of ys){ it.y = Math.max(it.yc, last + 32); last = it.y; }
+    ys.forEach((it, k) => {
+      const L = `${cutName(c - 1)}-${k + 1}`, tip = `<title>${sx(it.g.a.name)} ${sx(it.g.l.label)} ${sx(it.g.b.name)}</title>`, line = `stroke="${EXP.muted}" stroke-width="1.6" fill="none"`;
+      rights[c - 1] += `<g>${tip}<path d="M${X},${it.yc} L${X + PAD / 2 - 23},${it.y}" ${line}/>${opc(X + PAD / 2, it.y, L)}</g>`;
+      lefts[c] += `<g>${tip}<path d="M${X - PAD / 2 + 23},${it.y} L${X},${it.yc}" ${line}/>${opc(X - PAD / 2, it.y, L)}</g>`;
+    });
+  }
+  return {area:a, scale:s, pages:cuts.slice(0, -1).map((x0, i) => page(x0, cuts[i + 1], i, count, lefts[i], rights[i]))};
 }
 const FEEL_X = {for:EXP.good, unsure:EXP.watch, against:EXP.bad, "":"#7C8A84"};
 function gridSVG(){
@@ -1676,27 +1743,25 @@ async function exportPDF(){
   para(checks.length ? `Things to look at: ${nb} serious, ${nw} worth checking, and ${checks.length - nb - nw} to note. They are listed later in this report.` : "The checks found nothing to flag.");
   y += 3; para("Contents: the map, " + (people.length ? "stakeholders, " : "") + (hasCost ? "costs, " : "") + "things to look at, and everything on the map.", 9.5, muted);
 
-  /* 2. The map, split across pages if it is wide */
+  /* 2. The map: one page if the text stays readable, otherwise parts with lettered off-page markers */
   if (S.blocks.length){
-    const pic = mapSVG("all"), scale = Math.min(2, 14000 / pic.w), big = await svgToCanvas(pic, scale);
-    const areaW = CW, areaH = PH - M * 2 - 10, sliceW = Math.min(big.width, Math.round(big.height * areaW / areaH * 1.0));
-    const parts = Math.max(1, Math.ceil(big.width / Math.max(sliceW, 1)));
-    const sw = Math.ceil(big.width / parts);
-    for (let i = 0; i < parts; i++){
-      doc.addPage(); heading(parts > 1 ? `The map (part ${i + 1} of ${parts})` : "The map");
-      const piece = document.createElement("canvas"); piece.width = Math.min(sw, big.width - i * sw); piece.height = big.height;
-      piece.getContext("2d").drawImage(big, i * sw, 0, piece.width, big.height, 0, 0, piece.width, big.height);
-      const k = Math.min(areaW / piece.width, areaH / piece.height);
-      doc.addImage(piece.toDataURL("image/jpeg", 0.92), "JPEG", M, M + 10, piece.width * k, piece.height * k, undefined, "FAST");
+    const MM = 10, lay = mapPages("all", [{name:"landscape", w:297 - MM * 2, h:210 - MM - 10 - 12}, {name:"portrait", w:210 - MM * 2, h:297 - MM - 10 - 12}], 5.2), n = lay.pages.length;
+    for (let i = 0; i < n; i++){
+      const pg = lay.pages[i], land = lay.area.name === "landscape", pw = land ? 297 : 210;
+      doc.addPage("a4", land ? "landscape" : "portrait");
+      doc.setFont("helvetica", "bold"); doc.setFontSize(15); doc.setTextColor(...ink); doc.text(n > 1 ? `The map (part ${i + 1} of ${n})` : "The map", MM, MM + 5);
+      if (n > 1){ doc.setFont("helvetica", "normal"); doc.setFontSize(8.5); doc.setTextColor(...muted); doc.text("Connectors at the edges, such as A-1, show where a line carries on. The same label appears on both parts.", pw - MM, MM + 5, {align:"right"}); }
+      const c = await svgToCanvas(pg, Math.min(3, Math.max(1.3, lay.scale * 10)));
+      doc.addImage(c.toDataURL("image/jpeg", 0.92), "JPEG", MM, MM + 10, pg.w * lay.scale, pg.h * lay.scale, undefined, "FAST");
     }
   }
 
   /* 3. Stakeholders */
   if (people.length){
-    doc.addPage(); heading("Stakeholders");
+    doc.addPage("a4", "landscape"); heading("Stakeholders");
     const g = await svgToCanvas(gridSVG(), 1.6), k = Math.min(CW / g.width, (PH - M * 2 - 10) / g.height);
     doc.addImage(g.toDataURL("image/jpeg", 0.92), "JPEG", M + (CW - g.width * k) / 2, M + 10, g.width * k, g.height * k, undefined, "FAST");
-    doc.addPage(); heading("Stakeholders in detail", "Grouped by how closely to work with them.");
+    doc.addPage("a4", "landscape"); heading("Stakeholders in detail", "Grouped by how closely to work with them.");
     const order = ["close", "satisfied", "informed", "checkin"];
     at({...tableBase, startY:M + 22, head:[["Name", "Role", "Feeling", "How to work with them", "What they care about", "How we keep them on side", "Cares about on the map"]],
       body:people.slice().sort((a, b) => order.indexOf(quadOf(a)) - order.indexOf(quadOf(b))).map(p => [p.name, p.role, FEEL[p.feeling] || FEEL[""], QUADS[quadOf(p)].t, p.cares, p.plan || "No plan yet", p.links.map(id => byId(id)?.name).filter(Boolean).join(", ")]),
@@ -1706,7 +1771,7 @@ async function exportPDF(){
 
   /* 4. Costs */
   if (hasCost){
-    doc.addPage(); heading("Costs", `Yearly running costs, today and after the planned changes. Amounts in ${cur()}.`);
+    doc.addPage("a4", "landscape"); heading("Costs", `Yearly running costs, today and after the planned changes. Amounts in ${cur()}.`);
     at({...tableBase, startY:M + 22, head:[["Row", "Today, a year", "Future, a year", "Change"]],
       body:[...c.rows.filter(r => r.today || r.future).map(r => [r.t.lane, moneyFull(r.today), moneyFull(r.future), (r.future - r.today > 0 ? "+" : r.future - r.today < 0 ? "-" : "") + moneyFull(Math.abs(r.future - r.today))]), ["Total", moneyFull(c.today), moneyFull(c.future), (c.future - c.today > 0 ? "+" : c.future - c.today < 0 ? "-" : "") + moneyFull(Math.abs(c.future - c.today))]],
       columnStyles:{1:{halign:"right"}, 2:{halign:"right"}, 3:{halign:"right"}},
@@ -1717,7 +1782,7 @@ async function exportPDF(){
   }
 
   /* 5. Things to look at */
-  doc.addPage(); heading("Things to look at", "Simple checks on the map. Serious ones first.");
+  doc.addPage("a4", "landscape"); heading("Things to look at", "Simple checks on the map. Serious ones first.");
   if (checks.length){
     const lvl = {bad:"Serious", watch:"Worth checking", info:"To note"};
     at({...tableBase, startY:M + 22, head:[["", "What we found", "What to do"]], body:checks.map(x => [lvl[x.lvl], x.t, x.d]),
@@ -1727,7 +1792,7 @@ async function exportPDF(){
 
   /* 6. Everything on the map */
   if (S.blocks.length){
-    doc.addPage(); heading("Everything on the map", "Grouped by row.");
+    doc.addPage("a4", "landscape"); heading("Everything on the map", "Grouped by row.");
     const body = [];
     for (const t of TYPES){
       const bs = S.blocks.filter(b => b.type === t.key).sort((a, b) => a.name.localeCompare(b.name)); if (!bs.length) continue;
@@ -1754,6 +1819,288 @@ $("#csvIn").addEventListener("change", async e => {
   try { openCSVDialog(f.name, parseCSV(await f.text())); }
   catch { toast("That file couldn't be read. Save the spreadsheet as CSV and try again."); }
 });
+
+/* ---- export helpers shared by PowerPoint, Visio and draw.io ---- */
+function summaryFacts(){
+  const c = costSummary(), diff = c.today - c.future, people = P();
+  let verdict = "";
+  if (c.today || c.future || c.oneOff){
+    if (diff > 0){ verdict = `The planned changes save ${money(diff)} a year.`; if (c.oneOff){ const yrs = c.oneOff / diff; verdict += ` With ${money(c.oneOff)} of one-off costs, they pay for themselves in about ${yrs < 1 ? "less than a year" : (Math.round(yrs * 10) / 10) + " years"}.`; } }
+    else if (diff < 0) verdict = `The planned changes add ${money(-diff)} a year to running costs${c.oneOff ? `, plus ${money(c.oneOff)} of one-off costs` : ""}.`;
+    else verdict = c.oneOff ? `Running costs stay the same. The changes cost ${money(c.oneOff)} one-off.` : "Running costs stay the same after the planned changes.";
+  }
+  const planned = S.blocks.filter(b => b.when === "planned").map(b => b.name), retiring = S.blocks.filter(b => b.when === "retiring").map(b => b.name);
+  const fc = k => people.filter(p => (p.feeling || "") === k).length;
+  return {c, diff, verdict, planned, retiring, people, fc, checks: runChecks()};
+}
+/* Save as the real file where the browser allows it, or inside a zip in the online version (it only saves some file types). */
+async function saveSpecial(filename, blob, readme){
+  if (window.claude?.use){
+    let dl = null; try { dl = await window.claude.use("downloads"); } catch {}
+    if (dl){
+      const data = new Uint8Array(await blob.arrayBuffer());
+      const ok = await saveFile(filename.replace(/\.[^.]+$/, "") + ".zip", zipFiles([{name:filename, data}, {name:"README.txt", data:readme.replace(/\n/g, "\r\n")}]));
+      return ok ? "zip" : false;
+    }
+  }
+  return (await saveFile(filename, blob)) ? "file" : false;
+}
+
+/* ---- PowerPoint ---- */
+async function exportPPTX(){
+  await loadScript(VENDOR.pptx);
+  const PG = window.PptxGenJS; if (!PG) throw new Error("The PowerPoint maker didn't load. Check your connection and try again.");
+  const pptx = new PG();
+  pptx.layout = "LAYOUT_WIDE"; pptx.title = (S.name || "Map") + " – Blockplan"; pptx.company = ""; pptx.author = "Blockplan";
+  pptx.theme = {headFontFace:"Arial", bodyFontFace:"Arial"};
+  const INK = "16211E", MUTED = "56665F", ACC = "1F5B4E", LINE = "CFD8D4", PANEL = "F5F7F6";
+  const hx = h => h.replace("#", "").toUpperCase();
+  pptx.defineSlideMaster({title:"BP", background:{color:"FFFFFF"},
+    objects:[{text:{text:`${S.name || "Map"} · Made with Blockplan`, options:{x:0.5, y:7.05, w:9, h:0.3, fontSize:9, color:MUTED}}}],
+    slideNumber:{x:12.3, y:7.05, w:0.6, h:0.3, fontSize:9, color:MUTED, align:"right"}});
+  const heading = (sl, t, sub) => { sl.addText(t, {x:0.5, y:0.3, w:12.3, h:0.55, fontSize:24, bold:true, color:INK}); if (sub) sl.addText(sub, {x:0.5, y:0.82, w:12.3, h:0.3, fontSize:12, color:MUTED}); };
+  const f = summaryFacts(), cw = 12.33;
+  const tblOpts = (extra = {}) => ({x:0.5, y:1.3, w:cw, fontSize:10, color:INK, border:{type:"solid", pt:0.5, color:LINE}, valign:"top", margin:0.05,
+    autoPage:true, autoPageRepeatHeader:true, autoPageHeaderRows:1, newSlideStartY:0.5, autoPageSlideStartY:0.5, ...extra});
+  const head = cols => cols.map(t => ({text:t, options:{bold:true, color:"FFFFFF", fill:{color:ACC}}}));
+
+  /* title */
+  let sl = pptx.addSlide({masterName:"BP"});
+  sl.addShape(pptx.ShapeType.rect, {x:0, y:0, w:0.25, h:7.5, fill:{color:ACC}, line:{color:ACC}});
+  sl.addText(S.name || "Map", {x:0.8, y:2.4, w:11.5, h:1.2, fontSize:40, bold:true, color:INK});
+  sl.addText(`Architecture summary · ${todayGB()}`, {x:0.8, y:3.6, w:11.5, h:0.5, fontSize:18, color:MUTED});
+
+  /* summary */
+  sl = pptx.addSlide({masterName:"BP"}); heading(sl, "Summary");
+  const tW = (cw - 5 * 0.2) / 6;
+  TYPES.forEach((t, i) => {
+    const x = 0.5 + i * (tW + 0.2);
+    sl.addShape(pptx.ShapeType.rect, {x, y:1.2, w:tW, h:0.06, fill:{color:hx(EXP[t.key])}, line:{color:hx(EXP[t.key])}});
+    sl.addText([{text:String(S.blocks.filter(b => b.type === t.key).length), options:{fontSize:26, bold:true, color:INK, breakLine:true}}, {text:t.plural, options:{fontSize:11, color:MUTED}}],
+      {x, y:1.28, w:tW, h:1.0, fill:{color:PANEL}, valign:"top", margin:0.1});
+  });
+  if (f.verdict){
+    const cW = (cw - 3 * 0.2) / 4;
+    [[money(f.c.today), "a year today"], [money(f.c.future), "a year in future"], [money(f.c.oneOff), "one-off costs"], [f.diff >= 0 ? money(f.diff) : "+" + money(-f.diff), f.diff >= 0 ? "saved a year" : "extra a year"]].forEach(([big, small], i) =>
+      sl.addText([{text:big, options:{fontSize:24, bold:true, color:INK, breakLine:true}}, {text:small, options:{fontSize:11, color:MUTED}}],
+        {x:0.5 + i * (cW + 0.2), y:2.5, w:cW, h:0.95, fill:{color:PANEL}, valign:"top", margin:0.1}));
+  }
+  const bullets = [f.verdict && {text:f.verdict, options:{bold:true}},
+    f.planned.length && {text:`Planned: ${f.planned.join(", ")}.`}, f.retiring.length && {text:`Being removed: ${f.retiring.join(", ")}.`},
+    f.people.length && {text:`${f.people.length} stakeholder${f.people.length === 1 ? "" : "s"}: ${f.fc("for")} for the changes, ${f.fc("unsure")} unsure, ${f.fc("against")} against, and ${f.fc("")} not known yet.`},
+    {text: f.checks.length ? `Things to look at: ${f.checks.filter(x => x.lvl === "bad").length} serious and ${f.checks.filter(x => x.lvl === "watch").length} worth checking.` : "The checks found nothing to flag."}].filter(Boolean)
+    .map(b => ({text:b.text, options:{bullet:true, breakLine:true, ...(b.options || {})}}));
+  sl.addText(bullets, {x:0.5, y:f.verdict ? 3.7 : 2.6, w:cw, h:3.1, fontSize:14, color:INK, valign:"top", paraSpaceAfter:6});
+
+  /* the map */
+  if (S.blocks.length){
+    const lay = mapPages("all", [{name:"wide", w:cw * 25.4, h:5.95 * 25.4}], 4.5), n = lay.pages.length;
+    for (let i = 0; i < n; i++){
+      const pg = lay.pages[i], c = await svgToCanvas(pg, Math.min(3, Math.max(1.5, lay.scale * 12)));
+      sl = pptx.addSlide({masterName:"BP"}); heading(sl, n > 1 ? `The map (part ${i + 1} of ${n})` : "The map", n > 1 ? "Connectors at the edges, such as A-1, show where a line carries on. The same label appears on both parts." : `How the organisation works – ${todayGB()}`);
+      const wIn = pg.w * lay.scale / 25.4, hIn = pg.h * lay.scale / 25.4;
+      sl.addImage({data:c.toDataURL("image/png"), x:0.5, y:1.2, w:wIn, h:hIn});
+      sl.addNotes([f.planned.length ? `Planned: ${f.planned.join(", ")}.` : "", f.retiring.length ? `Being removed: ${f.retiring.join(", ")}.` : ""].filter(Boolean).join("\n") || "How the organisation works.");
+    }
+  }
+
+  /* stakeholders */
+  if (f.people.length){
+    const g = gridSVG(), c = await svgToCanvas(g, 1.5), k = Math.min(cw / (g.w / 96), 5.95 / (g.h / 96));
+    sl = pptx.addSlide({masterName:"BP"}); heading(sl, "Stakeholders", "Higher up means more say. Further right means the changes affect them more.");
+    sl.addImage({data:c.toDataURL("image/png"), x:0.5 + (cw - g.w / 96 * k) / 2, y:1.2, w:g.w / 96 * k, h:g.h / 96 * k});
+    sl = pptx.addSlide({masterName:"BP"}); heading(sl, "Stakeholders in detail", "Grouped by how closely to work with them.");
+    const order = ["close", "satisfied", "informed", "checkin"];
+    const rows = [head(["Name", "Role", "Feeling", "How to work with them", "What they care about", "How we keep them on side"]),
+      ...f.people.slice().sort((a, b) => order.indexOf(quadOf(a)) - order.indexOf(quadOf(b))).map(p => [
+        {text:p.name, options:{bold:true}}, p.role, {text:FEEL[p.feeling] || FEEL[""], options:{color: p.feeling === "against" ? "C2372B" : p.feeling === "for" ? "2F8A4E" : p.feeling === "unsure" ? "9A6C0A" : MUTED}},
+        QUADS[quadOf(p)].t, p.cares, p.plan || "No plan yet"])];
+    sl.addTable(rows, tblOpts({colW:[1.9, 1.4, 1.4, 2.0, 2.9, 2.73]}));
+  }
+
+  /* costs */
+  if (f.verdict){
+    sl = pptx.addSlide({masterName:"BP"}); heading(sl, "Costs", f.verdict);
+    const sgn = d => (d > 0 ? "+" : d < 0 ? "-" : "") + moneyFull(Math.abs(d));
+    const rows = [head(["Row", "Today, a year", "Future, a year", "Change"]),
+      ...f.c.rows.filter(r => r.today || r.future).map(r => [r.t.lane, moneyFull(r.today), moneyFull(r.future), sgn(r.future - r.today)]),
+      [{text:"Total", options:{bold:true}}, {text:moneyFull(f.c.today), options:{bold:true}}, {text:moneyFull(f.c.future), options:{bold:true}}, {text:sgn(f.c.future - f.c.today), options:{bold:true}}]];
+    sl.addTable(rows, tblOpts({colW:[4.33, 2.67, 2.67, 2.66], align:"left", fontSize:12}));
+  }
+
+  /* checks */
+  sl = pptx.addSlide({masterName:"BP"}); heading(sl, "Things to look at", "Simple checks on the map. Serious ones first.");
+  if (f.checks.length){
+    const lvl = {bad:["Serious", "C2372B"], watch:["Worth checking", "9A6C0A"], info:["To note", MUTED]};
+    sl.addTable([head(["", "What we found", "What to do"]), ...f.checks.map(x => [{text:lvl[x.lvl][0], options:{bold:true, color:lvl[x.lvl][1]}}, x.t, x.d])], tblOpts({colW:[1.6, 5.2, 5.53]}));
+  } else sl.addText("Nothing to flag right now.", {x:0.5, y:1.4, w:cw, h:0.5, fontSize:14, color:MUTED});
+
+  /* everything on the map */
+  if (S.blocks.length){
+    sl = pptx.addSlide({masterName:"BP"}); heading(sl, "Everything on the map", "Grouped by row.");
+    const rows = [head(["Name", "What it is", "Who looks after it", "Status", "Health", "Yearly", "One-off"])];
+    for (const t of TYPES){
+      const bs = S.blocks.filter(b => b.type === t.key).sort((a, b) => a.name.localeCompare(b.name)); if (!bs.length) continue;
+      rows.push([{text:`${t.lane} – ${t.plural}`, options:{colspan:7, bold:true, color:hx(EXP[t.key]), fill:{color:hx(mix(EXP[t.key], "#FFFFFF", 0.14))}}}]);
+      for (const b of bs) rows.push([{text:b.name, options:{bold:true}}, b.desc, b.owner, WHEN[b.when], b.health ? HEALTH[b.health] : "", b.cost ? moneyFull(b.cost) : "", b.oneOff ? moneyFull(b.oneOff) : ""]);
+    }
+    sl.addTable(rows, tblOpts({colW:[2.3, 3.6, 1.7, 1.4, 1.3, 1.0, 1.03], fontSize:9}));
+  }
+
+  const blob = await pptx.write({outputType:"blob"});
+  const ok = await saveFile(fileBase() + ".pptx", blob);
+  return ok && "PowerPoint saved. The tables are editable; the map and the stakeholder grid are pictures.";
+}
+
+/* ---- draw.io ---- */
+const ax = s => xesc(s).replace(/\n/g, "&#10;");
+function drawioXML(){
+  const people = P(), lanes = TYPES.filter(t => S.blocks.some(b => b.type === t.key));
+  const W = Math.max(900, ...S.blocks.map(b => b.x + BW + 48));
+  let id = 2; const cells = [], ids = {};
+  const v = (attrs, style, x, y, w, h, parent = "1") => { const i = "c" + (id++); cells.push(`<object id="${i}" ${attrs}><mxCell style="${ax(style)}" vertex="1" parent="${parent}"><mxGeometry x="${Math.round(x)}" y="${Math.round(y)}" width="${Math.round(w)}" height="${Math.round(h)}" as="geometry"/></mxCell></object>`); return i; };
+  for (const t of lanes){
+    v(`label="${ax(t.lane + "  ·  " + t.plural)}" kind="Row"`, `rounded=0;whiteSpace=wrap;html=0;fillColor=${EXP[t.key + "Soft"]};strokeColor=${EXP.line};dashed=1;align=left;verticalAlign=top;spacingLeft=12;spacingTop=6;fontStyle=1;fontSize=14;fontColor=${EXP[t.key]};movable=1;locked=0;`, 0, laneTop(t.key), W, LANE_H);
+  }
+  for (const b of S.blocks){
+    const c = EXP[b.type], planned = b.when === "planned", ret = b.when === "retiring";
+    const label = `<font style="font-size:9px" color="${ret ? EXP.gone : c}"><b>${xesc(T[b.type].name.toUpperCase())}${planned ? " · PLANNED" : ret ? " · BEING REMOVED" : ""}</b></font>${b.health ? ` <font color="${EXP[b.health]}">●</font>` : ""}${b.cost ? ` <font style="font-size:9px">${xesc(money(b.cost))}/yr</font>` : ""}<br><b>${xesc(b.name)}</b>`;
+    const style = `rounded=1;arcSize=14;whiteSpace=wrap;html=1;align=left;verticalAlign=middle;spacingLeft=8;spacingRight=6;fontSize=13;fontColor=${EXP.ink};strokeWidth=1.5;` +
+      (planned ? `fillColor=#FFFFFF;strokeColor=${mix(c, EXP.line, 0.55)};dashed=1;dashPattern=6 4;` : ret ? `fillColor=${EXP.goneBg};strokeColor=${EXP.gone};fontStyle=8;` : `fillColor=${mix(c, "#FFFFFF", 0.09)};strokeColor=${mix(c, EXP.line, 0.55)};`);
+    const data = [["kind", T[b.type].name], ["description", b.desc], ["owner", b.owner], ["status", WHEN[b.when]], ["health", b.health ? HEALTH[b.health] : ""], ["yearlyCost", b.cost ? moneyFull(b.cost) : ""], ["oneOffCost", b.oneOff ? moneyFull(b.oneOff) : ""]]
+      .filter(([, x]) => x).map(([k, x]) => `${k}="${ax(x)}"`).join(" ");
+    ids[b.id] = v(`label="${ax(label)}" tooltip="${ax(b.desc || b.name)}" ${data}`, style, b.x, b.y, BW, BH);
+  }
+  for (const l of S.links){
+    const a = byId(l.from), b = byId(l.to); if (!a || !b) continue;
+    const faded = a.when !== "now" || b.when !== "now", i = "c" + (id++);
+    cells.push(`<mxCell id="${i}" value="${ax(l.label)}" style="${ax(`edgeStyle=orthogonalEdgeStyle;rounded=1;curved=0;html=1;endArrow=block;endFill=1;strokeColor=${EXP.muted};strokeWidth=1.5;fontSize=11;fontColor=${EXP.muted};labelBackgroundColor=#FFFFFF;${faded ? "dashed=1;" : ""}`)}" edge="1" parent="1" source="${ids[l.from]}" target="${ids[l.to]}"><mxGeometry relative="1" as="geometry"/></mxCell>`);
+  }
+  const page1 = cells.join("\n");
+  /* page 2: stakeholders */
+  id = 2; cells.length = 0;
+  if (people.length){
+    const GW = 1000, GH = 700, q = [["satisfied", 0, 0], ["close", 1, 0], ["checkin", 0, 1], ["informed", 1, 1]];
+    for (const [k, cx, cy] of q) v(`label="${ax(QUADS[k].t)}"`, `rounded=0;whiteSpace=wrap;html=0;fillColor=${k === "close" ? EXP.soft : "#FFFFFF"};strokeColor=${EXP.line};dashed=${k === "close" ? 0 : 1};align=${cx ? "right" : "left"};verticalAlign=${cy ? "bottom" : "top"};spacing=12;fontStyle=1;fontSize=15;fontColor=${EXP.ink};`, cx * GW / 2, cy * GH / 2, GW / 2, GH / 2);
+    for (const p of people){
+      const col = FEEL_X[p.feeling] || FEEL_X[""], w = Math.max(120, tw(p.name, `600 13px ${XF}`) + 40);
+      const data = [["role", p.role], ["feeling", FEEL[p.feeling] || FEEL[""]], ["approach", QUADS[quadOf(p)].t], ["caresAbout", p.cares], ["plan", p.plan], ["onTheMap", p.links.map(x => byId(x)?.name).filter(Boolean).join(", ")]]
+        .filter(([, x]) => x).map(([k, x]) => `${k}="${ax(x)}"`).join(" ");
+      v(`label="${ax(p.name)}" tooltip="${ax([p.role, FEEL[p.feeling] || FEEL[""], p.cares].filter(Boolean).join(" · "))}" ${data}`, `rounded=1;arcSize=50;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=${col};strokeWidth=2;fontStyle=1;fontSize=13;fontColor=${EXP.ink};`,
+        Math.min(Math.max(p.impact * GW - w / 2, 4), GW - w - 4), Math.min(Math.max((1 - p.say) * GH - 15, 34), GH - 34), w, 30);
+    }
+  }
+  const page2 = cells.join("\n");
+  const diagram = (name, did, body) => `<diagram id="${did}" name="${ax(name)}"><mxGraphModel dx="1200" dy="800" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="0" pageScale="1" math="0" shadow="0"><root><mxCell id="0"/><mxCell id="1" parent="0"/>\n${body}\n</root></mxGraphModel></diagram>`;
+  return `<mxfile host="Blockplan" agent="Blockplan" version="24.0.0">\n${diagram(S.name || "Map", "map", page1)}\n${people.length ? diagram("Stakeholders", "stakeholders", page2) : ""}\n</mxfile>\n`;
+}
+async function exportDrawio(){
+  if (!S.blocks.length) return "There's nothing on the map to export yet.";
+  const name = fileBase() + ".drawio", r = await saveSpecial(name, new Blob([drawioXML()], {type:"application/xml"}),
+    `${name} is a draw.io diagram.\n\nOpen it at https://app.diagrams.net (File > Open from > Device), or in the draw.io desktop app.\nIt has a page for the map${P().length ? " and one for stakeholders" : ""}. Select a shape and choose Edit Data to see its details.\n`);
+  return r === "zip" ? "draw.io diagram saved, inside a zip file. Unzip it, then open the .drawio file in draw.io." : r && "draw.io diagram saved. Open it at app.diagrams.net or in the draw.io app.";
+}
+
+/* ---- Visio ---- */
+function vsdxFiles(){
+  const IN = 96;                                  /* px per inch */
+  const NS = `xmlns="http://schemas.microsoft.com/office/visio/2012/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships" xml:space="preserve"`;
+  const n4 = x => (Math.round(x * 10000) / 10000).toString();
+  const cell = (n, v, extra = "") => `<Cell N="${n}" V="${typeof v === "number" ? n4(v) : xesc(v)}"${extra}/>`;
+  const people = P(), lanes = TYPES.filter(t => S.blocks.some(b => b.type === t.key));
+  const pages = [];
+  const rectGeom = `<Section N="Geometry" IX="0">${cell("NoFill", 0)}${cell("NoLine", 0)}${cell("NoShow", 0)}${cell("NoSnap", 0)}<Row T="RelMoveTo" IX="1">${cell("X", 0)}${cell("Y", 0)}</Row><Row T="RelLineTo" IX="2">${cell("X", 1)}${cell("Y", 0)}</Row><Row T="RelLineTo" IX="3">${cell("X", 1)}${cell("Y", 1)}</Row><Row T="RelLineTo" IX="4">${cell("X", 0)}${cell("Y", 1)}</Row><Row T="RelLineTo" IX="5">${cell("X", 0)}${cell("Y", 0)}</Row></Section>`;
+  const props = list => { const ps = list.filter(([, v]) => v); return ps.length ? `<Section N="Property">${ps.map(([k, label, v]) => `<Row N="${k}">${cell("Value", v, ' U="STR"')}${cell("Label", label)}${cell("Type", 0)}</Row>`).join("")}</Section>` : ""; };
+  const page = (name, Wpx, Hpx, build) => {
+    let sid = 1; const shapes = [], connects = [];
+    const Hin = Hpx / IN, X = px => px / IN, Y = py => Hin - py / IN;
+    const box = ({x, y, w, h, fill, line, dashed, rounding = 0, noLine, text = [], valign = 1, halign = 0, data = [], lineW = 0.01}) => {
+      const id = sid++;
+      shapes.push(`<Shape ID="${id}" NameU="Shape${id}" Type="Shape" LineStyle="0" FillStyle="0" TextStyle="0">` +
+        cell("PinX", X(x + w / 2)) + cell("PinY", Y(y + h / 2)) + cell("Width", X(w)) + cell("Height", h / IN) + cell("LocPinX", X(w) / 2, ' F="Width*0.5"') + cell("LocPinY", h / IN / 2, ' F="Height*0.5"') +
+        cell("Angle", 0) + cell("FlipX", 0) + cell("FlipY", 0) + cell("ResizeMode", 0) +
+        cell("FillForegnd", fill || "#FFFFFF") + cell("FillPattern", fill ? 1 : 0) + cell("LineColor", line || "#000000") + cell("LinePattern", noLine ? 0 : dashed ? 2 : 1) + cell("LineWeight", lineW) + cell("Rounding", rounding) +
+        cell("VerticalAlign", valign) + cell("LeftMargin", 0.08) + cell("RightMargin", 0.06) + cell("TopMargin", 0.04) + cell("BottomMargin", 0.04) +
+        `<Section N="Character">${text.map((t, i) => `<Row IX="${i}">${cell("Font", "Arial")}${cell("Size", (t.pt || 10) / 72)}${cell("Color", t.color || EXP.ink)}${cell("Style", (t.bold ? 1 : 0) + (t.strike ? 0 : 0))}${t.strike ? cell("Strikethru", 1) : ""}</Row>`).join("")}</Section>` +
+        `<Section N="Paragraph"><Row IX="0">${cell("HorzAlign", halign)}</Row></Section>` +
+        rectGeom + props(data) +
+        `<Text>${text.map((t, i) => `<cp IX="${i}"/>${xesc(t.s)}${i < text.length - 1 ? "\n" : ""}`).join("")}</Text></Shape>`);
+      return id;
+    };
+    const connector = (fromId, toId, p, q, label, dashed) => {
+      const id = sid++, x1 = X(p.x), y1 = Y(p.y), x2 = X(q.x), y2 = Y(q.y), dx = x2 - x1, dy = y2 - y1, len = Math.max(0.01, Math.hypot(dx, dy));
+      shapes.push(`<Shape ID="${id}" NameU="Connector${id}" Type="Shape" LineStyle="0" FillStyle="0" TextStyle="0">` +
+        cell("PinX", (x1 + x2) / 2) + cell("PinY", (y1 + y2) / 2) + cell("Width", len) + cell("Height", 0) + cell("LocPinX", len / 2, ' F="Width*0.5"') + cell("LocPinY", 0) + cell("Angle", Math.atan2(dy, dx)) +
+        cell("FlipX", 0) + cell("FlipY", 0) + cell("BeginX", x1) + cell("BeginY", y1) + cell("EndX", x2) + cell("EndY", y2) + cell("ObjType", 2) +
+        cell("LineColor", EXP.muted) + cell("LineWeight", 0.0139) + cell("LinePattern", dashed ? 2 : 1) + cell("EndArrow", 4) + cell("EndArrowSize", 2) +
+        cell("TxtPinX", len / 2, ' F="Width*0.5"') + cell("TxtPinY", 0) + cell("TxtWidth", 1.4) + cell("TxtHeight", 0.22) + cell("TxtLocPinX", 0.7) + cell("TxtLocPinY", 0.11) + cell("TxtAngle", -Math.atan2(dy, dx), ' F="-Angle"') +
+        cell("TextBkgnd", "#FFFFFF") +
+        `<Section N="Character"><Row IX="0">${cell("Font", "Arial")}${cell("Size", 8 / 72)}${cell("Color", EXP.muted)}</Row></Section>` +
+        `<Section N="Geometry" IX="0">${cell("NoFill", 1)}${cell("NoLine", 0)}${cell("NoShow", 0)}${cell("NoSnap", 0)}<Row T="MoveTo" IX="1">${cell("X", 0)}${cell("Y", 0)}</Row><Row T="LineTo" IX="2">${cell("X", len)}${cell("Y", 0)}</Row></Section>` +
+        `<Text>${xesc(label)}</Text></Shape>`);
+      connects.push(`<Connect FromSheet="${id}" FromCell="BeginX" FromPart="9" ToSheet="${fromId}" ToCell="PinX" ToPart="3"/>`, `<Connect FromSheet="${id}" FromCell="EndX" FromPart="12" ToSheet="${toId}" ToCell="PinX" ToPart="3"/>`);
+    };
+    build({box, connector});
+    pages.push({name, w:Wpx / IN, h:Hin, xml:`<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\n<PageContents ${NS}><Shapes>${shapes.join("")}</Shapes>${connects.length ? `<Connects>${connects.join("")}</Connects>` : ""}</PageContents>`});
+  };
+  const Wmap = Math.max(900, ...S.blocks.map(b => b.x + BW + 48)), Hmap = laneTop(TYPES[TYPES.length - 1].key) + LANE_H;
+  page(S.name || "Map", Wmap, Hmap, ({box, connector}) => {
+    for (const t of lanes) box({x:0, y:laneTop(t.key), w:Wmap, h:LANE_H, fill:EXP[t.key + "Soft"], line:EXP.line, dashed:true, valign:0, text:[{s:`${t.lane}  ·  ${t.plural}`, pt:11, bold:true, color:EXP[t.key]}]});
+    const sid = {};
+    for (const b of S.blocks){
+      const c = EXP[b.type], planned = b.when === "planned", ret = b.when === "retiring";
+      const kind = T[b.type].name.toUpperCase() + (planned ? " · PLANNED" : ret ? " · BEING REMOVED" : "") + (b.cost ? `   ${money(b.cost)}/yr` : "") + (b.health ? `   ● ${HEALTH[b.health]}` : "");
+      sid[b.id] = box({x:b.x, y:b.y, w:BW, h:BH, rounding:0.1, dashed:planned, lineW:0.0139,
+        fill: planned ? "#FFFFFF" : ret ? EXP.goneBg : mix(c, "#FFFFFF", 0.09), line: ret ? EXP.gone : mix(c, EXP.line, 0.55),
+        text:[{s:b.name, pt:10, bold:true, strike:ret}, {s:kind, pt:6.5, bold:true, color: ret ? EXP.gone : c}],
+        data:[["Kind", "Kind", T[b.type].name], ["Description", "Description", b.desc], ["Owner", "Who looks after it", b.owner], ["Status", "Status", WHEN[b.when]], ["Health", "Health", b.health ? HEALTH[b.health] : ""], ["YearlyCost", "Yearly cost", b.cost ? moneyFull(b.cost) : ""], ["OneOffCost", "One-off cost", b.oneOff ? moneyFull(b.oneOff) : ""]]});
+    }
+    for (const l of S.links){
+      const a = byId(l.from), b = byId(l.to); if (!a || !b) continue;
+      connector(sid[a.id], sid[b.id], anchor(a, b), anchor(b, a), l.label, a.when !== "now" || b.when !== "now");
+    }
+  });
+  if (people.length){
+    const GW = 1000, GH = 700;
+    page("Stakeholders", GW, GH, ({box}) => {
+      for (const [k, cx, cy] of [["satisfied", 0, 0], ["close", 1, 0], ["checkin", 0, 1], ["informed", 1, 1]])
+        box({x:cx * GW / 2, y:cy * GH / 2, w:GW / 2, h:GH / 2, fill: k === "close" ? EXP.soft : "#FFFFFF", line:EXP.line, dashed:k !== "close", valign:cy ? 2 : 0, halign:cx ? 2 : 0, text:[{s:QUADS[k].t, pt:12, bold:true}]});
+      for (const p of people){
+        const w = Math.max(120, tw(p.name, `600 13px ${XF}`) + 30);
+        box({x:Math.min(Math.max(p.impact * GW - w / 2, 4), GW - w - 4), y:Math.min(Math.max((1 - p.say) * GH - 15, 34), GH - 34), w, h:30, rounding:0.15, fill:"#FFFFFF", line:FEEL_X[p.feeling] || FEEL_X[""], lineW:0.025, halign:1,
+          text:[{s:p.name, pt:10, bold:true}],
+          data:[["Role", "Role", p.role], ["Feeling", "Feeling about the changes", FEEL[p.feeling] || FEEL[""]], ["Approach", "How to work with them", QUADS[quadOf(p)].t], ["Cares", "What they care about", p.cares], ["Plan", "How we keep them on side", p.plan], ["OnTheMap", "Cares about on the map", p.links.map(x => byId(x)?.name).filter(Boolean).join(", ")]]});
+      }
+    });
+  }
+  const files = [];
+  files.push({name:"[Content_Types].xml", data:`<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\n<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/><Override PartName="/visio/document.xml" ContentType="application/vnd.ms-visio.drawing.main+xml"/><Override PartName="/visio/pages/pages.xml" ContentType="application/vnd.ms-visio.pages+xml"/>${pages.map((p, i) => `<Override PartName="/visio/pages/page${i + 1}.xml" ContentType="application/vnd.ms-visio.page+xml"/>`).join("")}<Override PartName="/visio/windows.xml" ContentType="application/vnd.ms-visio.windows+xml"/><Override PartName="/docProps/core.xml" ContentType="application/vnd.openxmlformats-package.core-properties+xml"/><Override PartName="/docProps/app.xml" ContentType="application/vnd.openxmlformats-officedocument.extended-properties+xml"/></Types>`});
+  files.push({name:"_rels/.rels", data:`<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\n<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.microsoft.com/visio/2010/relationships/document" Target="visio/document.xml"/><Relationship Id="rId2" Type="http://schemas.openxmlformats.org/package/2006/relationships/metadata/core-properties" Target="docProps/core.xml"/><Relationship Id="rId3" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/extended-properties" Target="docProps/app.xml"/></Relationships>`});
+  const now = new Date().toISOString().replace(/\.\d+Z$/, "Z");
+  files.push({name:"docProps/core.xml", data:`<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\n<cp:coreProperties xmlns:cp="http://schemas.openxmlformats.org/package/2006/metadata/core-properties" xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:dcterms="http://purl.org/dc/terms/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"><dc:title>${xesc(S.name || "Map")}</dc:title><dc:creator>Blockplan</dc:creator><dcterms:created xsi:type="dcterms:W3CDTF">${now}</dcterms:created><dcterms:modified xsi:type="dcterms:W3CDTF">${now}</dcterms:modified></cp:coreProperties>`});
+  files.push({name:"docProps/app.xml", data:`<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\n<Properties xmlns="http://schemas.openxmlformats.org/officeDocument/2006/extended-properties"><Application>Microsoft Visio</Application><Template></Template></Properties>`});
+  files.push({name:"visio/_rels/document.xml.rels", data:`<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\n<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.microsoft.com/visio/2010/relationships/pages" Target="pages/pages.xml"/><Relationship Id="rId2" Type="http://schemas.microsoft.com/visio/2010/relationships/windows" Target="windows.xml"/></Relationships>`});
+  files.push({name:"visio/windows.xml", data:`<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\n<Windows ClientWidth="1600" ClientHeight="900" ${NS}><Window ID="0" WindowType="Drawing" WindowState="1073741824" ClientWidth="1600" ClientHeight="900" ViewScale="-1" ViewCenterX="${n4(pages[0].w / 2)}" ViewCenterY="${n4(pages[0].h / 2)}"><ShowRulers>1</ShowRulers><ShowGrid>1</ShowGrid><ShowPageBreaks>0</ShowPageBreaks><ShowGuides>1</ShowGuides><ShowConnectionPoints>1</ShowConnectionPoints><GlueSettings>9</GlueSettings><SnapSettings>65847</SnapSettings><SnapExtensions>34</SnapExtensions><DynamicGridEnabled>1</DynamicGridEnabled></Window></Windows>`});
+  files.push({name:"visio/document.xml", data:`<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\n<VisioDocument ${NS}><DocumentSettings TopPage="0" DefaultTextStyle="0" DefaultLineStyle="0" DefaultFillStyle="0" DefaultGuideStyle="0"><GlueSettings>9</GlueSettings><SnapSettings>65847</SnapSettings><SnapExtensions>34</SnapExtensions><DynamicGridEnabled>1</DynamicGridEnabled><ProtectStyles>0</ProtectStyles><ProtectShapes>0</ProtectShapes><ProtectMasters>0</ProtectMasters><ProtectBkgnds>0</ProtectBkgnds></DocumentSettings>` +
+    `<Colors><ColorEntry IX="0" RGB="#000000"/><ColorEntry IX="1" RGB="#FFFFFF"/></Colors><FaceNames><FaceName NameU="Arial" UnicodeRanges="-536859905 -1073711037 9 0" CharSets="1073742335 -65536" Panos="2 11 6 4 2 2 2 2 2 4" Flags="325"/></FaceNames>` +
+    `<StyleSheets><StyleSheet ID="0" NameU="No Style" Name="No Style">${cell("EnableLineProps", 1)}${cell("EnableFillProps", 1)}${cell("EnableTextProps", 1)}${cell("HideForApply", 0)}${cell("LineWeight", 0.01)}${cell("LineColor", "#000000")}${cell("LinePattern", 1)}${cell("Rounding", 0)}${cell("EndArrowSize", 2)}${cell("BeginArrow", 0)}${cell("EndArrow", 0)}${cell("LineCap", 0)}${cell("BeginArrowSize", 2)}${cell("LineColorTrans", 0)}${cell("CompoundType", 0)}${cell("FillForegnd", "#FFFFFF")}${cell("FillBkgnd", "#000000")}${cell("FillPattern", 1)}${cell("ShdwForegnd", "#000000")}${cell("ShdwPattern", 0)}${cell("FillForegndTrans", 0)}${cell("FillBkgndTrans", 0)}${cell("ShdwForegndTrans", 0)}${cell("LeftMargin", 0)}${cell("RightMargin", 0)}${cell("TopMargin", 0)}${cell("BottomMargin", 0)}${cell("VerticalAlign", 1)}${cell("TextBkgnd", 0)}${cell("DefaultTabStop", 0.5)}${cell("TextDirection", 0)}${cell("TextBkgndTrans", 0)}` +
+    `<Section N="Character"><Row IX="0">${cell("Font", "Arial")}${cell("Color", "#000000")}${cell("Style", 0)}${cell("Case", 0)}${cell("Pos", 0)}${cell("FontScale", 1)}${cell("Size", 0.1667)}${cell("DblUnderline", 0)}${cell("Overline", 0)}${cell("Strikethru", 0)}${cell("Letterspace", 0)}${cell("ColorTrans", 0)}</Row></Section>` +
+    `<Section N="Paragraph"><Row IX="0">${cell("IndFirst", 0)}${cell("IndLeft", 0)}${cell("IndRight", 0)}${cell("SpLine", -1.2)}${cell("SpBefore", 0)}${cell("SpAfter", 0)}${cell("HorzAlign", 1)}${cell("Bullet", 0)}</Row></Section></StyleSheet></StyleSheets></VisioDocument>`});
+  files.push({name:"visio/pages/pages.xml", data:`<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\n<Pages ${NS}>${pages.map((p, i) => `<Page ID="${i}" NameU="${xesc(p.name)}" Name="${xesc(p.name)}" ViewScale="-1" ViewCenterX="${n4(p.w / 2)}" ViewCenterY="${n4(p.h / 2)}"><PageSheet LineStyle="0" FillStyle="0" TextStyle="0">${cell("PageWidth", p.w + 0.5)}${cell("PageHeight", p.h + 0.5)}${cell("ShdwOffsetX", 0.125)}${cell("ShdwOffsetY", -0.125)}${cell("PageScale", 1, ' U="IN"')}${cell("DrawingScale", 1, ' U="IN"')}${cell("DrawingSizeType", 0)}${cell("DrawingScaleType", 0)}${cell("InhibitSnap", 0)}${cell("PageLockReplace", 0, ' U="BOOL"')}${cell("PageLockDuplicate", 0, ' U="BOOL"')}${cell("UIVisibility", 0)}${cell("ShdwType", 0)}${cell("ShdwObliqueAngle", 0)}${cell("ShdwScaleFactor", 1)}${cell("DrawingResizeType", 1)}${cell("PageShapeSplit", 1)}${cell("PrintPageOrientation", p.w >= p.h ? 2 : 1)}</PageSheet><Rel r:id="rId${i + 1}"/></Page>`).join("")}</Pages>`});
+  files.push({name:"visio/pages/_rels/pages.xml.rels", data:`<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\n<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">${pages.map((p, i) => `<Relationship Id="rId${i + 1}" Type="http://schemas.microsoft.com/visio/2010/relationships/page" Target="page${i + 1}.xml"/>`).join("")}</Relationships>`});
+  pages.forEach((p, i) => files.push({name:`visio/pages/page${i + 1}.xml`, data:p.xml}));
+  return files;
+}
+async function exportVisio(){
+  if (!S.blocks.length) return "There's nothing on the map to export yet.";
+  const name = fileBase() + ".vsdx", r = await saveSpecial(name, zipFiles(vsdxFiles()),
+    `${name} is a Visio drawing.\n\nOpen it in Microsoft Visio, or in Visio for the web.\nIt has a page for the map${P().length ? " and one for stakeholders" : ""}. Right-click a shape and choose Data > Shape Data to see its details.\n`);
+  return r === "zip" ? "Visio drawing saved, inside a zip file. Unzip it, then open the .vsdx file in Visio." : r && "Visio drawing saved. Open it in Visio or Visio for the web.";
+}
+
+$("#pptxBtn").onclick = () => exporting("Making the PowerPoint", exportPPTX);
+$("#drawioBtn").onclick = () => exporting("Making the draw.io diagram", exportDrawio);
+$("#vsdxBtn").onclick = () => exporting("Making the Visio drawing", exportVisio);
 
 /* ---------- tabs, view, zoom, menu ---------- */
 function showTab(t, soft){
