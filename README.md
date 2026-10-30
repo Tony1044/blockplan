@@ -1,37 +1,83 @@
 # Blockplan
 
-A simple, drag-and-drop way to map how an organisation works, with an AI helper you can ask in plain English. It is built for people new to architecture work: no framework names, no acronyms, and nothing to learn before you start.
+**Map how your organisation works in an afternoon, in words everyone understands.**
+
+Blockplan is a simple, drag-and-drop way to map an organisation: what it's trying to achieve, what it does, who does it, the information it relies on, the systems it uses, and what those systems run on. It shows what things cost, what's changing, and who cares about the changes. An AI helper you can ask in plain English builds starter maps, explains them, and spots what's missing.
+
+It's built so that someone new to architecture work can use it on day one, and so that the business people in the room can follow the map without help. There are no framework names, no acronyms, and nothing to learn before you start. Underneath, it maps cleanly to ArchiMate, so the work isn't lost when it moves into a full architecture tool.
+
+![The Blockplan map, with a planned system selected and its details open](docs/images/map.png)
+
+## Contents
+
+- [Who it's for](#who-its-for)
+- [Why Blockplan](#why-blockplan)
+- [What it does](#what-it-does)
+- [Quick start](#quick-start)
+- [The AI helper](#the-ai-helper)
+- [Importing and exporting](#importing-and-exporting)
+- [Running it for a team](#running-it-for-a-team)
+- [Your maps](#your-maps)
+- [The API](#the-api)
+- [Settings](#settings)
+- [Common questions](#common-questions)
+- [What's next](#whats-next)
+- [Project layout](#project-layout)
+- [Licence](#licence)
+
+## Who it's for
+
+Blockplan is for the first conversation, not a replacement for a full enterprise architecture platform. Experienced architects already have tools for the long-term record. Blockplan is the tool that gets a workshop going in minutes and leaves everyone with something they understand.
+
+- **Architects doing discovery.** A new client, a newly acquired business, a division nobody has mapped, or a business being separated out. Once a deal is signed, you have to assess the business, agree the target state, and plan the transition, usually with people who have never seen an architecture diagram. Blockplan puts the today and future views, the costs and payback, and who's for or against the changes in one place.
+- **New and junior architects.** It teaches the shape of the job, from goals and activities through to systems and technology, without the jargon. The checks act like a mentor, pointing out gaps as you build.
+- **Organisations without an architecture team.** Small and mid-sized organisations that can't justify a platform licence but need to see their estate, their costs, and their risks.
+- **Consultancies.** A free, quick tool for pre-sales and discovery that leaves the client with something useful.
+
+## Why Blockplan
+
+- **Plain words on top, ArchiMate underneath.** The six rows line up with ArchiMate's layers: goals with Motivation; activities, teams, and information with Business; systems with Application; and technology with Technology. A map started in a workshop exports as a valid ArchiMate model, ready for Archi or another architecture tool.
+- **Cost and payback next to the architecture.** Most tools treat these separately. Seeing "this change saves £25k a year and pays for itself in about ten years" beside the map is what gets a decision made.
+- **Stakeholders on the same page.** Changes more often fail because of people than because of technology. Blockplan records who has a say, who is affected, how they feel, and what they care about, and links them to the parts of the map they care about.
+- **It runs on your own server, and the AI can stay local.** For government, defence, finance, or anyone else who needs it, `AI_MODE=local` means nothing about your maps leaves your network.
+- **Free and open.** MIT licensed. No procurement, no licence conversation, so people can try it the same day.
 
 ## What it does
 
 - **Six plain rows.** Why we do it (goals), What we do (activities), Who does it (teams), What we need to know (information), Systems we use, and What it runs on (technology).
-- **Drag and drop.** Drag a block onto the map, or tap it to add one. Drag from the round dot on a block to another block to connect them. The connecting words are filled in for you.
-- **Today and future.** Mark anything as in place today, planned, or being removed, then switch between Today and Future to see the map before and after.
+- **Drag and drop.** Drag a block onto the map, or tap it to add one. Drag from the round dot on a block to another block to connect them. The connecting words are filled in for you, and you can change them.
+- **Follow a connection.** Click a line and it turns red and is drawn above the boxes, so you can follow it from end to end.
+- **Today and future.** Mark anything as in place today, planned, or being removed, then switch between Today and Future to see the map before and after. Planned blocks have a dashed outline. Blocks being removed have grey stripes, with the name crossed through.
 - **Health.** Mark each block as working well, needing attention, or causing problems.
 - **Costs.** Add a yearly running cost and a one-off cost to any block. The Costs tab totals them, compares today with the future, and works out how long the changes take to pay for themselves.
-- **Stakeholders.** Choose Stakeholders at the top to see the people and groups who have a say in the changes or are affected by them, on a simple grid: more say towards the top, more affected towards the right. Note how each one feels, what they care about, and how you will keep them on side, and link them to the blocks they care about. Blocks show how many stakeholders care about them.
-- **Checks.** Simple rules flag gaps as you build, such as a system nothing uses, an activity no one does, or a plan that depends on something being removed.
-- **AI helper.** Build a starter map, explain the map, find what is missing, spot risks, overlaps, and savings, and suggest stakeholders. It always shows its suggested changes first, and you choose whether to put them on the map.
-- **Bring in what you already have.** Import a spreadsheet (CSV), such as an application list from a CMDB. Blockplan matches the columns for you and shows a preview first.
-- **Share it.** Download a PDF report, a picture of the map or the stakeholder grid for slides, a spreadsheet, or an ArchiMate model for Archi and other architecture tools.
+- **Stakeholders.** Choose **Stakeholders** at the top to see the people and groups who have a say in the changes or are affected by them, on a simple grid: more say towards the top, more affected towards the right. Each corner says how to work with them. Note how each one feels, what they care about, and how you'll keep them on side, and link them to the blocks they care about. Blocks show how many stakeholders care about them.
+- **Checks.** Simple rules flag gaps as you build. They include a system nothing uses, an activity no one does, a plan that depends on something being removed, a stakeholder with a lot of say who is against the changes, and a change nobody has been linked to.
+- **AI helper.** Build a starter map, explain the map, find what's missing, spot risks, overlaps, and savings, and suggest stakeholders. It always shows its suggested changes first, and you choose whether to put them on the map.
+- **Bring in what you already have.** Import a spreadsheet (CSV), such as an application list from a CMDB.
+- **Share it.** Download a PDF report, a picture of the map or the stakeholder grid for slides, a spreadsheet, or an ArchiMate model.
 - **Shared maps.** Maps are saved on the Blockplan server, so everyone using it sees the same maps. If two people save the same map at once, the second person is told and can load the other version or keep theirs as a copy.
+
+![The stakeholder grid, with the Finance Director selected](docs/images/stakeholders.png)
 
 ## Quick start
 
 You need Python 3.10 or newer.
 
-**macOS or Linux**
+**From GitHub**
 
 ```bash
-unzip blockplan.zip && cd blockplan
+git clone https://github.com/Tony1044/blockplan
+cd blockplan
 ./run.sh
 ```
 
-**Windows**
+On Windows, double-click `run.bat` in the `blockplan` folder instead of running `./run.sh`.
 
-Unzip `blockplan.zip`, open the `blockplan` folder, and double-click `run.bat`.
+**From the zip file**
 
-Then open http://localhost:8080. The first run creates an example map so you can see how it works.
+Unzip `blockplan.zip`, then run `./run.sh` in the `blockplan` folder on macOS or Linux, or double-click `run.bat` on Windows.
+
+Then open http://localhost:8080. The first run sets everything up and creates an example map, a snack maker with costs, planned changes, and stakeholders, so you can see how it all fits together.
 
 To switch on the AI helper, open the `.env` file the first run created, add your Claude API key after `ANTHROPIC_API_KEY=`, and restart Blockplan.
 
@@ -46,46 +92,19 @@ Blockplan can use Claude, a model running on your own machine through [Ollama](h
 | `local` | The local model only. Nothing about your maps leaves this machine. |
 | `off` | No AI helper. Everything else still works. |
 
-**Claude.** Get an API key at https://platform.claude.com/settings/keys and put it in `ANTHROPIC_API_KEY`. Create the key for a single workspace; if it works across several, also set `ANTHROPIC_WORKSPACE_ID`. `CLAUDE_MODEL` defaults to `claude-sonnet-5-5`. `claude-haiku-5-5` is quicker and cheaper; `claude-opus-5-5` is the most capable for large maps.
+**Claude.** Get an API key at https://platform.claude.com/settings/keys and put it in `ANTHROPIC_API_KEY`. Create the key for a single workspace; if it works across several, also set `ANTHROPIC_WORKSPACE_ID`. `CLAUDE_MODEL` defaults to `claude-sonnet-5-5`. `claude-haiku-5-5` is quicker and cheaper, and `claude-opus-5-5` is the most capable for large maps.
 
-**Local model.** Install Ollama, then run `ollama pull qwen2.5:7b`. Larger models such as `qwen2.5:14b` give better answers if the machine has the memory. Set `OLLAMA_MODEL` to match.
+**Local model.** Install Ollama, then run `ollama pull qwen2.5:7b`. Larger models such as `qwen2.5:14b` give better answers if the machine has the memory. Set `OLLAMA_MODEL` to match. A local model is slower than Claude and less reliable on big requests, so ask for one part of the map at a time.
 
-When the helper is used, the map's names, descriptions, owners, statuses, and costs are sent to the model with the question. Use `AI_MODE=local` if that information must stay on your network.
-
-## Running it for a team
-
-**Linux server, starting on boot**
-
-```bash
-cd blockplan
-bash deploy/setup.sh
-```
-
-This installs Blockplan as a service. Edit `.env`, then `systemctl --user restart blockplan`.
-
-**Docker**
-
-```bash
-cd blockplan
-cp .env.example .env      # then add your API key
-docker compose up -d
-```
-
-Maps are kept in `./data`. If Ollama runs on the host, the container reaches it automatically.
-
-**Sign-in.** Set `AUTH_USER` and `AUTH_PASSWORD` in `.env` to ask everyone for a username and password. This is a simple shared login. If Blockplan is reachable from outside your network, put it behind HTTPS, for example with a reverse proxy, a VPN, or Tailscale.
-
-## Your maps
-
-- Everything is in one file, `data/blockplan.db`.
-- `bash scripts/backup.sh` makes a dated copy in `backups/`, and is safe to run while Blockplan is running.
-- **Maps → Download this map as a file** gives a `.blockplan.json` file. **Maps → Open a map file** brings one back in, on this or another Blockplan.
+When the helper is used, the map's names, descriptions, owners, statuses, costs, and stakeholders are sent to the model with the question. Use `AI_MODE=local` if that information must stay on your network. The helper is told to name stakeholders by role, such as "Head of Finance", and never to invent personal names.
 
 ## Importing and exporting
 
 Everything is in the **Maps** menu.
 
-**Import from a spreadsheet.** Save the spreadsheet as CSV, with one row per item and column names in the first row. Blockplan recognises common names, for example:
+### Import from a spreadsheet
+
+Save the spreadsheet as CSV, with one row per item and column names in the first row. Commas, semicolons, and tabs all work. Blockplan recognises common column names:
 
 | Blockplan field | Column names it recognises |
 |---|---|
@@ -95,16 +114,32 @@ Everything is in the **Maps** menu.
 | Who looks after it | Any column with "owner" in its name, Responsible, Accountable |
 | Status | Status, Lifecycle, Stage, Phase. Planned, Proposed, or Pipeline means planned. Retire, Sunset, Decommission, or To be replaced means being removed. |
 | Health | Health, RAG, Condition, Technical fit. Green, Amber, and Red work, as do Good, Fair, and Poor. |
-| Yearly cost | Any column with "cost", "annual", or "opex" in its name. 40k and £1.2m both work. |
+| Yearly cost | Any column with "cost", "annual", or "opex" in its name. Amounts like 40k and £1.2m both work. |
 | One-off cost | One-off, Setup, Capex, Project cost, Implementation |
 
-You can change any match before importing. Rows without a kind go into the row you choose, Systems by default. Importing into an existing map updates blocks with the same name instead of adding them twice. **Download as a spreadsheet** gives a file in the same layout, so it doubles as a template.
+You see a preview first and can change any match before importing. Rows without a kind go into the row you choose, Systems by default. You can import into the current map or a new one. Importing into an existing map updates blocks with the same name instead of adding them twice.
 
-**PDF report.** A landscape A4 report: a summary with counts, costs, payback, and stakeholders, then the map (split across pages if it's wide), the stakeholder grid and details, costs, the checks, and a list of everything on the map.
+**Download as a spreadsheet** gives a CSV in the same layout, so it doubles as a template.
 
-**Picture.** A PNG of whatever you're looking at, either the map (respecting Everything, Today, or Future) or the stakeholder grid. It always uses the light colours, so it suits slides.
+### PDF report
 
-**ArchiMate.** A model in the Open Group exchange format (ArchiMate 3.1). In Archi, use **File → Import → Open Exchange XML Model**. Blockplan's rows become ArchiMate elements:
+A landscape A4 report, ready to send or print. [See an example](docs/example-report.pdf). It contains:
+
+1. A summary with counts, yearly costs today and in future, payback, what's planned and being removed, and how stakeholders feel
+2. The map, split across pages if it's wide
+3. The stakeholder grid
+4. Stakeholders in detail, with how to work with each one
+5. Costs by row, and the biggest costs
+6. Things to look at, from the checks
+7. Everything on the map, grouped by row
+
+### Picture
+
+A PNG of whatever you're looking at: the map (Everything, Today, or Future) or the stakeholder grid. It always uses the light colours, so it suits slides. When a connection's label has no clear space on the picture, it's listed under the map instead.
+
+### ArchiMate
+
+A model in the Open Group ArchiMate exchange format (version 3.1). In Archi, use **File → Import → Open Exchange XML Model**. Other tools that support the exchange format can import it too.
 
 | Blockplan | ArchiMate |
 |---|---|
@@ -116,13 +151,90 @@ You can change any match before importing. Rows without a kind go into the row y
 | Technology | Node |
 | Stakeholder | Stakeholder |
 
-Connections become the matching ArchiMate relationship. For example, a team "does" an activity becomes Assignment, a system "supports" an activity becomes Serving, and a system "runs on" technology becomes Serving from the technology to the system. Where ArchiMate wouldn't allow the matching type, the connection becomes an Association, so every relationship is valid. Owner, status, health, and costs come across as properties. The model includes three views: the map, the stakeholder grid, and what stakeholders care about.
+Connections become the matching ArchiMate relationship:
 
-The PDF maker (jsPDF and jsPDF-AutoTable, both MIT licensed) is included in `app/static/vendor/`, so exports work without internet access.
+| Blockplan connection | ArchiMate relationship |
+|---|---|
+| Activity *helps achieve* goal | Realization |
+| Team *does* activity | Assignment |
+| System *supports* activity | Serving |
+| System *holds* information | Access |
+| System *sends information to* system | Flow |
+| System *runs on* technology | Serving, from the technology to the system |
+| Activity *leads to* activity | Triggering |
+| Information *is part of* information | Aggregation |
+| Stakeholder *cares about* anything | Association |
+
+Where ArchiMate wouldn't allow the matching relationship between two elements, the connection becomes an Association, so every relationship in the model is valid. Exports are checked against the Open Group schema and against Archi's own rules for which relationships are allowed.
+
+Owner, status, health, and costs come across as properties, and descriptions as documentation. Stakeholders bring their role, feeling, say, how much they're affected, what they care about, and the plan. The model includes three views: the map, with a group for each row; the stakeholder grid; and what stakeholders care about.
+
+## Running it for a team
+
+**Linux server, starting on boot**
+
+```bash
+cd blockplan
+bash deploy/setup.sh
+```
+
+This installs Blockplan as a service. Edit `.env`, then run `systemctl --user restart blockplan`.
+
+**Docker**
+
+```bash
+cd blockplan
+cp .env.example .env      # then add your API key
+docker compose up -d
+```
+
+Maps are kept in `./data`. If Ollama runs on the host, the container reaches it automatically.
+
+To update, get the new files (`git pull`, or unzip the new version over the old one), then rebuild:
+
+```bash
+docker compose up -d --build
+```
+
+Your maps and `.env` are kept. If the build fails with `NotFound: forwarding Ping: no such job`, that's a known Docker build problem rather than a Blockplan one. Restart Docker Desktop and try again. If it still fails, turn off Docker's newer build method for that window:
+
+```powershell
+$env:COMPOSE_BAKE = "false"     # PowerShell; in bash use: export COMPOSE_BAKE=false
+docker compose up -d --build
+```
+
+**Sign-in.** Set `AUTH_USER` and `AUTH_PASSWORD` in `.env` to ask everyone for a username and password. This is a simple shared login. If Blockplan is reachable from outside your network, put it behind HTTPS, for example with a reverse proxy, a VPN, or Tailscale.
+
+## Your maps
+
+- Everything is in one file, `data/blockplan.db`.
+- `bash scripts/backup.sh` makes a dated copy in `backups/`, and is safe to run while Blockplan is running.
+- **Maps → Download this map as a file** gives a `.blockplan.json` file. **Maps → Open a map file** brings one back in, on this or another copy of Blockplan.
+
+## The API
+
+The page talks to the server through a small JSON API, so anything you can do in the browser can also be done from a script. It isn't versioned yet, so expect it to change.
+
+| Request | What it does |
+|---|---|
+| `GET /api/status` | Version, and which AI model is available |
+| `GET /api/maps` | Lists all maps, with id, name, number of blocks, and when each was last saved |
+| `GET /api/maps/{id}` | Gets one map, with its current revision number |
+| `POST /api/maps` | Creates a map. The body is `{"map": {...}}`, and the reply includes its new id. |
+| `PUT /api/maps/{id}` | Saves a map. The body is `{"map": {...}, "rev": n}`. |
+| `DELETE /api/maps/{id}` | Deletes a map |
+| `POST /api/ai` | Asks the AI helper. The body is `{"map": {...}, "request": "..."}`, and the reply has its answer plus any suggested changes. Nothing is changed for you. |
+| `GET /healthz` | A simple check that Blockplan is running |
+
+A map is the same JSON as a downloaded `.blockplan.json` file: `name`, `currency`, `blocks`, `links`, and `stakeholders`.
+
+- **Saving uses revision numbers.** A save must send the `rev` it read, and is refused with `409` if someone else has saved since. Read, change, then save with the `rev` you got.
+- **The server tidies what it's sent.** Unknown block types, connections to missing blocks, and unknown fields are dropped, so a bad request can't break a map.
+- **Sign-in** applies to the API too. With `AUTH_USER` and `AUTH_PASSWORD` set, send them with every request, for example `curl -u name:password http://localhost:8080/api/maps`.
 
 ## Settings
 
-All settings live in `.env`. See `.env.example` for the full list with notes. The main ones:
+All settings live in `.env`. See `.env.example` for the full list with notes. The main ones are:
 
 | Setting | Default | Notes |
 |---|---|---|
@@ -132,28 +244,51 @@ All settings live in `.env`. See `.env.example` for the full list with notes. Th
 | `AUTH_USER`, `AUTH_PASSWORD` | empty | Set both to require sign-in |
 | `AI_MODE` | `auto` | `auto`, `claude`, `local`, or `off` |
 | `ANTHROPIC_API_KEY` | empty | Needed for Claude |
+| `ANTHROPIC_WORKSPACE_ID` | empty | Only for keys that work across several workspaces |
 | `CLAUDE_MODEL` | `claude-sonnet-5-5` | Any Claude model name |
 | `OLLAMA_URL`, `OLLAMA_MODEL` | `http://localhost:11434`, `qwen2.5:7b` | Local model |
+
+## Common questions
+
+**Isn't it too simple for a real estate?**
+For a full, long-term record of a large estate, yes, and it isn't trying to be that. It's for the first 80% of a discovery, and for the people who would never open a full architecture platform. When the work needs to move on, export it to ArchiMate and carry on in your main tool.
+
+**Where does my data go?**
+Wherever you run Blockplan. Maps are stored in one file on your own server. The only thing that leaves it is what the AI helper sends to Claude when you ask it something, and with `AI_MODE=local` or `AI_MODE=off` nothing leaves at all.
+
+**Can I get my data out?**
+Yes, in several ways: as an ArchiMate model, a spreadsheet, a PDF, a picture, the map's own JSON file, or through the API.
+
+**Do I need to know ArchiMate or TOGAF?**
+No. Blockplan uses plain words throughout. The ArchiMate export is there for when someone who does know it needs the model.
+
+**Does it work without the internet?**
+Yes. The fonts and the PDF maker are included, so everything works offline except the AI helper when it uses Claude.
+
+## What's next
+
+- A documented, versioned API with its own keys, and requests for changing single blocks and stakeholders
+- Importing ArchiMate models, as well as exporting them
+- A hosted demo with the example map loaded, so people can try Blockplan without installing it
 
 ## Project layout
 
 ```
-app/main.py          web server: the page, saving maps, the AI helper route, sign-in
+app/main.py          web server: the page, saving maps, the AI helper, sign-in
 app/storage.py       maps in SQLite, with a check that stops people overwriting each other
-app/llm.py           Claude first, local model fallback
-app/prompts.py       what the helper is told, kept in one place
+app/llm.py           Claude first, local model as a fallback
+app/prompts.py       what the AI helper is told, kept in one place
 app/config.py        reads .env
-app/static/          the page itself, its fonts, and the PDF maker (no internet needed)
+app/static/          the page itself, its fonts, and the PDF maker
+docs/                screenshots and an example PDF report
 deploy/              Linux service setup
 scripts/backup.sh    copies all maps to backups/
 run.sh, run.bat      start it on macOS, Linux, or Windows
 Dockerfile, docker-compose.yml
 ```
 
-## Fonts
-
-Bricolage Grotesque, Hanken Grotesk, and JetBrains Mono are included under the SIL Open Font Licence. The licence files are in `app/static/fonts/`.
-
 ## Licence
 
-MIT. See `LICENSE`.
+Blockplan is MIT licensed. See `LICENSE`.
+
+Bricolage Grotesque, Hanken Grotesk, and JetBrains Mono are included under the SIL Open Font Licence, with their licence files in `app/static/fonts/`. jsPDF and jsPDF-AutoTable are included under the MIT licence, with their licence files in `app/static/vendor/`.
