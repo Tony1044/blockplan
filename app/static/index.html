@@ -1506,16 +1506,14 @@ const sx = s => xesc(s);
 const VIEW_NAME = {all:"Everything", today:"Today", future:"Future"};
 /* The map drawn for pictures, PDF and PowerPoint. mapParts gives the pieces; mapSVG puts them
    together as one picture, and mapPages cuts them into readable pages with off-page markers. */
-function mapParts(v = view, bare = false, colours = null){
+function mapParts(v = view, bare = false, skip = null){
   const vis = b => v === "all" || (v === "today" && b.when !== "planned") || (v === "future" && b.when !== "retiring");
   const blocks = S.blocks.filter(vis), TOP = bare ? 14 : 74;
   const lanes = TYPES.filter(t => blocks.some(b => b.type === t.key));
   const offs = {}; lanes.forEach((t, i) => { offs[t.key] = TOP + i * LANE_H - laneTop(t.key); });
   const pb = blocks.map(b => ({...b, y: b.y + offs[b.type]})), byP = Object.fromEntries(pb.map(b => [b.id, b]));
   const W = Math.max(bare ? 600 : 900, ...pb.map(b => b.x + BW + 48)), HB = TOP + Math.max(1, lanes.length) * LANE_H;
-  const arrowIds = {};
-  const arrowDefs = [...new Set(Object.values(colours || {}))].map((c, i) => { arrowIds[c] = "ar" + i; return `<marker id="ar${i}" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="${c}"/></marker>`; }).join("");
-  const defs = `<defs><marker id="ar" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="${EXP.muted}"/></marker>${arrowDefs}` +
+  const defs = `<defs><marker id="ar" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="${EXP.muted}"/></marker>` +
     `<pattern id="gone" width="14" height="14" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><rect width="14" height="14" fill="#FFFFFF"/><rect width="7" height="14" fill="${EXP.goneBg}"/></pattern></defs>`;
   let body = "";
   const laneInfo = [];
@@ -1530,15 +1528,12 @@ function mapParts(v = view, bare = false, colours = null){
   for (const b of pb) boxes.push({x:b.x - 4, y:b.y - 4, w:BW + 8, h:BH + 8});
   const hits = r => boxes.some(o => r.x < o.x + o.w && r.x + r.w > o.x && r.y < o.y + o.h && r.y + r.h > o.y);
   const at = (p, c1, c2, q, t) => { const u = 1 - t; return {x:u*u*u*p.x + 3*u*u*t*c1.x + 3*u*t*t*c2.x + t*t*t*q.x, y:u*u*u*p.y + 3*u*u*t*c1.y + 3*u*t*t*c2.y + t*t*t*q.y}; };
-  let labels = "", colouredPaths = ""; const missed = [], geoms = [];
+  let labels = ""; const missed = [];
   for (const l of S.links){
-    const a = byP[l.from], b = byP[l.to]; if (!a || !b) continue;
+    const a = byP[l.from], b = byP[l.to]; if (!a || !b || (skip && skip.has(l.id))) continue;
     const p = anchor(a, b), q = anchor(b, a), {d} = curve(p, q), faded = a.when !== "now" || b.when !== "now";
-    const col = colours && colours[l.id];
-    if (col) colouredPaths += `<path d="${d}" fill="none" stroke="${col}" stroke-width="2.2"${faded ? ` stroke-dasharray="6 4"` : ""} marker-end="url(#${arrowIds[col]})"/>`;
-    else body += `<path d="${d}" fill="none" stroke="${EXP.muted}" stroke-width="1.6"${faded ? ` stroke-dasharray="5 4"` : ""}${faded || colours ? ` opacity="${colours ? 0.45 : 0.75}"` : ""} marker-end="url(#ar)"/>`;
+    body += `<path d="${d}" fill="none" stroke="${EXP.muted}" stroke-width="1.6"${faded ? ` stroke-dasharray="5 4" opacity="0.75"` : ""} marker-end="url(#ar)"/>`;
     const k = Math.max(36, Math.hypot(q.x - p.x, q.y - p.y) * 0.35), c1 = {x:p.x + p.dx*k, y:p.y + p.dy*k}, c2 = {x:q.x + q.dx*k, y:q.y + q.dy*k};
-    geoms.push({l, a, b, pt: t => at(p, c1, c2, q, t)});
     const lf = `11.5px ${XF}`, txt = wrapText(l.label, lf, 170, 1)[0], w = tw(txt, lf) + 14;
     let spot = null;
     for (const t of [0.5, 0.4, 0.6, 0.3, 0.7, 0.22, 0.78]){ const m = at(p, c1, c2, q, t), r = {x:m.x - w / 2, y:m.y - 10, w, h:20}; if (!hits(r)){ spot = m; break; } }
@@ -1546,7 +1541,7 @@ function mapParts(v = view, bare = false, colours = null){
     boxes.push({x:spot.x - w / 2 - 2, y:spot.y - 11, w:w + 4, h:22});
     labels += `<rect x="${(spot.x - w / 2).toFixed(1)}" y="${(spot.y - 10).toFixed(1)}" width="${w.toFixed(1)}" height="20" rx="10" fill="${EXP.bg}" stroke="${EXP.line}"/><text x="${spot.x.toFixed(1)}" y="${(spot.y + 4).toFixed(1)}" font-size="11.5" text-anchor="middle" fill="${EXP.muted}">${sx(txt)}</text>`;
   }
-  body += colouredPaths + labels;
+  body += labels;
   for (const b of pb){
     const c = EXP[b.type], planned = b.when === "planned", ret = b.when === "retiring", n = caresAbout(b.id).length;
     const nf = `600 13.5px ${XF}`, kf = `700 9.5px ${XF}`, cf = `10px ${XF}`;
@@ -1580,7 +1575,7 @@ ${countTxt ? `<text x="${BW - 8}" y="${BH - 8}" font-size="10" text-anchor="end"
 <rect x="${x0 + 120}" y="${fy - 11}" width="22" height="13" rx="3" fill="url(#gone)" stroke="${EXP.gone}"/><text x="${x0 + 148}" y="${fy}">Being removed</text>
 ${[["good", "Working well"], ["watch", "Needs attention"], ["bad", "Causing problems"]].map(([k, t], i) => `<circle cx="${x0 + 262 + i * 140}" cy="${fy - 4}" r="4.5" fill="${EXP[k]}"/><text x="${x0 + 272 + i * 140}" y="${fy}">${t}</text>`).join("")}
 ${w >= 900 ? `<text x="${x0 + w - 24}" y="${fy}" text-anchor="end">Made with Blockplan</text>` : ""}</g>`;
-  return {W, HB, TOP, pb, lanes, defs, body, laneTitles, geoms, notes, key, empty:!lanes.length};
+  return {W, HB, TOP, pb, lanes, defs, body, laneTitles, laneBoxes:(x0 = 0) => laneInfo.map(({y, w}) => ({x:x0 + 8, y:y + 6, w, h:24})), byP, notes, key, empty:!lanes.length};
 }
 function mapSVG(v = view){
   const m = mapParts(v, false), FOOT = 46, n = m.notes(0, m.W), H = m.HB + n.h + FOOT;
@@ -1597,23 +1592,23 @@ function mapSVG(v = view){
    Returns {area, scale (mm per px), pages:[{svg, w, h, x0}]}. */
 function mapPages(v, areas, minPt = 5.5){
   let m = mapParts(v, true);
-  const FOOT = 40, PAD = 112, smin = minPt * 0.3528 / 13.5;
+  const FOOT = 40, PAD = 44, smin = minPt * 0.3528 / 13.5;
   const notes0 = m.notes(0, Math.min(m.W, 1400)), H = m.HB + notes0.h + FOOT;
-  /* one page: [x0, x1] of the map, with a margin strip for off-page markers at each cut edge */
-  const page = (x0, x1, idx, count, left, right) => {
+  /* one page: [x0, x1] of the map, with a narrow margin at each cut edge so tags on the outermost blocks aren't clipped */
+  const page = (x0, x1, idx, count, extra) => {
     const w = x1 - x0, lp = idx > 0 ? PAD : 0, rp = idx < count - 1 ? PAD : 0, n = idx === count - 1 ? m.notes(x0, Math.max(w, 600)) : {h:0};
     let s = `<svg xmlns="http://www.w3.org/2000/svg" width="${w + lp + rp}" height="${H}" viewBox="${x0 - lp} 0 ${w + lp + rp} ${H}" font-family="${XF}">${m.defs}<rect x="${x0 - lp}" y="0" width="${w + lp + rp}" height="${H}" fill="${EXP.bg}"/>`;
     if (m.empty) s += `<text x="${x0 + 24}" y="${m.TOP + 40}" font-size="14" fill="${EXP.muted}">Nothing on the map yet.</text>`;
     s += m.body + m.laneTitles(x0);
-    const strip = (sx0, label, anchor) => `<rect x="${sx0}" y="0" width="${PAD}" height="${H}" fill="${EXP.bg}"/><line x1="${anchor}" x2="${anchor}" y1="${m.TOP}" y2="${m.HB}" stroke="${EXP.line}" stroke-dasharray="3 4"/><text x="${sx0 + PAD / 2}" y="${m.TOP + 12}" font-size="9.5" text-anchor="middle" fill="${EXP.muted}">${label}</text>`;
-    if (lp) s += strip(x0 - lp, `from part ${idx}`, x0) + left;
-    if (rp) s += strip(x1, `to part ${idx + 2}`, x1) + right;
-    s += (n.h ? n.svg(m.HB) : "") + m.key(x0, w, H - 14) + `</svg>`;
+    const strip = (sx0, edge) => `<rect x="${sx0}" y="0" width="${PAD}" height="${H}" fill="${EXP.bg}"/><line x1="${edge}" x2="${edge}" y1="${m.TOP}" y2="${m.HB}" stroke="${EXP.line}" stroke-dasharray="3 4"/>`;
+    if (lp) s += strip(x0 - lp, x0);
+    if (rp) s += strip(x1, x1);
+    s += extra + (n.h ? n.svg(m.HB) : "") + m.key(x0, w, H - 14) + `</svg>`;
     return {svg:s, w:w + lp + rp, h:H, x0};
   };
   for (const a of areas){
     const s = Math.min(a.w / m.W, a.h / H);
-    if (s >= smin) return {area:a, scale:s, pages:[page(0, m.W, 0, 1, "", "")]};
+    if (s >= smin) return {area:a, scale:s, pages:[page(0, m.W, 0, 1, "")]};
   }
   const a = areas.find(x => H * smin <= x.h) || areas.reduce((p, x) => x.h > p.h ? x : p, areas[0]);
   const s = Math.min(a.h / H, 0.3), tileW = a.w / s - PAD * 2;
@@ -1627,49 +1622,68 @@ function mapPages(v, areas, minPt = 5.5){
     cuts.push(inBlock(x) ? Math.floor(want) : x);
   }
   cuts.push(m.W);
-  const count = cuts.length - 1, rights = Array(count).fill(""), lefts = Array(count).fill("");
-  /* off-page connectors: the same label (A-1, A-2, ... for the first split, B-1 ... for the next) where a line leaves one part
-     and where it carries on, pointing the way the connection flows. Each crossing connection gets its own colour, used for
-     its whole line and its connectors, and the connectors are staggered in two columns so they're easy to tell apart. */
+  const count = cuts.length - 1;
+  const partOf = b => { const c = b.x + BW / 2; let i = 0; while (i < count - 1 && c >= cuts[i + 1]) i++; return i; };
+  /* A connection between blocks in different parts isn't drawn as a line at all. Instead each end gets an off-page connector
+     (the pointed flowchart box) fixed to the edge of its block: the same label, such as A-1, and the same colour on both,
+     pointing the way the connection flows. So there's no line to follow, just a matching tag to find in the other part. */
   const PALETTE = ["#D0342C", "#2563EB", "#16A34A", "#9333EA", "#EA580C", "#0E8FA8", "#DB2777", "#65A30D", "#B45309", "#4F46E5", "#0F766E", "#BE185D"];
   const cutName = i => { let s2 = ""; i++; while (i > 0){ i--; s2 = String.fromCharCode(65 + i % 26) + s2; i = Math.floor(i / 26); } return s2; };
-  const OPC = {
-    right: (cx, y) => [`M${cx - 23},${y - 11} H${cx + 11} L${cx + 23},${y} L${cx + 11},${y + 11} H${cx - 23} Z`, cx - 5, y + 4],
-    left:  (cx, y) => [`M${cx + 23},${y - 11} H${cx - 11} L${cx - 23},${y} L${cx - 11},${y + 11} H${cx + 23} Z`, cx + 5, y + 4],
-    down:  (cx, y) => [`M${cx - 23},${y - 13} H${cx + 23} V${y + 4} L${cx},${y + 13} L${cx - 23},${y + 4} Z`, cx, y + 1.5],
-    up:    (cx, y) => [`M${cx - 23},${y + 13} H${cx + 23} V${y - 4} L${cx},${y - 13} L${cx - 23},${y - 4} Z`, cx, y + 7.5],
+  const across = [];
+  for (const l of S.links){
+    const fa = m.byP[l.from], fb = m.byP[l.to]; if (!fa || !fb) continue;
+    const pa = partOf(fa), pbp = partOf(fb);
+    if (pa !== pbp) across.push({l, fa, fb, pa, pbp});
+  }
+  if (!across.length) return {area:a, scale:s, pages:cuts.slice(0, -1).map((x0, i) => page(x0, cuts[i + 1], i, count, ""))};
+  across.sort((p, q) => Math.min(p.pa, p.pbp) - Math.min(q.pa, q.pbp) || p.fa.y - q.fa.y || p.fa.x - q.fa.x);
+  const seq = {};
+  across.forEach((c, i) => {
+    const letter = cutName(Math.min(c.pa, c.pbp));
+    seq[letter] = (seq[letter] || 0) + 1;
+    c.label = `${letter}-${seq[letter]}`; c.col = PALETTE[i % PALETTE.length]; c.dir = c.pbp > c.pa ? "right" : "left";
+  });
+  m = mapParts(v, true, new Set(across.map(c => c.l.id)));
+  /* each block collects its tags, in rows of three along its top or bottom edge: the edge facing the other block first,
+     then a second row further out, then the other edge. Tags never sit on the sides, where blocks can be close together. */
+  const tags = {};
+  const add = (blk, other, c, part) => {
+    const p = anchor(blk, other), pref = p.dy ? (p.dy < 0 ? "top" : "bottom") : (other.y < blk.y ? "top" : "bottom");
+    (tags[blk.id] = tags[blk.id] || {blk, list:[]}).list.push({c, pref, other, part});
   };
-  const opc = (cx, y, label, dir, col) => { const [d, tx, ty] = OPC[dir](cx, y); return `<path d="${d}" fill="${mix(col, "#FFFFFF", 0.1)}" stroke="${col}" stroke-width="1.8"/><text x="${tx}" y="${ty}" font-size="11" font-weight="700" text-anchor="middle" fill="${col}">${label}</text>`; };
-  const crossings = [], colours = {};
-  for (let c = 1; c < count; c++){
-    const X = cuts[c], ys = [];
-    for (const g of m.geoms){
-      let prev = g.pt(0);
-      for (let i = 1; i <= 200; i++){
-        const cur = g.pt(i / 200);
-        if ((prev.x - X) * (cur.x - X) < 0) ys.push({yc: prev.y + (cur.y - prev.y) * (X - prev.x) / (cur.x - prev.x), g});
-        prev = cur;
-      }
-    }
-    ys.sort((p, q) => p.yc - q.yc);
-    let last = m.TOP + 4;
-    for (const it of ys){ it.y = Math.max(it.yc, last + 20); last = it.y; }
-    crossings.push({c, X, ys});
-    for (const it of ys) if (!colours[it.g.l.id]) colours[it.g.l.id] = PALETTE[Object.keys(colours).length % PALETTE.length];
-  }
-  if (Object.keys(colours).length) m = mapParts(v, true, colours);
-  for (const {c, X, ys} of crossings){
-    ys.forEach((it, k) => {
-      const L = `${cutName(c - 1)}-${k + 1}`, col = colours[it.g.l.id], tip = `<title>${sx(it.g.a.name)} ${sx(it.g.l.label)} ${sx(it.g.b.name)}</title>`;
-      const off = k % 2 ? 78 : 28;                                   /* two columns: near the edge, then further out */
-      const dir = it.g.b.x + BW / 2 > X ? "right" : "left";         /* which way the arrow goes */
-      const line = `stroke="${col}" stroke-width="2.2" fill="none"`;
-      rights[c - 1] += `<g>${tip}<path d="M${X},${it.yc} L${X + off - 23},${it.y}" ${line}/>${opc(X + off, it.y, L, dir, col)}</g>`;
-      lefts[c] += `<g>${tip}<path d="M${X - off + 23},${it.y} L${X},${it.yc}" ${line}/>${opc(X - off, it.y, L, dir, col)}</g>`;
+  for (const c of across){ add(c.fa, c.fb, c, c.pa); add(c.fb, c.fa, c, c.pbp); }
+  const PER_ROW = 3, GAP = 56, ROW_H = 23;
+  const SHAPE = {
+    right: (cx, y) => [`M${cx - 25},${y - 10} H${cx + 15} L${cx + 25},${y} L${cx + 15},${y + 10} H${cx - 25} Z`, cx - 5],
+    left:  (cx, y) => [`M${cx + 25},${y - 10} H${cx - 15} L${cx - 25},${y} L${cx - 15},${y + 10} H${cx + 25} Z`, cx + 5],
+  };
+  const extras = Array(count).fill("");
+  for (const {blk, list} of Object.values(tags)){
+    const tops = list.filter(t => t.pref === "top").length, pref = tops * 2 >= list.length ? "top" : "bottom", other = pref === "top" ? "bottom" : "top";
+    const order = [[pref, 0], [pref, 1], [other, 0], [other, 1]];
+    for (let r = 2; order.length * PER_ROW < list.length; r++) order.push([pref, r], [other, r]);
+    /* tags wanting the preferred edge go first, each group left to right by where its other block is */
+    list.sort((p, q) => (p.pref !== pref) - (q.pref !== pref) || p.other.x - q.other.x);
+    const rows = order.map(() => []);
+    list.forEach((t, i) => rows[Math.floor(i / PER_ROW)].push(t));
+    let out = "";
+    rows.forEach((ts, ri) => {
+      const [e, r] = order[ri];
+      ts.forEach((t, j) => {
+        let cx = blk.x + BW / 2 + (j - (ts.length - 1) / 2) * GAP;
+        const cy = blk.y + (e === "top" ? -6 - r * ROW_H : BH + 6 + r * ROW_H);
+        /* slide a tag right if it would cover a row name */
+        const titles = m.laneBoxes(cuts[partOf(blk)]);
+        while (titles.some(o => cx - 27 < o.x + o.w && cx + 27 > o.x && cy - 11 < o.y + o.h && cy + 11 > o.y)) cx += 4;
+        const [d, tx] = SHAPE[t.c.dir](cx, cy), far = t.part === t.c.pa ? t.c.pbp : t.c.pa;
+        out += `<g><title>${sx(t.c.fa.name)} ${sx(t.c.l.label)} ${sx(t.c.fb.name)} (part ${far + 1})</title><path d="${d}" fill="${t.c.col}" stroke="#FFFFFF" stroke-width="1.2"/><text x="${tx}" y="${cy + 4.3}" font-size="12" font-weight="700" text-anchor="middle" fill="#FFFFFF">${t.c.label}</text></g>`;
+      });
     });
+    extras[partOf(blk)] += out;
   }
-  return {area:a, scale:s, pages:cuts.slice(0, -1).map((x0, i) => page(x0, cuts[i + 1], i, count, lefts[i], rights[i]))};
+  return {area:a, scale:s, pages:cuts.slice(0, -1).map((x0, i) => page(x0, cuts[i + 1], i, count, extras[i]))};
 }
+
 const FEEL_X = {for:EXP.good, unsure:EXP.watch, against:EXP.bad, "":"#7C8A84"};
 function gridSVG(){
   const W = 1200, H = 860, L = 70, T0 = 96, GW = W - L - 40, GH = H - T0 - 64;
@@ -1773,7 +1787,7 @@ async function exportPDF(){
       const pg = lay.pages[i], land = lay.area.name === "landscape", pw = land ? 297 : 210;
       doc.addPage("a4", land ? "landscape" : "portrait");
       doc.setFont("helvetica", "bold"); doc.setFontSize(15); doc.setTextColor(...ink); doc.text(n > 1 ? `The map (part ${i + 1} of ${n})` : "The map", MM, MM + 5);
-      if (n > 1){ doc.setFont("helvetica", "normal"); doc.setFontSize(8.5); doc.setTextColor(...muted); doc.text("Connectors at the edges, such as A-1, show where a line carries on. The same label appears on both parts.", pw - MM, MM + 5, {align:"right"}); }
+      if (n > 1){ doc.setFont("helvetica", "normal"); doc.setFontSize(8.5); doc.setTextColor(...muted); doc.text("A coloured tag on a block, such as A-1, is a connection to a block in another part. Look for the same tag there.", pw - MM, MM + 5, {align:"right"}); }
       const c = await svgToCanvas(pg, Math.min(3, Math.max(1.3, lay.scale * 10)));
       doc.addImage(c.toDataURL("image/jpeg", 0.92), "JPEG", MM, MM + 10, pg.w * lay.scale, pg.h * lay.scale, undefined, "FAST");
     }
@@ -1920,7 +1934,7 @@ async function exportPPTX(){
     const lay = mapPages("all", [{name:"wide", w:cw * 25.4, h:5.95 * 25.4}], 4.5), n = lay.pages.length;
     for (let i = 0; i < n; i++){
       const pg = lay.pages[i], c = await svgToCanvas(pg, Math.min(3, Math.max(1.5, lay.scale * 12)));
-      sl = pptx.addSlide({masterName:"BP"}); heading(sl, n > 1 ? `The map (part ${i + 1} of ${n})` : "The map", n > 1 ? "Connectors at the edges, such as A-1, show where a line carries on. The same label appears on both parts." : `How the organisation works – ${todayGB()}`);
+      sl = pptx.addSlide({masterName:"BP"}); heading(sl, n > 1 ? `The map (part ${i + 1} of ${n})` : "The map", n > 1 ? "A coloured tag on a block, such as A-1, is a connection to a block in another part. Look for the same tag there." : `How the organisation works – ${todayGB()}`);
       const wIn = pg.w * lay.scale / 25.4, hIn = pg.h * lay.scale / 25.4;
       sl.addImage({data:c.toDataURL("image/png"), x:0.5, y:1.2, w:wIn, h:hIn});
       sl.addNotes([f.planned.length ? `Planned: ${f.planned.join(", ")}.` : "", f.retiring.length ? `Being removed: ${f.retiring.join(", ")}.` : ""].filter(Boolean).join("\n") || "How the organisation works.");
