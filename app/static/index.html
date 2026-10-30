@@ -1644,40 +1644,61 @@ function mapPages(v, areas, minPt = 5.5){
     c.label = `${letter}-${seq[letter]}`; c.col = PALETTE[i % PALETTE.length]; c.dir = c.pbp > c.pa ? "right" : "left";
   });
   m = mapParts(v, true, new Set(across.map(c => c.l.id)));
-  /* each block collects its tags, in rows of three along its top or bottom edge: the edge facing the other block first,
-     then a second row further out, then the other edge. Tags never sit on the sides, where blocks can be close together. */
+  /* Each end is a short lead: a line out from the top or bottom of the block, the connection's label (such as "supports") on
+     the line, and the connector at the far end. Leads sit three across; a second row reaches further out and threads through
+     the gaps in the first, so up to five fit on an edge. A block uses the edge facing the other block, unless that side has
+     no room (another block close by, or the edge of the map), and spills over to the other edge when one is full. */
   const tags = {};
   const add = (blk, other, c, part) => {
     const p = anchor(blk, other), pref = p.dy ? (p.dy < 0 ? "top" : "bottom") : (other.y < blk.y ? "top" : "bottom");
     (tags[blk.id] = tags[blk.id] || {blk, list:[]}).list.push({c, pref, other, part});
   };
   for (const c of across){ add(c.fa, c.fb, c, c.pa); add(c.fb, c.fa, c, c.pbp); }
-  const PER_ROW = 3, GAP = 56, ROW_H = 23;
+  const GAP = 64, UNIT = 50, LF = `600 10px ${XF}`;
+  const SLOTS = [[0, -1], [0, 0], [0, 1], [1, -0.5], [1, 0.5]];          /* [row, column offset in GAPs] */
   const SHAPE = {
     right: (cx, y) => [`M${cx - 25},${y - 10} H${cx + 15} L${cx + 25},${y} L${cx + 15},${y + 10} H${cx - 25} Z`, cx - 5],
     left:  (cx, y) => [`M${cx + 25},${y - 10} H${cx - 15} L${cx - 25},${y} L${cx - 15},${y + 10} H${cx + 25} Z`, cx + 5],
   };
+  /* clear space above and below a block, up to the next block in the way or the edge of the map */
+  const room = (blk, e) => {
+    let r = e === "top" ? blk.y - 2 : m.HB - (blk.y + BH);
+    for (const o of m.pb){
+      if (o.id === blk.id || o.x + BW <= blk.x - 30 || o.x >= blk.x + BW + 30) continue;
+      if (e === "top" && o.y + BH <= blk.y) r = Math.min(r, blk.y - (o.y + BH));
+      if (e === "bottom" && o.y >= blk.y + BH) r = Math.min(r, o.y - (blk.y + BH));
+    }
+    return r;
+  };
   const extras = Array(count).fill("");
   for (const {blk, list} of Object.values(tags)){
-    const tops = list.filter(t => t.pref === "top").length, pref = tops * 2 >= list.length ? "top" : "bottom", other = pref === "top" ? "bottom" : "top";
-    const order = [[pref, 0], [pref, 1], [other, 0], [other, 1]];
-    for (let r = 2; order.length * PER_ROW < list.length; r++) order.push([pref, r], [other, r]);
-    /* tags wanting the preferred edge go first, each group left to right by where its other block is */
-    list.sort((p, q) => (p.pref !== pref) - (q.pref !== pref) || p.other.x - q.other.x);
-    const rows = order.map(() => []);
-    list.forEach((t, i) => rows[Math.floor(i / PER_ROW)].push(t));
+    const tops = list.filter(t => t.pref === "top").length;
+    let first = tops * 2 >= list.length ? "top" : "bottom", second = first === "top" ? "bottom" : "top";
+    if (room(blk, first) < UNIT && room(blk, second) >= UNIT) [first, second] = [second, first];
+    const rows2 = e => room(blk, e) >= UNIT * 2;                          /* is there room for the second row of leads? */
+    const slots = [first, second].flatMap(e => SLOTS.filter(([r]) => r === 0 || rows2(e)).map(([r, k]) => ({e, r, k})));
+    for (let r = rows2(first) ? 2 : 1; slots.length < list.length; r++) SLOTS.forEach(([, k]) => slots.push({e:first, r, k}));
+    /* left to right by where the other block is, so leads don't cross each other */
+    list.sort((p, q) => (p.pref !== first) - (q.pref !== first) || p.other.x - q.other.x);
+    const used = slots.slice(0, list.length);
+    const groups = {};
+    used.forEach((sl, i) => (groups[sl.e + sl.r] = groups[sl.e + sl.r] || []).push(i));
     let out = "";
-    rows.forEach((ts, ri) => {
-      const [e, r] = order[ri];
-      ts.forEach((t, j) => {
-        let cx = blk.x + BW / 2 + (j - (ts.length - 1) / 2) * GAP;
-        const cy = blk.y + (e === "top" ? -6 - r * ROW_H : BH + 6 + r * ROW_H);
-        /* slide a tag right if it would cover a row name */
-        const titles = m.laneBoxes(cuts[partOf(blk)]);
-        while (titles.some(o => cx - 27 < o.x + o.w && cx + 27 > o.x && cy - 11 < o.y + o.h && cy + 11 > o.y)) cx += 4;
-        const [d, tx] = SHAPE[t.c.dir](cx, cy), far = t.part === t.c.pa ? t.c.pbp : t.c.pa;
-        out += `<g><title>${sx(t.c.fa.name)} ${sx(t.c.l.label)} ${sx(t.c.fb.name)} (part ${far + 1})</title><path d="${d}" fill="${t.c.col}" stroke="#FFFFFF" stroke-width="1.2"/><text x="${tx}" y="${cy + 4.3}" font-size="12" font-weight="700" text-anchor="middle" fill="#FFFFFF">${t.c.label}</text></g>`;
-      });
+    list.forEach((t, i) => {
+      const sl = used[i], g = groups[sl.e + sl.r], k = g.length < 3 && sl.r % 2 === 0 ? (g.indexOf(i) - (g.length - 1) / 2) : sl.k;
+      let cx = blk.x + BW / 2 + k * GAP;
+      const sgn = sl.e === "top" ? -1 : 1, edge = blk.y + (sl.e === "top" ? 0 : BH);
+      const py = edge + sgn * (16 + sl.r * UNIT), cy = edge + sgn * (36 + sl.r * UNIT), tip = edge + sgn * (26 + sl.r * UNIT);
+      const titles = m.laneBoxes(cuts[partOf(blk)]);
+      while (titles.some(o => cx - 31 < o.x + o.w && cx + 31 > o.x && Math.min(py, cy) - 11 < o.y + o.h && Math.max(py, cy) + 11 > o.y)) cx += 4;
+      const [d, tx] = SHAPE[t.c.dir](cx, cy), far = t.part === t.c.pa ? t.c.pbp : t.c.pa;
+      const txt = wrapText(t.c.l.label, LF, 54, 1)[0], pw = tw(txt, LF) + 10;
+      const faded = t.c.fa.when !== "now" || t.c.fb.when !== "now";
+      out += `<g><title>${sx(t.c.fa.name)} ${sx(t.c.l.label)} ${sx(t.c.fb.name)} (part ${far + 1})</title>` +
+        `<line x1="${cx}" x2="${cx}" y1="${edge}" y2="${tip}" stroke="${t.c.col}" stroke-width="2"${faded ? ` stroke-dasharray="4 3"` : ""}/>` +
+        `<rect x="${(cx - pw / 2).toFixed(1)}" y="${py - 8}" width="${pw.toFixed(1)}" height="16" rx="8" fill="#FFFFFF" stroke="${t.c.col}"/>` +
+        `<text x="${cx}" y="${py + 3.5}" font-size="10" font-weight="600" text-anchor="middle" fill="${t.c.col}">${sx(txt)}</text>` +
+        `<path d="${d}" fill="${t.c.col}" stroke="#FFFFFF" stroke-width="1.2"/><text x="${tx}" y="${cy + 4.3}" font-size="12" font-weight="700" text-anchor="middle" fill="#FFFFFF">${t.c.label}</text></g>`;
     });
     extras[partOf(blk)] += out;
   }

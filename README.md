@@ -189,9 +189,9 @@ The PDF and PowerPoint fit the map on one page whenever its text stays readable,
 
 - Splits fall in the gaps between blocks, never through one.
 - Each part repeats the row names, so every page makes sense on its own.
-- A connection between blocks in different parts isn't drawn as a long line across the page. Instead, each end gets an off-page connector, the pointed box used in flowcharts, fixed to the edge of its block. Both ends have the same label, such as **A-1**, and the same colour, so you find A-1 on one block and look for A-1 on the other part. The first split's connectors are A-1, A-2, and so on, the next split's are B-1, B-2, and so on.
+- A connection between blocks in different parts isn't drawn as a long line across the page. Instead, each end gets a short lead from its own block: a line out from the block, the connection's label on the line (such as "supports"), and an off-page connector at the end, the pointed box used in flowcharts. Both ends have the same connector label, such as **A-1**, and the same colour, so you find A-1 on one block and look for A-1 on the other part. The first split's connectors are A-1, A-2, and so on, the next split's are B-1, B-2, and so on.
 - Each connector points the way its connection flows, and points the same way at both ends: right for a connection that carries on to a later part, left for one that goes back to an earlier part.
-- Connectors sit in rows of three along the top or bottom of a block, never on the sides, where blocks can be close together.
+- Leads come out of the top or bottom of a block, on the side with room, three across. A second row reaches further out between the first, so up to five fit on each edge.
 - The heading on each page says which part it is, such as "The map (part 2 of 3)".
 
 ### Picture
@@ -400,7 +400,7 @@ Yes. The fonts and the PDF and PowerPoint makers are included, so everything wor
 - Export to PowerPoint, with editable tables.
 - Export the map as an editable diagram for Visio or draw.io, with each block's details as data.
 - Wide maps in the PDF and PowerPoint fit one page when the text stays readable, in landscape where possible. Otherwise they're split between blocks, with flowchart-style off-page connectors labelled the same on both pages, such as A-1, and pointing the way the connection flows.
-- A connection that crosses a split isn't drawn as a line. Each end gets a coloured connector fixed to its block, with the same label and colour at both ends.
+- A connection that crosses a split isn't drawn as a line. Each end gets a short coloured lead from its block, with the connection's label and a connector, and the same connector label and colour at both ends.
 
 **1.3.2**
 - Docker serves Blockplan on 443, the standard HTTPS port, so the address is `https://localhost`. Change it with `BLOCKPLAN_PORT` in `.env`, with no need to edit `docker-compose.yml`.
