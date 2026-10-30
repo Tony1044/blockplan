@@ -6,7 +6,12 @@ cd "$(dirname "$0")/.."
 APP_DIR="$(pwd)"
 
 echo "Setting up Blockplan in $APP_DIR"
-python3 -m venv .venv
+PY=""
+for c in python3.14 python3.13 python3.12 python3.11 python3.10 python3; do
+  if command -v "$c" >/dev/null 2>&1 && "$c" -c 'import sys; sys.exit(0 if sys.version_info >= (3, 10) else 1)' 2>/dev/null; then PY="$c"; break; fi
+done
+[ -n "$PY" ] || { echo "Blockplan needs Python 3.10 or newer."; exit 1; }
+"$PY" -m venv .venv
 .venv/bin/pip install --quiet --upgrade pip
 .venv/bin/pip install --quiet -r requirements.txt
 [ -f .env ] || { cp .env.example .env; echo "Created .env – add your ANTHROPIC_API_KEY to it."; }

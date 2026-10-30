@@ -61,7 +61,9 @@ Blockplan is for the first conversation, not a replacement for a full enterprise
 
 ## Quick start
 
-You need Python 3.10 or newer.
+Blockplan runs on Windows, macOS, and Linux. You need Python 3.10 or newer.
+
+On a Mac, the Python that comes with Apple's developer tools is usually 3.9, which is too old. Install a newer one from [python.org](https://www.python.org/downloads/macos/) or with `brew install python`. `run.sh` finds it automatically.
 
 **From GitHub**
 
