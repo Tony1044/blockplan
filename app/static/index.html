@@ -21,7 +21,7 @@ img{max-width:100%}
   --bg:#E9EEEC; --surface:#FFFFFF; --panel:#F5F7F6; --ink:#16211E; --muted:#56665F; --line:#CFD8D4;
   --accent:#1F5B4E; --accent-ink:#FFFFFF; --accent-soft:#DCEBE6;
   --c-goal:#A86A12; --c-ability:#2A62A8; --c-team:#7E4A9E; --c-info:#0C7680; --c-system:#B0442A; --c-tech:#4B5867; --c-person:#1F5B4E;
-  --good:#2F8A4E; --watch:#C28A12; --bad:#C2372B;
+  --good:#2F8A4E; --sel:#D0342C; --gone:#5F6664; --gone-bg:#DFE3E1; --watch:#C28A12; --bad:#C2372B;
   --f-display:"Bricolage Grotesque", "Segoe UI", system-ui, sans-serif;
   --f-body:"Hanken Grotesk", "Segoe UI", system-ui, sans-serif;
   --f-mono:"JetBrains Mono", ui-monospace, Menlo, Consolas, monospace;
@@ -31,13 +31,13 @@ img{max-width:100%}
   --bg:#101614; --surface:#1A2220; --panel:#151C1A; --ink:#E3ECE8; --muted:#94A49E; --line:#2D3935;
   --accent:#62C3A6; --accent-ink:#0D1F19; --accent-soft:#1D3530;
   --c-goal:#E0A548; --c-ability:#6FA3E6; --c-team:#B88AD6; --c-info:#4CB8C2; --c-system:#E57C5F; --c-tech:#9AA8B8; --c-person:#62C3A6;
-  --good:#5CC17E; --watch:#E3B04A; --bad:#EE6A5D;
+  --good:#5CC17E; --sel:#FF6E61; --gone:#A3ABA8; --gone-bg:#2C3431; --watch:#E3B04A; --bad:#EE6A5D;
   --shadow:0 1px 2px rgba(0,0,0,.4), 0 4px 14px rgba(0,0,0,.3); color-scheme:dark}}
 :root[data-theme="dark"]{
   --bg:#101614; --surface:#1A2220; --panel:#151C1A; --ink:#E3ECE8; --muted:#94A49E; --line:#2D3935;
   --accent:#62C3A6; --accent-ink:#0D1F19; --accent-soft:#1D3530;
   --c-goal:#E0A548; --c-ability:#6FA3E6; --c-team:#B88AD6; --c-info:#4CB8C2; --c-system:#E57C5F; --c-tech:#9AA8B8; --c-person:#62C3A6;
-  --good:#5CC17E; --watch:#E3B04A; --bad:#EE6A5D;
+  --good:#5CC17E; --sel:#FF6E61; --gone:#A3ABA8; --gone-bg:#2C3431; --watch:#E3B04A; --bad:#EE6A5D;
   --shadow:0 1px 2px rgba(0,0,0,.4), 0 4px 14px rgba(0,0,0,.3); color-scheme:dark}
 
 html,body{height:100%}
@@ -98,18 +98,22 @@ details.menu .drop button:hover{background:var(--panel)}
 .lane:nth-child(odd){background:color-mix(in srgb, var(--panel) 55%, transparent)}
 svg.links{position:absolute;left:0;top:0;overflow:visible;pointer-events:none}
 svg.links path.l{fill:none;stroke:var(--muted);stroke-width:1.6}
-svg.links path.l.sel{stroke:var(--accent);stroke-width:2.6}
+svg.links path.l.sel{stroke:var(--sel);stroke-width:3}
+svg.linktop{z-index:4}
+svg.linktop path.top{fill:none;stroke:var(--sel);stroke-width:2.4;stroke-opacity:.92}
 svg.links path.l.faded{stroke-dasharray:5 4;opacity:.7}
 svg.links path.hit{fill:none;stroke:transparent;stroke-width:14;pointer-events:stroke;cursor:pointer}
 svg.links path.tmp{fill:none;stroke:var(--accent);stroke-width:2;stroke-dasharray:6 4}
 .llabel{position:absolute;transform:translate(-50%,-50%);font-size:11.5px;color:var(--muted);background:var(--surface);border:1px solid var(--line);padding:1px 7px;border-radius:20px;white-space:nowrap;cursor:pointer;max-width:180px;overflow:hidden;text-overflow:ellipsis}
-.llabel.sel{color:var(--accent);border-color:var(--accent);font-weight:600}
+.llabel.sel{z-index:6;color:var(--sel);border-color:var(--sel);font-weight:600}
 .block{position:absolute;width:172px;height:62px;background:color-mix(in srgb, var(--tc) 9%, var(--surface));border:1.5px solid color-mix(in srgb, var(--tc) 55%, var(--line));border-radius:10px;padding:7px 26px 7px 10px;touch-action:none;user-select:none;-webkit-user-select:none;cursor:grab;display:flex;flex-direction:column;justify-content:center;gap:1px}
 .block:hover{box-shadow:var(--shadow)}
 .block.sel{box-shadow:0 0 0 3px color-mix(in srgb, var(--accent) 40%, transparent);border-color:var(--accent)}
 .block.drag{cursor:grabbing;box-shadow:var(--shadow);z-index:5}
 .block.w-planned{border-style:dashed;background:var(--surface)}
-.block.w-retiring{opacity:.62}
+.block.w-retiring{background:repeating-linear-gradient(135deg, var(--gone-bg) 0 7px, var(--surface) 7px 14px);border-color:var(--gone)}
+.block.w-retiring .kind,.block.w-retiring .kind em{color:var(--gone)}
+.block.w-retiring .nm{color:color-mix(in srgb, var(--ink) 72%, var(--gone))}
 .block.w-retiring .nm{text-decoration:line-through;text-decoration-color:color-mix(in srgb, var(--ink) 40%, transparent)}
 .block .kind{font-family:var(--f-mono);font-size:10px;letter-spacing:.06em;text-transform:uppercase;color:var(--tc);display:flex;gap:6px;align-items:center}
 .block .kind em{font-style:normal;color:var(--muted);text-transform:none;letter-spacing:0;font-family:var(--f-body);font-size:11px}
@@ -136,6 +140,11 @@ svg.links path.tmp{fill:none;stroke:var(--accent);stroke-width:2;stroke-dasharra
 .money{display:grid;grid-template-columns:1fr 1fr;gap:8px}
 .money .field{margin-bottom:0}
 .money small{font-size:11px;color:var(--muted);font-variant-numeric:tabular-nums;min-height:1em}
+.block .kind{white-space:nowrap;min-width:0}
+.block .kind em{min-width:0;overflow:hidden;text-overflow:ellipsis}
+.block .kind .cost{flex:0 0 auto}
+.lane .lname{z-index:3;background:var(--surface);border-radius:0 0 8px 0}
+.lane:nth-child(odd) .lname{background:color-mix(in srgb, var(--panel) 55%, var(--surface))}
 .block .nm{font-weight:600;font-size:13.5px;line-height:1.2;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
 .block .hdot{position:absolute;right:8px;top:8px;width:9px;height:9px;border-radius:50%}
 .h-good .hdot{background:var(--good)} .h-watch .hdot{background:var(--watch)} .h-bad .hdot{background:var(--bad)}
@@ -207,6 +216,16 @@ svg.links path.tmp{fill:none;stroke:var(--accent);stroke-width:2;stroke-dasharra
 .toast button{border:0;background:transparent;color:var(--bg);text-decoration:underline;font-weight:600}
 .sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
 
+/* Import window */
+.modal{position:fixed;inset:0;z-index:300;background:color-mix(in srgb, var(--ink) 38%, transparent);display:grid;place-items:center;padding:max(16px, env(safe-area-inset-top, 0px)) max(16px, env(safe-area-inset-right, 0px)) max(16px, env(safe-area-inset-bottom, 0px)) max(16px, env(safe-area-inset-left, 0px))}
+.dlg{background:var(--surface);color:var(--ink);border:1px solid var(--line);border-radius:14px;box-shadow:var(--shadow);width:min(640px,100%);max-height:100%;overflow:auto;padding:18px 20px}
+.csvgrid{display:grid;grid-template-columns:minmax(120px,auto) minmax(0,1fr);gap:8px 12px;align-items:center}
+.csvgrid label{font-size:12.5px;font-weight:600;color:var(--muted)}
+.csvgrid select{width:100%;min-width:0;border:1px solid var(--line);background:var(--surface);border-radius:8px;padding:6px 8px}
+.csvprev table{border-collapse:collapse;width:100%;font-size:12.5px}
+.csvprev th,.csvprev td{text-align:left;padding:5px 8px;border-bottom:1px solid var(--line);white-space:nowrap}
+.csvprev th{font-family:var(--f-mono);font-size:10.5px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);font-weight:500}
+@media (max-width:520px){.csvgrid{grid-template-columns:minmax(0,1fr)}}
 /* Stakeholders */
 body:not(.mode-people) .peopleonly{display:none!important}
 body.mode-people .maponly{display:none!important}
@@ -303,12 +322,20 @@ details.menu .drop button.warn{color:var(--bad)}
         <button id="dupBtn">Make a copy of this map</button>
         <hr>
         <button id="importBtn">Open a map file…</button>
+        <button id="csvInBtn">Import from a spreadsheet…<small>A CSV list of applications, teams, or anything else</small></button>
         <button id="exportBtn">Download this map as a file</button>
+        <hr>
+        <div class="mh">Share and export</div>
+        <button id="pdfBtn">Download a PDF report<small>Summary, map, stakeholders, costs, and checks</small></button>
+        <button id="pngBtn">Download a picture of this view<small>A PNG of the map or the stakeholder grid, for slides</small></button>
+        <button id="amBtn">Export for ArchiMate tools<small>Open Group exchange format, for Archi and others</small></button>
+        <button id="csvOutBtn">Download as a spreadsheet<small>A CSV file with one row per block</small></button>
         <hr>
         <button id="delMapBtn" class="warn">Delete this map</button>
       </div>
     </details>
     <input type="file" id="fileIn" accept=".json,application/json" hidden>
+    <input type="file" id="csvIn" accept=".csv,.tsv,.txt,text/csv" hidden>
   </div>
 </header>
 
@@ -331,6 +358,7 @@ details.menu .drop button.warn{color:var(--bad)}
         <svg class="links" id="links"></svg>
         <div id="labels"></div>
         <div id="blocks"></div>
+        <svg class="links linktop" id="linksTop" aria-hidden="true"></svg>
       </div>
     </div>
   </section>
@@ -600,13 +628,13 @@ function addLink(a, b, label){
 function removeBlock(id){ S.blocks = S.blocks.filter(b => b.id !== id); S.links = S.links.filter(l => l.from !== id && l.to !== id); for (const p of P()) p.links = p.links.filter(x => x !== id); }
 
 /* ---------- rendering ---------- */
-const surf = $("#surf"), vp = $("#vp"), sizer = $("#sizer"), svg = $("#links"), labelsEl = $("#labels"), blocksEl = $("#blocks"), lanesEl = $("#lanes");
+const linksTop = $("#linksTop"), surf = $("#surf"), vp = $("#vp"), sizer = $("#sizer"), svg = $("#links"), labelsEl = $("#labels"), blocksEl = $("#blocks"), lanesEl = $("#lanes");
 function dims(){ const w = Math.max(MIN_W, ...S.blocks.map(b => b.x + BW + 400)); return {w, h: TYPES.length * LANE_H}; }
 function renderLanes(){
   const {w, h} = dims();
   surf.style.width = w + "px"; surf.style.height = h + "px"; surf.style.transform = `scale(${zoom})`;
   sizer.style.width = w * zoom + "px"; sizer.style.height = h * zoom + "px";
-  svg.setAttribute("width", w); svg.setAttribute("height", h);
+  svg.setAttribute("width", w); svg.setAttribute("height", h); linksTop.setAttribute("width", w); linksTop.setAttribute("height", h);
   lanesEl.innerHTML = TYPES.map((t, i) => {
     const has = S.blocks.some(b => b.type === t.key);
     return `<div class="lane" style="top:${i*LANE_H}px;height:${LANE_H}px;--tc:${tc(t.key)}"><span class="lname">${esc(t.lane)} <small>${esc(t.plural)}</small></span>${has ? "" : `<div class="empty">Drag ${esc(t.a)} here, for example “${esc(t.ex)}”</div>`}</div>`;
@@ -635,7 +663,7 @@ function curve(p, q){
   return {d:`M${p.x},${p.y} C${c1.x},${c1.y} ${c2.x},${c2.y} ${q.x},${q.y}`, mid:{x:(p.x + 3*c1.x + 3*c2.x + q.x)/8, y:(p.y + 3*c1.y + 3*c2.y + q.y)/8}};
 }
 function renderLinks(){
-  let paths = `<defs><marker id="arr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="var(--muted)"/></marker><marker id="arrS" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="var(--accent)"/></marker></defs>`;
+  let paths = `<defs><marker id="arr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="var(--muted)"/></marker><marker id="arrS" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="var(--sel)"/></marker></defs>`;
   let labels = "";
   for (const l of S.links){
     const a = byId(l.from), b = byId(l.to);
@@ -647,6 +675,8 @@ function renderLinks(){
     labels += `<div class="llabel${s ? " sel" : ""}" data-link="${l.id}" style="left:${mid.x}px;top:${mid.y}px">${esc(l.label)}</div>`;
   }
   svg.innerHTML = paths + `<path class="tmp" id="tmpLink" d=""/>`;
+  const sl = sel && sel.kind === "link" ? linkById(sel.id) : null, sa = sl && byId(sl.from), sb = sl && byId(sl.to);
+  linksTop.innerHTML = sa && sb && visible(sa) && visible(sb) ? `<defs><marker id="arrT" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="var(--sel)"/></marker></defs><path class="top" d="${curve(anchor(sa, sb), anchor(sb, sa)).d}" marker-end="url(#arrT)"/>` : "";
   labelsEl.innerHTML = labels;
 }
 function renderAll(){
@@ -850,7 +880,7 @@ function overview(){
     <p class="flabel">The six rows</p>
     <div class="layers">${TYPES.map(t => `<div style="--tc:${tc(t.key)}"><b>${esc(t.lane)}</b><span>${esc(t.plural)}. ${esc(t.hint)} For example, “${esc(t.ex)}”.</span></div>`).join("")}</div>
     <p class="flabel">Reading the map</p>
-    <p class="sub" style="margin-top:4px">A dashed outline means planned. Faded and crossed through means being removed. The dot in the corner shows how it is doing: green working well, amber needs attention, red causing problems. Use Today and Future at the top to see the map before and after the changes.</p>
+    <p class="sub" style="margin-top:4px">A dashed outline means planned. Grey stripes with the name crossed through mean being removed. The dot in the corner shows how it is doing: green working well, amber needs attention, red causing problems. Use Today and Future at the top to see the map before and after the changes.</p>
   </div>`;
 }
 let editSnap = null;
@@ -1163,6 +1193,554 @@ function peopleOverview(){
     ${["close", "satisfied", "informed", "checkin"].map(k => `<p class="flabel">${esc(QUADS[k].t)}</p><p class="sub" style="margin:2px 0 6px">${esc(QUADS[k].d)}</p>${by(k).length ? `<ul class="conns" style="margin-bottom:14px">${by(k).map(p => `<li><i class="pdot" style="background:${FEEL_C[p.feeling] || FEEL_C[""]}"></i><span><button class="linkish" data-gop="${esc(p.id)}">${esc(p.name)}</button>${p.role ? ` <small>${esc(p.role)}</small>` : ""}</span></li>`).join("")}</ul>` : `<p class="sub" style="margin:0 0 14px">No one here yet.</p>`}`).join("")}
   </div>`;
 }
+
+const VENDOR = {jspdf:"/static/vendor/jspdf.umd.min.js", autotable:"/static/vendor/jspdf.plugin.autotable.min.js"};
+/* ---------- import and export ---------- */
+const loadedScripts = {};
+function loadScript(src){
+  return loadedScripts[src] ||= new Promise((res, rej) => {
+    const s = document.createElement("script"); s.src = src; s.async = true;
+    s.onload = () => res(); s.onerror = () => { delete loadedScripts[src]; rej(new Error("Couldn't load " + src)); };
+    document.head.appendChild(s);
+  });
+}
+const fileBase = () => (S.name || "map").replace(/[^\w\- ]+/g, "").trim().replace(/\s+/g, "-").toLowerCase() || "map";
+const todayGB = () => new Date().toLocaleDateString("en-GB", {day:"numeric", month:"long", year:"numeric"});
+let anchorOnly = false;
+/* Saves a file. Returns true when the file was handed over, false when the viewer declined. */
+async function saveFile(filename, blob){
+  if (!anchorOnly){
+    let dl = null;
+    try { dl = await window.claude?.use?.("downloads"); } catch { dl = null; }
+    if (dl){
+      try { await dl.save({filename, data:blob}); return true; }
+      catch (e){
+        if (e?.code === "declined") return false;
+        if (e?.code === "rate_limited") throw new Error("A save is already waiting for you to confirm it.");
+        if (e?.code !== "unavailable" && e?.code !== "not_granted") throw new Error(e?.message || "The file couldn't be saved.");
+      }
+    } else anchorOnly = true;
+  }
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a"); a.href = url; a.download = filename; document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 5000);
+  return true;
+}
+async function exporting(label, fn){
+  menu.open = false;
+  toast(label + "…");
+  try { const ok = await fn(); if (ok !== false) toast(ok || "Done"); }
+  catch (e){ console.error(e); toast((e && e.message) || "Something went wrong making that file. Try again."); }
+}
+
+/* ---- minimal zip (stored, no compression) ---- */
+const CRC_T = (() => { const t = new Uint32Array(256); for (let n = 0; n < 256; n++){ let c = n; for (let k = 0; k < 8; k++) c = c & 1 ? 0xEDB88320 ^ (c >>> 1) : c >>> 1; t[n] = c >>> 0; } return t; })();
+function crc32(b){ let c = 0xFFFFFFFF; for (let i = 0; i < b.length; i++) c = CRC_T[(c ^ b[i]) & 0xFF] ^ (c >>> 8); return (c ^ 0xFFFFFFFF) >>> 0; }
+function zipFiles(files){
+  const enc = new TextEncoder(), parts = [], central = []; let off = 0;
+  const d = new Date(), dt = ((d.getHours() << 11) | (d.getMinutes() << 5) | (d.getSeconds() >> 1)) & 0xFFFF, dd = (((d.getFullYear() - 1980) << 9) | ((d.getMonth() + 1) << 5) | d.getDate()) & 0xFFFF;
+  for (const f of files){
+    const name = enc.encode(f.name), data = typeof f.data === "string" ? enc.encode(f.data) : f.data, crc = crc32(data);
+    const h = new DataView(new ArrayBuffer(30));
+    [[0, 0x04034b50, 4], [4, 20, 2], [6, 0x0800, 2], [8, 0, 2], [10, dt, 2], [12, dd, 2], [14, crc, 4], [18, data.length, 4], [22, data.length, 4], [26, name.length, 2], [28, 0, 2]].forEach(([o, v, n]) => n === 4 ? h.setUint32(o, v, true) : h.setUint16(o, v, true));
+    parts.push(new Uint8Array(h.buffer), name, data);
+    const c = new DataView(new ArrayBuffer(46));
+    [[0, 0x02014b50, 4], [4, 20, 2], [6, 20, 2], [8, 0x0800, 2], [10, 0, 2], [12, dt, 2], [14, dd, 2], [16, crc, 4], [20, data.length, 4], [24, data.length, 4], [28, name.length, 2], [30, 0, 2], [32, 0, 2], [34, 0, 2], [36, 0, 2], [38, 0, 4], [42, off, 4]].forEach(([o, v, n]) => n === 4 ? c.setUint32(o, v, true) : c.setUint16(o, v, true));
+    central.push(new Uint8Array(c.buffer), name);
+    off += 30 + name.length + data.length;
+  }
+  const cs = central.reduce((a, b) => a + b.length, 0), e = new DataView(new ArrayBuffer(22));
+  [[0, 0x06054b50, 4], [4, 0, 2], [6, 0, 2], [8, files.length, 2], [10, files.length, 2], [12, cs, 4], [16, off, 4], [20, 0, 2]].forEach(([o, v, n]) => n === 4 ? e.setUint32(o, v, true) : e.setUint16(o, v, true));
+  return new Blob([...parts, ...central, new Uint8Array(e.buffer)], {type:"application/zip"});
+}
+
+/* ---- ArchiMate (Open Group exchange format 3.1) ---- */
+const AM_TYPE = {goal:"Goal", ability:"BusinessFunction", team:"BusinessActor", info:"BusinessObject", system:"ApplicationComponent", tech:"Node", person:"Stakeholder"};
+const AM_REL = {a:"Access", c:"Composition", f:"Flow", g:"Aggregation", i:"Assignment", n:"Influence", o:"Association", r:"Realization", s:"Specialization", t:"Triggering", v:"Serving"};
+/* Which relationships ArchiMate 3.2 allows between the element types Blockplan uses (from Archi's rules). */
+const AM_OK = {"ApplicationComponent>ApplicationComponent":"cfgorstv","ApplicationComponent>BusinessActor":"fotv","ApplicationComponent>BusinessFunction":"fortv","ApplicationComponent>BusinessObject":"ao","ApplicationComponent>Goal":"nor","ApplicationComponent>Node":"fotv","ApplicationComponent>Stakeholder":"no","BusinessActor>ApplicationComponent":"fotv","BusinessActor>BusinessActor":"cfgostv","BusinessActor>BusinessFunction":"fiotv","BusinessActor>BusinessObject":"ao","BusinessActor>Goal":"nor","BusinessActor>Node":"fotv","BusinessActor>Stakeholder":"ino","BusinessFunction>ApplicationComponent":"fotv","BusinessFunction>BusinessActor":"fotv","BusinessFunction>BusinessFunction":"cfgostv","BusinessFunction>BusinessObject":"ao","BusinessFunction>Goal":"nor","BusinessFunction>Node":"fotv","BusinessFunction>Stakeholder":"no","BusinessObject>ApplicationComponent":"o","BusinessObject>BusinessActor":"o","BusinessObject>BusinessFunction":"o","BusinessObject>BusinessObject":"cgos","BusinessObject>Goal":"nor","BusinessObject>Node":"o","BusinessObject>Stakeholder":"no","Goal>ApplicationComponent":"o","Goal>BusinessActor":"o","Goal>BusinessFunction":"o","Goal>BusinessObject":"o","Goal>Goal":"cgnos","Goal>Node":"o","Goal>Stakeholder":"no","Node>ApplicationComponent":"fortv","Node>BusinessActor":"fiotv","Node>BusinessFunction":"fiortv","Node>BusinessObject":"ao","Node>Goal":"nor","Node>Node":"cfgiostv","Node>Stakeholder":"ino","Stakeholder>ApplicationComponent":"o","Stakeholder>BusinessActor":"o","Stakeholder>BusinessFunction":"o","Stakeholder>BusinessObject":"o","Stakeholder>Goal":"no","Stakeholder>Node":"o","Stakeholder>Stakeholder":"cgnos"};
+/* Preferred ArchiMate relationship for each of Blockplan's connecting words: [code, reversed?] in order of preference. */
+const AM_BY_LABEL = {
+  "helps achieve":[["r",0],["n",0]], "does":[["i",0]], "supports":[["v",0],["n",0],["r",0]], "holds":[["a",0]], "stores":[["a",0]],
+  "looks after":[["a",0]], "uses":[["a",0],["v",1]], "sends information to":[["f",0]], "runs on":[["v",1],["r",1]],
+  "leads to":[["t",0],["f",0]], "is part of":[["g",1]], "depends on":[["v",1]], "is responsible for":[["o",0]],
+  "works with":[["o",0]], "connects to":[["o",0]], "replaces":[["o",0]], "relates to":[["o",0]],
+};
+function amRelationship(a, b, label){
+  const ta = AM_TYPE[a.type], tb = AM_TYPE[b.type];
+  const ok = (code, s, t) => (AM_OK[s + ">" + t] || "o").includes(code);
+  const key = String(label || "").trim().toLowerCase();
+  const pref = AM_BY_LABEL[key] || AM_BY_LABEL[LINK_WORDS[a.type + ">" + b.type] || ""] || [];
+  for (const [code, rev] of pref){
+    const s = rev ? tb : ta, t = rev ? ta : tb;
+    if (ok(code, s, t)) return {type:AM_REL[code], source: rev ? b : a, target: rev ? a : b};
+  }
+  return {type:"Association", source:a, target:b};
+}
+const xesc = s => String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;", "<":"&lt;", ">":"&gt;", '"':"&quot;", "'":"&apos;"}[c])).replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F]/g, "");
+const xid = (p, id) => "id-" + p + "-" + String(id).replace(/[^A-Za-z0-9_.-]/g, "_");
+function archimateXML(){
+  const PD = [["owner", "Owner"], ["status", "Status"], ["health", "Health"], ["cost", "Yearly running cost"], ["oneoff", "One-off cost"],
+    ["role", "Role"], ["feeling", "Feeling about the changes"], ["say", "How much say"], ["affected", "How much they are affected"], ["approach", "How to work with them"], ["cares", "What they care about"], ["plan", "How we keep them on side"], ["source", "Made with"]];
+  const level = v => v >= 0.67 ? "High" : v >= 0.34 ? "Some" : "Low";
+  const props = list => { const ps = list.filter(([, v]) => v !== "" && v != null); return ps.length ? `<properties>${ps.map(([k, v]) => `<property propertyDefinitionRef="id-pd-${k}"><value xml:lang="en">${xesc(v)}</value></property>`).join("")}</properties>` : ""; };
+  const blocks = S.blocks, people = P();
+  const els = [], rels = [];
+  for (const b of blocks){
+    els.push(`<element identifier="${xid("e", b.id)}" xsi:type="${AM_TYPE[b.type]}"><name xml:lang="en">${xesc(b.name)}</name>${b.desc ? `<documentation xml:lang="en">${xesc(b.desc)}</documentation>` : ""}${props([["owner", b.owner], ["status", WHEN[b.when]], ["health", b.health ? HEALTH[b.health] : ""], ["cost", b.cost ? moneyFull(b.cost) : ""], ["oneoff", b.oneOff ? moneyFull(b.oneOff) : ""]])}</element>`);
+  }
+  for (const p of people){
+    const doc = [p.cares && "Cares about: " + p.cares, p.plan && "Plan: " + p.plan].filter(Boolean).join("\n");
+    els.push(`<element identifier="${xid("s", p.id)}" xsi:type="Stakeholder"><name xml:lang="en">${xesc(p.name)}</name>${doc ? `<documentation xml:lang="en">${xesc(doc)}</documentation>` : ""}${props([["role", p.role], ["feeling", FEEL[p.feeling] || FEEL[""]], ["say", level(p.say)], ["affected", level(p.impact)], ["approach", QUADS[quadOf(p)].t], ["cares", p.cares], ["plan", p.plan]])}</element>`);
+  }
+  const relOf = {};
+  for (const l of S.links){
+    const a = byId(l.from), b = byId(l.to); if (!a || !b) continue;
+    const r = amRelationship(a, b, l.label), id = xid("r", l.id);
+    relOf[l.id] = {id, s:r.source.id, t:r.target.id};
+    rels.push(`<relationship identifier="${id}" source="${xid("e", r.source.id)}" target="${xid("e", r.target.id)}" xsi:type="${r.type}"><name xml:lang="en">${xesc(l.label)}</name></relationship>`);
+  }
+  const pRel = [];
+  for (const p of people) for (const bid of p.links){
+    if (!byId(bid)) continue;
+    const id = xid("r", "sh-" + p.id + "-" + bid); pRel.push({id, p:p.id, b:bid});
+    rels.push(`<relationship identifier="${id}" source="${xid("s", p.id)}" target="${xid("e", bid)}" xsi:type="Association"><name xml:lang="en">cares about</name></relationship>`);
+  }
+  const W = 172, H = 62;
+  const rgb = h => { const n = parseInt(h.slice(1), 16); return `r="${n >> 16 & 255}" g="${n >> 8 & 255}" b="${n & 255}"`; };
+  /* View 1: the map, one container per row */
+  const used = TYPES.filter(t => blocks.some(b => b.type === t.key));
+  const maxX = Math.max(800, ...blocks.map(b => b.x + W + 40));
+  const mapNodes = used.map(t => {
+    const top = laneTop(t.key), kids = blocks.filter(b => b.type === t.key);
+    return `<node identifier="${xid("lane", t.key)}" x="0" y="${top}" w="${maxX}" h="${LANE_H}" xsi:type="Container"><label xml:lang="en">${xesc(t.lane)}</label><style><fillColor ${rgb(EXP[t.key + "Soft"])}/><lineColor ${rgb("#CFD8D4")}/></style>${kids.map(b => `<node identifier="${xid("n", b.id)}" elementRef="${xid("e", b.id)}" xsi:type="Element" x="${Math.round(b.x)}" y="${Math.round(b.y)}" w="${W}" h="${H}"/>`).join("")}</node>`;
+  }).join("");
+  const mapConns = Object.values(relOf).map(r => `<connection identifier="${r.id}-c" relationshipRef="${r.id}" xsi:type="Relationship" source="${xid("n", r.s)}" target="${xid("n", r.t)}"/>`).join("");
+  const views = [`<view identifier="id-view-map" xsi:type="Diagram"><name xml:lang="en">${xesc(S.name || "Map")}</name><documentation xml:lang="en">Made with Blockplan. One group per row of the map.</documentation>${mapNodes}${mapConns}</view>`];
+  if (people.length){
+    /* View 2: the stakeholder grid */
+    const GW = 1000, GH = 700, qx = GW / 2, qy = GH / 2;
+    const quads = [["satisfied", 0, 0], ["close", qx, 0], ["checkin", 0, qy], ["informed", qx, qy]];
+    const gridNodes = quads.map(([k, x, y]) => {
+      const inQ = people.filter(p => quadOf(p) === k);
+      return `<node identifier="${xid("q", k)}" x="${x}" y="${y}" w="${qx}" h="${qy}" xsi:type="Container"><label xml:lang="en">${xesc(QUADS[k].t)}</label><style><fillColor ${rgb(k === "close" ? "#DCEBE6" : "#F5F7F6")}/><lineColor ${rgb("#CFD8D4")}/></style>${inQ.map(p => {
+        const cx = Math.round(Math.min(Math.max(p.impact * GW - 70, x + 8), x + qx - 148)), cy = Math.round(Math.min(Math.max((1 - p.say) * GH - 27, y + 30), y + qy - 62));
+        return `<node identifier="${xid("sg", p.id)}" elementRef="${xid("s", p.id)}" xsi:type="Element" x="${cx}" y="${cy}" w="140" h="55"/>`;
+      }).join("")}</node>`;
+    }).join("");
+    views.push(`<view identifier="id-view-grid" xsi:type="Diagram"><name xml:lang="en">Stakeholders</name><documentation xml:lang="en">Higher up means more say. Further right means the changes affect them more.</documentation>${gridNodes}</view>`);
+    /* View 3: stakeholders and what they care about */
+    const care = [...new Set(people.flatMap(p => p.links))].map(byId).filter(Boolean).sort((a, b) => TYPES.findIndex(t => t.key === a.type) - TYPES.findIndex(t => t.key === b.type));
+    const rows = Math.max(people.length, care.length);
+    const careNodes = people.map((p, i) => `<node identifier="${xid("sc", p.id)}" elementRef="${xid("s", p.id)}" xsi:type="Element" x="40" y="${40 + i * Math.round((rows * 80) / Math.max(1, people.length))}" w="160" h="55"/>`).join("") +
+      care.map((b, i) => `<node identifier="${xid("bc", b.id)}" elementRef="${xid("e", b.id)}" xsi:type="Element" x="520" y="${40 + i * 80}" w="${W}" h="55"/>`).join("");
+    const careConns = pRel.filter(r => care.some(b => b.id === r.b)).map(r => `<connection identifier="${r.id}-c" relationshipRef="${r.id}" xsi:type="Relationship" source="${xid("sc", r.p)}" target="${xid("bc", r.b)}"/>`).join("");
+    views.push(`<view identifier="id-view-care" xsi:type="Diagram"><name xml:lang="en">What stakeholders care about</name>${careNodes}${careConns}</view>`);
+  }
+  return `<?xml version="1.0" encoding="UTF-8"?>
+<model xmlns="http://www.opengroup.org/xsd/archimate/3.0/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.opengroup.org/xsd/archimate/3.0/ http://www.opengroup.org/xsd/archimate/3.1/archimate3_Diagram.xsd" identifier="id-model-${xesc(String(Date.now()))}">
+<name xml:lang="en">${xesc(S.name || "Blockplan map")}</name>
+<documentation xml:lang="en">${xesc(`Exported from Blockplan on ${todayGB()}. Costs are in ${cur()}.`)}</documentation>
+<properties><property propertyDefinitionRef="id-pd-source"><value xml:lang="en">Blockplan</value></property></properties>
+<elements>${els.join("\n")}</elements>
+${rels.length ? `<relationships>${rels.join("\n")}</relationships>` : ""}
+<propertyDefinitions>${PD.map(([k, n]) => `<propertyDefinition identifier="id-pd-${k}" type="string"><name xml:lang="en">${xesc(n)}</name></propertyDefinition>`).join("")}</propertyDefinitions>
+<views><diagrams>${views.join("\n")}</diagrams></views>
+</model>
+`;
+}
+async function exportArchimate(){
+  if (!S.blocks.length) return "There's nothing on the map to export yet.";
+  const xml = archimateXML(), name = fileBase() + "-archimate.xml";
+  if (window.claude?.use){
+    let dl = null; try { dl = await window.claude.use("downloads"); } catch {}
+    if (dl){
+      const ok = await saveFile(fileBase() + "-archimate.zip", zipFiles([{name, data:xml}, {name:"README.txt", data:`${name} is an ArchiMate model in the Open Group exchange format.\r\n\r\nIn Archi: File > Import > Open Exchange XML Model, then choose ${name}.\r\nOther ArchiMate tools that support the exchange format can import it too.\r\n`}]));
+      return ok && "ArchiMate model saved, inside a zip file. Unzip it, then import the .xml file.";
+    }
+  }
+  const ok = await saveFile(name, new Blob([xml], {type:"application/xml"}));
+  return ok && "ArchiMate model saved. In Archi, use File › Import › Open Exchange XML Model.";
+}
+
+/* ---- spreadsheet (CSV) ---- */
+function csvCell(v){ v = String(v ?? ""); return /[",\r\n]/.test(v) || /^[=+\-@]/.test(v) ? `"${(/^[=+\-@]/.test(v) ? "'" : "") + v.replace(/"/g, '""')}"` : v; }
+async function exportCSV(){
+  if (!S.blocks.length) return "There's nothing on the map to export yet.";
+  const head = ["Name", "Kind", "Description", "Owner", "Status", "Health", "Yearly cost", "One-off cost", "Stakeholders"];
+  const rows = S.blocks.slice().sort((a, b) => TYPES.findIndex(t => t.key === a.type) - TYPES.findIndex(t => t.key === b.type) || a.name.localeCompare(b.name))
+    .map(b => [b.name, T[b.type].name, b.desc, b.owner, WHEN[b.when], b.health ? HEALTH[b.health] : "", b.cost || "", b.oneOff || "", caresAbout(b.id).map(p => p.name).join("; ")]);
+  const text = "﻿" + [head, ...rows].map(r => r.map(csvCell).join(",")).join("\r\n") + "\r\n";
+  const ok = await saveFile(fileBase() + ".csv", new Blob([text], {type:"text/csv"}));
+  return ok && `Spreadsheet saved with ${rows.length} row${rows.length === 1 ? "" : "s"}. You can edit it and bring it back with Import from a spreadsheet.`;
+}
+function parseCSV(text){
+  text = text.replace(/^﻿/, "");
+  const first = text.split(/\r?\n/, 1)[0] || "";
+  const count = ch => { let n = 0, q = false; for (const c of first){ if (c === '"') q = !q; else if (c === ch && !q) n++; } return n; };
+  const delim = [",", ";", "\t"].reduce((a, b) => count(b) > count(a) ? b : a, ",");
+  const rows = []; let row = [], f = "", q = false;
+  for (let i = 0; i < text.length; i++){
+    const c = text[i];
+    if (q){ if (c === '"'){ if (text[i + 1] === '"'){ f += '"'; i++; } else q = false; } else f += c; }
+    else if (c === '"' && f === "") q = true;
+    else if (c === delim){ row.push(f); f = ""; }
+    else if (c === "\n" || c === "\r"){ if (c === "\r" && text[i + 1] === "\n") i++; row.push(f); rows.push(row); row = []; f = ""; }
+    else f += c;
+  }
+  if (f !== "" || row.length){ row.push(f); rows.push(row); }
+  return rows.filter(r => r.some(x => x.trim() !== "")).map(r => r.map(x => x.trim()));
+}
+const norm = s => String(s || "").toLowerCase().replace(/[^a-z0-9]/g, "");
+const CSV_FIELDS = [
+  ["name", "Name", h => ["name", "application", "applicationname", "app", "appname", "system", "systemname", "title", "item", "element", "elementname", "component", "service", "servicename"].includes(h)],
+  ["type", "Kind of block", h => ["type", "kind", "category", "layer", "elementtype", "class", "blocktype"].includes(h)],
+  ["desc", "Description", h => ["description", "desc", "details", "notes", "purpose", "summary", "comments", "comment"].includes(h)],
+  ["owner", "Who looks after it", h => h.includes("owner") || ["responsible", "accountable", "steward", "contact", "managedby", "supportedby", "wholooksafterit"].includes(h)],
+  ["when", "Status", h => ["status", "lifecycle", "lifecyclestatus", "state", "stage", "phase", "when", "timeline"].includes(h)],
+  ["health", "Health", h => ["health", "rag", "ragstatus", "condition", "technicalfit", "technicalhealth", "quality", "fit"].includes(h)],
+  ["cost", "Yearly cost", h => (h.includes("cost") || h.includes("opex") || h === "tco" || h.includes("annual") || h.includes("yearly")) && !/oneoff|setup|capex|project|implementation|onetime/.test(h)],
+  ["oneOff", "One-off cost", h => /oneoff|setup|capex|projectcost|implementation|onetime/.test(h)],
+];
+function csvKind(v){
+  const s = norm(v); if (!s) return null;
+  const tests = [["goal", /goal|objective|driver|outcome|aim|strateg/], ["ability", /activit|capabilit|process|function|businessservice|valuestream/], ["team", /team|actor|role|department|partner|supplier|vendor|organi[sz]ation|unit|group|people|person/],
+    ["info", /information|data|entity|record|dataset|businessobject/], ["tech", /technolog|infrastructure|server|platform|node|device|hardware|network|hosting|cloud|database/], ["system", /system|application|app|software|component|tool|saas|package|product/]];
+  for (const [k, re] of tests) if (re.test(s)) return k;
+  return null;
+}
+function csvWhen(v){ const s = String(v || "").toLowerCase(); if (/retir|sunset|decom|phas.?(e|ing).?out|end.?of.?life|\beol\b|to be replaced|replac|remov|switch.?off|eliminat/.test(s)) return "retiring"; if (/plan|propos|pipeline|future|\bnew\b|build|pilot|implement|roadmap|target|to be|tobe|candidate/.test(s)) return "planned"; return "now"; }
+function csvHealth(v){ const s = String(v || "").trim().toLowerCase(); if (!s) return ""; if (/^(g|green|good|ok|okay|healthy|high|excellent|strong|fine)\b/.test(s)) return "good"; if (/amber|yellow|orange|watch|fair|medium|moderate|at risk|some issues|adequate|^a$/.test(s)) return "watch"; if (/^(r|red|bad|poor|low|critical|failing|weak|unhealthy)\b/.test(s)) return "bad"; return ""; }
+function openCSVDialog(fileName, rows){
+  if (rows.length < 2) return toast("That file has no rows under its header. Choose a spreadsheet saved as CSV with one row per item.");
+  const head = rows[0], body = rows.slice(1, 5001), hn = head.map(norm);
+  const pick = {}; for (const [k, , test] of CSV_FIELDS){ const i = hn.findIndex((h, j) => test(h) && !Object.values(pick).includes(j)); pick[k] = i; }
+  if (pick.name < 0) pick.name = 0;
+  const dlg = document.createElement("div"); dlg.className = "modal"; dlg.setAttribute("role", "dialog"); dlg.setAttribute("aria-modal", "true"); dlg.setAttribute("aria-labelledby", "csvTitle");
+  const colSel = k => `<select id="csv-${k}" data-csv="${k}"><option value="-1">Not in this file</option>${head.map((h, i) => `<option value="${i}"${pick[k] === i ? " selected" : ""}>${esc(h || "Column " + (i + 1))}</option>`).join("")}</select>`;
+  dlg.innerHTML = `<div class="dlg">
+    <p class="paneh" id="csvTitle">Import from a spreadsheet</p>
+    <p class="sub">${esc(fileName)} has ${body.length} row${body.length === 1 ? "" : "s"}. Check which column is which, then import. Anything not matched is left blank.</p>
+    <div class="csvgrid">${CSV_FIELDS.map(([k, label]) => `<label for="csv-${k}">${esc(label)}</label>${colSel(k)}`).join("")}
+      <label for="csv-default">Rows with no kind are</label><select id="csv-default">${TYPES.map(t => `<option value="${t.key}"${t.key === "system" ? " selected" : ""}>${esc(t.plural)}</option>`).join("")}</select>
+      <label for="csv-target">Put them</label><select id="csv-target"><option value="this">On this map${S.blocks.length ? ", updating any with the same name" : ""}</option><option value="new">On a new map</option></select>
+    </div>
+    <p class="flabel" style="margin-top:14px">Preview</p>
+    <div class="csvprev" id="csvPrev"></div>
+    <div class="row" style="justify-content:flex-end;margin-top:14px"><button class="btn" data-a="cancel">Cancel</button><button class="btn primary" data-a="go">Import</button></div>
+  </div>`;
+  document.body.appendChild(dlg);
+  const get = k => +dlg.querySelector("#csv-" + k).value;
+  const toItems = () => {
+    const def = dlg.querySelector("#csv-default").value, cell = (r, k) => get(k) >= 0 ? (r[get(k)] || "") : "";
+    return body.map(r => ({name:cell(r, "name").slice(0, 120), type:csvKind(cell(r, "type")) || def, desc:cell(r, "desc"), owner:cell(r, "owner"),
+      when:get("when") >= 0 ? csvWhen(cell(r, "when")) : "now", health:csvHealth(cell(r, "health")), cost:parseMoney(cell(r, "cost")), oneOff:parseMoney(cell(r, "oneOff"))})).filter(x => x.name);
+  };
+  const preview = () => {
+    const items = toItems(), by = TYPES.map(t => [t, items.filter(x => x.type === t.key).length]).filter(([, n]) => n);
+    dlg.querySelector("#csvPrev").innerHTML = `<p class="sub" style="margin:0 0 8px">${items.length ? `${items.length} item${items.length === 1 ? "" : "s"}: ${by.map(([t, n]) => `${n} ${esc((n === 1 ? t.name : t.plural).toLowerCase())}`).join(", ")}.` : "No rows have a name, so nothing would be imported. Choose the column that holds the names."}</p>` +
+      (items.length ? `<div style="overflow-x:auto"><table><thead><tr><th>Name</th><th>Kind</th><th>Status</th><th>Health</th><th>Yearly cost</th></tr></thead><tbody>${items.slice(0, 6).map(x => `<tr><td>${esc(x.name)}</td><td>${esc(T[x.type].name)}</td><td>${esc(WHEN[x.when])}</td><td>${esc(x.health ? HEALTH[x.health] : "")}</td><td>${x.cost ? esc(money(x.cost)) : ""}</td></tr>`).join("")}</tbody></table></div>${items.length > 6 ? `<p class="sub" style="margin:6px 0 0">and ${items.length - 6} more.</p>` : ""}` : "");
+    dlg.querySelector('[data-a="go"]').disabled = !items.length;
+  };
+  const close = () => { dlg.remove(); document.removeEventListener("keydown", onKey, true); };
+  const onKey = e => { if (e.key === "Escape"){ e.stopPropagation(); close(); } };
+  document.addEventListener("keydown", onKey, true);
+  dlg.addEventListener("change", preview);
+  dlg.addEventListener("click", async e => {
+    if (e.target === dlg || e.target.dataset.a === "cancel") return close();
+    if (e.target.dataset.a !== "go") return;
+    const items = toItems(), toNew = dlg.querySelector("#csv-target").value === "new"; close();
+    if (toNew){
+      const saved = S; S = blank(); S.name = fileName.replace(/\.[^.]+$/, "") || "Imported map";
+      const r = addItems(items); const fresh = S; S = saved;
+      if (typeof createAndOpen === "function") await createAndOpen(fresh, `New map made with ${r.added} item${r.added === 1 ? "" : "s"}`);
+      else { commit(); S = fresh; sel = null; renderAll(); save(); toast(`New map made with ${r.added} item${r.added === 1 ? "" : "s"}`, true); }
+    } else {
+      commit(); if (S.example) S.example = false;
+      const r = addItems(items); sel = null; setMode("map"); if (view !== "all") setView("all"); renderAll(); save();
+      toast(`Added ${r.added}${r.updated ? ` and updated ${r.updated}` : ""} from the spreadsheet`, true);
+    }
+  });
+  preview(); dlg.querySelector("select").focus();
+}
+function addItems(items){
+  let added = 0, updated = 0;
+  for (const x of items){
+    const ex = S.blocks.find(b => b.type === x.type && b.name.trim().toLowerCase() === x.name.trim().toLowerCase());
+    if (ex){
+      for (const k of ["desc", "owner", "health"]) if (x[k]) ex[k] = x[k];
+      for (const k of ["cost", "oneOff"]) if (x[k]) ex[k] = x[k];
+      if (x.when !== "now") ex.when = x.when;
+      updated++;
+    } else {
+      const spot = freeSpot(x.type);
+      S.blocks.push({id:uid("b"), type:x.type, name:x.name, desc:x.desc, owner:x.owner, health:x.health, when:x.when, cost:x.cost, oneOff:x.oneOff, x:spot.x, y:spot.y});
+      added++;
+    }
+  }
+  return {added, updated};
+}
+
+/* ---- pictures: the map and the stakeholder grid drawn as SVG, in light colours for slides ---- */
+const EXP = {gone:"#5F6664", goneBg:"#DFE3E1", bg:"#FFFFFF", ink:"#16211E", muted:"#56665F", line:"#CFD8D4", panel:"#F5F7F6", accent:"#1F5B4E", soft:"#DCEBE6",
+  goal:"#A86A12", ability:"#2A62A8", team:"#7E4A9E", info:"#0C7680", system:"#B0442A", tech:"#4B5867", good:"#2F8A4E", watch:"#C28A12", bad:"#C2372B"};
+const mix = (a, b, t) => { const p = h => [1, 3, 5].map(i => parseInt(h.slice(i, i + 2), 16)); const x = p(a), y = p(b); return "#" + x.map((v, i) => Math.round(v * t + y[i] * (1 - t)).toString(16).padStart(2, "0")).join(""); };
+for (const t of TYPES){ EXP[t.key + "Soft"] = mix(EXP[t.key], "#FFFFFF", 0.07); }
+const XF = "Helvetica, Arial, sans-serif";
+const measureCtx = document.createElement("canvas").getContext("2d");
+const tw = (s, font) => { measureCtx.font = font; return measureCtx.measureText(s).width; };
+function wrapText(s, font, max, lines){
+  const words = String(s).split(/\s+/), out = []; let line = "";
+  for (const w of words){
+    const t = line ? line + " " + w : w;
+    if (tw(t, font) <= max || !line) line = t; else { out.push(line); line = w; }
+  }
+  if (line) out.push(line);
+  if (out.length > lines){ out.length = lines; let last = out[lines - 1]; while (last && tw(last + "…", font) > max) last = last.slice(0, -1); out[lines - 1] = last.trimEnd() + "…"; }
+  return out.map(l => { if (tw(l, font) <= max) return l; while (l && tw(l + "…", font) > max) l = l.slice(0, -1); return l + "…"; });
+}
+const sx = s => xesc(s);
+const VIEW_NAME = {all:"Everything", today:"Today", future:"Future"};
+function mapSVG(v = view){
+  const vis = b => v === "all" || (v === "today" && b.when !== "planned") || (v === "future" && b.when !== "retiring");
+  const blocks = S.blocks.filter(vis), TOP = 74, FOOT = 46;
+  const lanes = TYPES.filter(t => blocks.some(b => b.type === t.key));
+  const offs = {}; lanes.forEach((t, i) => { offs[t.key] = TOP + i * LANE_H - laneTop(t.key); });
+  const pb = blocks.map(b => ({...b, y: b.y + offs[b.type]})), byP = Object.fromEntries(pb.map(b => [b.id, b]));
+  const W = Math.max(900, ...pb.map(b => b.x + BW + 48)), Hh = TOP + Math.max(1, lanes.length) * LANE_H + FOOT;
+  let s = `<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${Hh}" viewBox="0 0 ${W} ${Hh}" font-family="${XF}">
+<defs><marker id="ar" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="${EXP.muted}"/></marker><pattern id="gone" width="14" height="14" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><rect width="14" height="14" fill="#FFFFFF"/><rect width="7" height="14" fill="${EXP.goneBg}"/></pattern></defs>
+<rect width="${W}" height="${Hh}" fill="${EXP.bg}"/>
+<text x="24" y="34" font-size="22" font-weight="700" fill="${EXP.ink}">${sx(S.name || "Map")}</text>
+<text x="24" y="56" font-size="13" fill="${EXP.muted}">${sx(`How the organisation works – ${VIEW_NAME[v]} – ${todayGB()}`)}</text>`;
+  let laneTitles = "";
+  const boxes = [];
+  lanes.forEach((t, i) => {
+    const y = TOP + i * LANE_H, bg = i % 2 ? EXP.bg : EXP.panel;
+    s += `<rect x="0" y="${y}" width="${W}" height="${LANE_H}" fill="${bg}"/><line x1="0" x2="${W}" y1="${y + LANE_H}" y2="${y + LANE_H}" stroke="${EXP.line}" stroke-dasharray="4 4"/>`;
+    const w1 = tw(t.lane, `700 14px ${XF}`), w2 = tw(t.plural.toUpperCase(), `10.5px ${XF}`) + t.plural.length * 0.6, tw0 = w1 + 8 + w2 + 16;
+    laneTitles += `<rect x="8" y="${y + 6}" width="${tw0.toFixed(1)}" height="24" rx="6" fill="${bg}"/><text x="16" y="${y + 22}" font-size="14" font-weight="700" fill="${EXP[t.key]}">${sx(t.lane)}<tspan font-size="10.5" font-weight="400" fill="${EXP.muted}" dx="8" letter-spacing="0.6">${sx(t.plural.toUpperCase())}</tspan></text>`;
+    boxes.push({x:8, y:y + 6, w:tw0, h:24});
+  });
+  if (!lanes.length) s += `<text x="24" y="${TOP + 40}" font-size="14" fill="${EXP.muted}">Nothing on the map yet.</text>`;
+  for (const b of pb) boxes.push({x:b.x - 4, y:b.y - 4, w:BW + 8, h:BH + 8});
+  const hits = r => boxes.some(o => r.x < o.x + o.w && r.x + r.w > o.x && r.y < o.y + o.h && r.y + r.h > o.y);
+  const at = (p, c1, c2, q, t) => { const u = 1 - t; return {x:u*u*u*p.x + 3*u*u*t*c1.x + 3*u*t*t*c2.x + t*t*t*q.x, y:u*u*u*p.y + 3*u*u*t*c1.y + 3*u*t*t*c2.y + t*t*t*q.y}; };
+  let labels = "";
+  for (const l of S.links){
+    const a = byP[l.from], b = byP[l.to]; if (!a || !b) continue;
+    const p = anchor(a, b), q = anchor(b, a), {d} = curve(p, q), faded = a.when !== "now" || b.when !== "now";
+    s += `<path d="${d}" fill="none" stroke="${EXP.muted}" stroke-width="1.6"${faded ? ` stroke-dasharray="5 4" opacity="0.75"` : ""} marker-end="url(#ar)"/>`;
+    const k = Math.max(36, Math.hypot(q.x - p.x, q.y - p.y) * 0.35), c1 = {x:p.x + p.dx*k, y:p.y + p.dy*k}, c2 = {x:q.x + q.dx*k, y:q.y + q.dy*k};
+    const lf = `11.5px ${XF}`, txt = wrapText(l.label, lf, 170, 1)[0], w = tw(txt, lf) + 14;
+    let spot = null;
+    for (const t of [0.5, 0.4, 0.6, 0.3, 0.7, 0.22, 0.78]){ const m = at(p, c1, c2, q, t), r = {x:m.x - w / 2, y:m.y - 10, w, h:20}; if (!hits(r)){ spot = m; break; } }
+    if (!spot) continue;
+    boxes.push({x:spot.x - w / 2 - 2, y:spot.y - 11, w:w + 4, h:22});
+    labels += `<rect x="${(spot.x - w / 2).toFixed(1)}" y="${(spot.y - 10).toFixed(1)}" width="${w.toFixed(1)}" height="20" rx="10" fill="${EXP.bg}" stroke="${EXP.line}"/><text x="${spot.x.toFixed(1)}" y="${(spot.y + 4).toFixed(1)}" font-size="11.5" text-anchor="middle" fill="${EXP.muted}">${sx(txt)}</text>`;
+  }
+  s += labels;
+  for (const b of pb){
+    const c = EXP[b.type], planned = b.when === "planned", ret = b.when === "retiring", n = caresAbout(b.id).length;
+    const nf = `600 13.5px ${XF}`, kf = `700 9.5px ${XF}`, cf = `10px ${XF}`;
+    const costTxt = b.cost ? money(b.cost) + "/yr" : "", room = BW - 20 - (costTxt ? tw(costTxt, cf) + 8 : 0) - (b.health ? 16 : 0);
+    const base = T[b.type].name.toUpperCase(), tags = planned ? [" · PLANNED", ""] : ret ? [" · BEING REMOVED", " · GOING", ""] : [""];
+    const kind = tags.map(t => base + t).find(t => tw(t, kf) + t.length * 0.5 <= room) || base;
+    const countTxt = n ? `${n} ${n === 1 ? "person" : "people"}` : "";
+    const first = wrapText(b.name, nf, BW - 36, 2);
+    const lines = first.length === 2 && countTxt ? [first[0], ...wrapText(b.name.slice(first[0].length).trim(), nf, BW - 30 - tw(countTxt, cf), 1)] : first;
+    const ny = lines.length === 1 ? 44 : 37;
+    s += `<g transform="translate(${b.x},${b.y})">
+<rect x="0.75" y="0.75" width="${BW - 1.5}" height="${BH - 1.5}" rx="10" fill="${planned ? EXP.bg : ret ? "url(#gone)" : mix(c, "#FFFFFF", 0.09)}" stroke="${ret ? EXP.gone : mix(c, EXP.line, 0.55)}" stroke-width="1.5"${planned ? ` stroke-dasharray="6 4"` : ""}/>
+<text x="10" y="19" font-size="9.5" font-weight="700" letter-spacing="0.5" fill="${ret ? EXP.gone : c}">${sx(kind)}</text>
+${costTxt ? `<text x="${BW - (b.health ? 24 : 10)}" y="19" font-size="10" text-anchor="end" fill="${EXP.ink}">${sx(costTxt)}</text>` : ""}
+${lines.map((ln, i) => `<text x="10" y="${ny + i * 16}" font-size="13.5" font-weight="600" fill="${EXP.ink}">${sx(ln)}</text>${ret ? `<line x1="10" x2="${10 + tw(ln, nf)}" y1="${ny + i * 16 - 4.5}" y2="${ny + i * 16 - 4.5}" stroke="${EXP.ink}" stroke-opacity="0.45"/>` : ""}`).join("")}
+${b.health ? `<circle cx="${BW - 12}" cy="15" r="4.5" fill="${EXP[b.health]}"/>` : ""}
+${countTxt ? `<text x="${BW - 8}" y="${BH - 8}" font-size="10" text-anchor="end" fill="${EXP.muted}">${countTxt}</text>` : ""}
+</g>`;
+  }
+  s += laneTitles;
+  const fy = Hh - 18;
+  s += `<g font-size="11.5" fill="${EXP.muted}"><rect x="24" y="${fy - 11}" width="22" height="13" rx="3" fill="none" stroke="${EXP.muted}" stroke-dasharray="4 3"/><text x="52" y="${fy}">Planned</text>
+<rect x="120" y="${fy - 11}" width="22" height="13" rx="3" fill="url(#gone)" stroke="${EXP.gone}"/><text x="148" y="${fy}">Being removed</text>
+${[["good", "Working well"], ["watch", "Needs attention"], ["bad", "Causing problems"]].map(([k, t], i) => `<circle cx="${262 + i * 140}" cy="${fy - 4}" r="4.5" fill="${EXP[k]}"/><text x="${272 + i * 140}" y="${fy}">${t}</text>`).join("")}
+<text x="${W - 24}" y="${fy}" text-anchor="end">Made with Blockplan</text></g></svg>`;
+  return {svg:s, w:W, h:Hh};
+}
+const FEEL_X = {for:EXP.good, unsure:EXP.watch, against:EXP.bad, "":"#7C8A84"};
+function gridSVG(){
+  const W = 1200, H = 860, L = 70, T0 = 96, GW = W - L - 40, GH = H - T0 - 64;
+  const q = [["satisfied", 0, 0], ["close", 1, 0], ["checkin", 0, 1], ["informed", 1, 1]];
+  let s = `<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" font-family="${XF}">
+<rect width="${W}" height="${H}" fill="${EXP.bg}"/>
+<text x="24" y="38" font-size="22" font-weight="700" fill="${EXP.ink}">${sx((S.name || "Map") + ": stakeholders")}</text>
+<text x="24" y="62" font-size="13" fill="${EXP.muted}">Higher up means more say. Further right means the changes affect them more. ${sx(todayGB())}</text>`;
+  const keys = [["for", "For the changes"], ["unsure", "Unsure"], ["against", "Against"], ["", "Don't know yet"]];
+  let kx = W - 40; const kitems = keys.map(([k, t]) => [k, t, tw(t, `12px ${XF}`) + 30]).reverse();
+  for (const [k, t, w] of kitems){ kx -= w; s += `<circle cx="${kx + 6}" cy="58" r="5" fill="${FEEL_X[k]}"/><text x="${kx + 16}" y="62" font-size="12" fill="${EXP.muted}">${sx(t)}</text>`; }
+  for (const [k, cx, cy] of q){
+    const x = L + cx * GW / 2, y = T0 + cy * GH / 2, right = cx === 1, bottom = cy === 1;
+    s += `<rect x="${x}" y="${y}" width="${GW / 2}" height="${GH / 2}" fill="${k === "close" ? EXP.soft : EXP.bg}" stroke="${EXP.line}" stroke-dasharray="${k === "close" ? "0" : "4 4"}"/>
+<text x="${right ? x + GW / 2 - 14 : x + 14}" y="${bottom ? y + GH / 2 - 30 : y + 26}" font-size="15" font-weight="700" fill="${EXP.ink}" text-anchor="${right ? "end" : "start"}">${sx(QUADS[k].t)}</text>
+<text x="${right ? x + GW / 2 - 14 : x + 14}" y="${bottom ? y + GH / 2 - 12 : y + 44}" font-size="12" fill="${EXP.muted}" text-anchor="${right ? "end" : "start"}">${sx({close:"A lot of say, affected a lot", satisfied:"A lot of say, less affected", checkin:"Less say, less affected", informed:"Less say, affected a lot"}[k])}</text>`;
+  }
+  s += `<rect x="${L}" y="${T0}" width="${GW}" height="${GH}" fill="none" stroke="${EXP.line}"/>
+<text transform="translate(${L - 22},${T0 + GH}) rotate(-90)" font-size="11" letter-spacing="0.8" fill="${EXP.muted}">LESS SAY</text>
+<text transform="translate(${L - 22},${T0}) rotate(-90)" font-size="11" letter-spacing="0.8" fill="${EXP.muted}" text-anchor="end">MORE SAY</text>
+<text x="${L}" y="${T0 + GH + 24}" font-size="11" letter-spacing="0.8" fill="${EXP.muted}">LESS AFFECTED</text>
+<text x="${L + GW}" y="${T0 + GH + 24}" font-size="11" letter-spacing="0.8" fill="${EXP.muted}" text-anchor="end">MORE AFFECTED BY THE CHANGES</text>`;
+  if (!P().length) s += `<text x="${L + GW / 2}" y="${T0 + GH / 2}" font-size="14" text-anchor="middle" fill="${EXP.muted}">No stakeholders yet.</text>`;
+  for (const p of P()){
+    const cx = L + p.impact * GW, cy = T0 + (1 - p.say) * GH, nf = `600 13px ${XF}`, name = wrapText(p.name, nf, 180, 1)[0], w = tw(name, nf) + 44, c = FEEL_X[p.feeling] || FEEL_X[""];
+    const x0 = Math.min(Math.max(cx - w / 2, L + 4), L + GW - w - 4);
+    s += `<g><rect x="${x0.toFixed(1)}" y="${(cy - 15).toFixed(1)}" width="${w.toFixed(1)}" height="30" rx="15" fill="${EXP.bg}" stroke="${c}" stroke-width="1.6"/>
+<circle cx="${(x0 + 15).toFixed(1)}" cy="${cy.toFixed(1)}" r="11.5" fill="${c}"/><text x="${(x0 + 15).toFixed(1)}" y="${(cy + 3.5).toFixed(1)}" font-size="9.5" font-weight="700" text-anchor="middle" fill="#FFFFFF">${sx(initials(p.name))}</text>
+<text x="${(x0 + 33).toFixed(1)}" y="${(cy + 4.5).toFixed(1)}" font-size="13" font-weight="600" fill="${EXP.ink}">${sx(name)}</text></g>`;
+  }
+  s += `<text x="${W - 24}" y="${H - 14}" font-size="11.5" text-anchor="end" fill="${EXP.muted}">Made with Blockplan</text></svg>`;
+  return {svg:s, w:W, h:H};
+}
+function svgToCanvas({svg, w, h}, scale = 2){
+  return new Promise((res, rej) => {
+    const img = new Image();
+    img.onload = () => { const c = document.createElement("canvas"); c.width = Math.round(w * scale); c.height = Math.round(h * scale); const g = c.getContext("2d"); g.fillStyle = "#FFFFFF"; g.fillRect(0, 0, c.width, c.height); g.drawImage(img, 0, 0, c.width, c.height); res(c); };
+    img.onerror = () => rej(new Error("The picture couldn't be drawn."));
+    img.src = "data:image/svg+xml;charset=utf-8," + encodeURIComponent(svg);
+  });
+}
+const canvasBlob = (c, type = "image/png", q) => new Promise((res, rej) => c.toBlob(b => b ? res(b) : rej(new Error("The picture couldn't be saved.")), type, q));
+async function exportPicture(){
+  const people = mode === "people";
+  if (!people && !S.blocks.length) return "There's nothing on the map to draw yet.";
+  const pic = people ? gridSVG() : mapSVG(view);
+  const scale = Math.min(2, 16000 / pic.w, 16000 / pic.h);
+  const c = await svgToCanvas(pic, scale);
+  const ok = await saveFile(fileBase() + (people ? "-stakeholders" : view === "all" ? "-map" : "-map-" + view) + ".png", await canvasBlob(c));
+  return ok && `Picture of the ${people ? "stakeholder grid" : "map"} saved. It's sized for slides.`;
+}
+
+/* ---- PDF report ---- */
+const strip = html => String(html).replace(/<[^>]+>/g, "");
+async function exportPDF(){
+  await loadScript(VENDOR.jspdf);
+  const JS = window.jspdf && window.jspdf.jsPDF; if (!JS) throw new Error("The PDF maker didn't load. Check your connection and try again.");
+  await loadScript(VENDOR.autotable);
+  if (typeof window.applyPlugin === "function" && !JS.API.autoTable) window.applyPlugin(JS);
+  const doc = new JS({orientation:"landscape", unit:"mm", format:"a4", compress:true});
+  const at = opts => typeof window.autoTable === "function" ? window.autoTable(doc, opts) : doc.autoTable(opts);
+  const PW = 297, PH = 210, M = 14, CW = PW - M * 2;
+  const ink = [22, 33, 30], muted = [86, 102, 95], acc = [31, 91, 78], line = [207, 216, 212];
+  const hex = h => [1, 3, 5].map(i => parseInt(h.slice(i, i + 2), 16));
+  doc.setProperties({title:(S.name || "Map") + " – Blockplan report", subject:"Architecture summary", creator:"Blockplan"});
+  const heading = (t, sub) => { doc.setFont("helvetica", "bold"); doc.setFontSize(17); doc.setTextColor(...ink); doc.text(t, M, M + 6); if (sub){ doc.setFont("helvetica", "normal"); doc.setFontSize(10); doc.setTextColor(...muted); doc.text(sub, M, M + 12); } return M + (sub ? 18 : 13); };
+  const tableBase = {margin:{left:M, right:M, top:M + 4, bottom:16}, styles:{font:"helvetica", fontSize:8.5, cellPadding:1.8, textColor:ink, lineColor:line, lineWidth:0.1, overflow:"linebreak"}, headStyles:{fillColor:acc, textColor:[255, 255, 255], fontStyle:"bold"}, alternateRowStyles:{fillColor:[245, 247, 246]}};
+  const c = costSummary(), checks = runChecks(), people = P();
+
+  /* 1. Summary */
+  doc.setFont("helvetica", "bold"); doc.setFontSize(26); doc.setTextColor(...ink); doc.text(doc.splitTextToSize(S.name || "Map", CW)[0], M, 34);
+  doc.setFont("helvetica", "normal"); doc.setFontSize(12); doc.setTextColor(...muted); doc.text(`Architecture summary · ${todayGB()}`, M, 43);
+  doc.setDrawColor(...acc); doc.setLineWidth(0.8); doc.line(M, 49, M + 40, 49);
+  const tile = (x, y, w, big, small, col) => { doc.setDrawColor(...line); doc.setLineWidth(0.2); doc.setFillColor(255, 255, 255); doc.roundedRect(x, y, w, 22, 2, 2, "FD"); if (col){ doc.setFillColor(...col); doc.rect(x, y, w, 1.2, "F"); } doc.setFont("helvetica", "bold"); doc.setFontSize(16); doc.setTextColor(...ink); doc.text(big, x + 4, y + 11); doc.setFont("helvetica", "normal"); doc.setFontSize(8.5); doc.setTextColor(...muted); doc.text(small, x + 4, y + 17.5); };
+  const tW = (CW - 5 * 4) / 6;
+  TYPES.forEach((t, i) => tile(M + i * (tW + 4), 58, tW, String(S.blocks.filter(b => b.type === t.key).length), t.plural, hex(EXP[t.key])));
+  const hasCost = c.today || c.future || c.oneOff, diff = c.today - c.future, cW = (CW - 3 * 4) / 4;
+  if (hasCost){
+    [[money(c.today), "a year today"], [money(c.future), "a year in future"], [money(c.oneOff), "one-off costs"], [diff >= 0 ? money(diff) : "+" + money(-diff), diff >= 0 ? "saved a year" : "extra a year"]].forEach(([b, s2], i) => tile(M + i * (cW + 4), 86, cW, b, s2));
+  }
+  let y = hasCost ? 116 : 88;
+  const para = (t, size = 10.5, col = ink, bold = false) => { doc.setFont("helvetica", bold ? "bold" : "normal"); doc.setFontSize(size); doc.setTextColor(...col); const ls = doc.splitTextToSize(t, CW); doc.text(ls, M, y); y += ls.length * size * 0.42 + 2.5; };
+  if (hasCost){
+    let verdict;
+    if (diff > 0){ verdict = `The planned changes save ${money(diff)} a year.`; if (c.oneOff){ const yrs = c.oneOff / diff; verdict += ` With ${money(c.oneOff)} of one-off costs, they pay for themselves in about ${yrs < 1 ? "less than a year" : (Math.round(yrs * 10) / 10) + " years"}.`; } }
+    else if (diff < 0) verdict = `The planned changes add ${money(-diff)} a year to running costs${c.oneOff ? `, plus ${money(c.oneOff)} of one-off costs` : ""}.`;
+    else verdict = c.oneOff ? `Running costs stay the same. The changes cost ${money(c.oneOff)} one-off.` : "Running costs stay the same after the planned changes.";
+    para(verdict, 11.5, ink, true);
+  }
+  const planned = S.blocks.filter(b => b.when === "planned"), retiring = S.blocks.filter(b => b.when === "retiring");
+  if (planned.length || retiring.length) para(`${planned.length ? `Planned: ${planned.map(b => b.name).join(", ")}.` : ""}${planned.length && retiring.length ? " " : ""}${retiring.length ? `Being removed: ${retiring.map(b => b.name).join(", ")}.` : ""}`);
+  if (people.length){ const fc = k => people.filter(p => (p.feeling || "") === k).length; para(`${people.length} stakeholder${people.length === 1 ? "" : "s"}: ${fc("for")} for the changes, ${fc("unsure")} unsure, ${fc("against")} against, and ${fc("")} not known yet.`); }
+  const nb = checks.filter(x => x.lvl === "bad").length, nw = checks.filter(x => x.lvl === "watch").length;
+  para(checks.length ? `Things to look at: ${nb} serious, ${nw} worth checking, and ${checks.length - nb - nw} to note. They are listed later in this report.` : "The checks found nothing to flag.");
+  y += 3; para("Contents: the map, " + (people.length ? "stakeholders, " : "") + (hasCost ? "costs, " : "") + "things to look at, and everything on the map.", 9.5, muted);
+
+  /* 2. The map, split across pages if it is wide */
+  if (S.blocks.length){
+    const pic = mapSVG("all"), scale = Math.min(2, 14000 / pic.w), big = await svgToCanvas(pic, scale);
+    const areaW = CW, areaH = PH - M * 2 - 10, sliceW = Math.min(big.width, Math.round(big.height * areaW / areaH * 1.0));
+    const parts = Math.max(1, Math.ceil(big.width / Math.max(sliceW, 1)));
+    const sw = Math.ceil(big.width / parts);
+    for (let i = 0; i < parts; i++){
+      doc.addPage(); heading(parts > 1 ? `The map (part ${i + 1} of ${parts})` : "The map");
+      const piece = document.createElement("canvas"); piece.width = Math.min(sw, big.width - i * sw); piece.height = big.height;
+      piece.getContext("2d").drawImage(big, i * sw, 0, piece.width, big.height, 0, 0, piece.width, big.height);
+      const k = Math.min(areaW / piece.width, areaH / piece.height);
+      doc.addImage(piece.toDataURL("image/jpeg", 0.92), "JPEG", M, M + 10, piece.width * k, piece.height * k, undefined, "FAST");
+    }
+  }
+
+  /* 3. Stakeholders */
+  if (people.length){
+    doc.addPage(); heading("Stakeholders");
+    const g = await svgToCanvas(gridSVG(), 1.6), k = Math.min(CW / g.width, (PH - M * 2 - 10) / g.height);
+    doc.addImage(g.toDataURL("image/jpeg", 0.92), "JPEG", M + (CW - g.width * k) / 2, M + 10, g.width * k, g.height * k, undefined, "FAST");
+    doc.addPage(); heading("Stakeholders in detail", "Grouped by how closely to work with them.");
+    const order = ["close", "satisfied", "informed", "checkin"];
+    at({...tableBase, startY:M + 22, head:[["Name", "Role", "Feeling", "How to work with them", "What they care about", "How we keep them on side", "Cares about on the map"]],
+      body:people.slice().sort((a, b) => order.indexOf(quadOf(a)) - order.indexOf(quadOf(b))).map(p => [p.name, p.role, FEEL[p.feeling] || FEEL[""], QUADS[quadOf(p)].t, p.cares, p.plan || "No plan yet", p.links.map(id => byId(id)?.name).filter(Boolean).join(", ")]),
+      columnStyles:{0:{cellWidth:34, fontStyle:"bold"}, 1:{cellWidth:24}, 2:{cellWidth:22}, 3:{cellWidth:32}},
+      didParseCell:d => { if (d.section === "body" && d.column.index === 2){ const v = d.cell.raw; d.cell.styles.textColor = v === "Against" ? [194, 55, 43] : v === "For the changes" ? [47, 138, 78] : v === "Unsure" ? [154, 108, 10] : muted; } }});
+  }
+
+  /* 4. Costs */
+  if (hasCost){
+    doc.addPage(); heading("Costs", `Yearly running costs, today and after the planned changes. Amounts in ${cur()}.`);
+    at({...tableBase, startY:M + 22, head:[["Row", "Today, a year", "Future, a year", "Change"]],
+      body:[...c.rows.filter(r => r.today || r.future).map(r => [r.t.lane, moneyFull(r.today), moneyFull(r.future), (r.future - r.today > 0 ? "+" : r.future - r.today < 0 ? "-" : "") + moneyFull(Math.abs(r.future - r.today))]), ["Total", moneyFull(c.today), moneyFull(c.future), (c.future - c.today > 0 ? "+" : c.future - c.today < 0 ? "-" : "") + moneyFull(Math.abs(c.future - c.today))]],
+      columnStyles:{1:{halign:"right"}, 2:{halign:"right"}, 3:{halign:"right"}},
+      didParseCell:d => { if (d.section === "body" && d.row.index === d.table.body.length - 1) d.cell.styles.fontStyle = "bold"; }});
+    const top = S.blocks.filter(b => b.cost || b.oneOff).sort((a, b) => b.cost - a.cost).slice(0, 15);
+    at({...tableBase, startY:doc.lastAutoTable.finalY + 8, head:[["Biggest costs", "Kind", "Status", "Yearly", "One-off"]],
+      body:top.map(b => [b.name, T[b.type].name, WHEN[b.when], b.cost ? moneyFull(b.cost) : "", b.oneOff ? moneyFull(b.oneOff) : ""]), columnStyles:{3:{halign:"right"}, 4:{halign:"right"}}});
+  }
+
+  /* 5. Things to look at */
+  doc.addPage(); heading("Things to look at", "Simple checks on the map. Serious ones first.");
+  if (checks.length){
+    const lvl = {bad:"Serious", watch:"Worth checking", info:"To note"};
+    at({...tableBase, startY:M + 22, head:[["", "What we found", "What to do"]], body:checks.map(x => [lvl[x.lvl], x.t, x.d]),
+      columnStyles:{0:{cellWidth:28, fontStyle:"bold"}, 1:{cellWidth:110}},
+      didParseCell:d => { if (d.section === "body" && d.column.index === 0){ d.cell.styles.textColor = d.cell.raw === "Serious" ? [194, 55, 43] : d.cell.raw === "Worth checking" ? [154, 108, 10] : muted; } }});
+  } else { y = M + 24; para("Nothing to flag right now.", 11, muted); }
+
+  /* 6. Everything on the map */
+  if (S.blocks.length){
+    doc.addPage(); heading("Everything on the map", "Grouped by row.");
+    const body = [];
+    for (const t of TYPES){
+      const bs = S.blocks.filter(b => b.type === t.key).sort((a, b) => a.name.localeCompare(b.name)); if (!bs.length) continue;
+      body.push([{content:t.lane + " – " + t.plural, colSpan:7, styles:{fontStyle:"bold", fillColor:hex(mix(EXP[t.key], "#FFFFFF", 0.14)), textColor:hex(EXP[t.key])}}]);
+      for (const b of bs) body.push([b.name, b.desc, b.owner, WHEN[b.when], b.health ? HEALTH[b.health] : "", b.cost ? moneyFull(b.cost) : "", b.oneOff ? moneyFull(b.oneOff) : ""]);
+    }
+    at({...tableBase, startY:M + 22, head:[["Name", "What it is", "Who looks after it", "Status", "Health", "Yearly", "One-off"]], body,
+      columnStyles:{0:{cellWidth:46, fontStyle:"bold"}, 2:{cellWidth:32}, 3:{cellWidth:26}, 4:{cellWidth:26}, 5:{cellWidth:22, halign:"right"}, 6:{cellWidth:22, halign:"right"}}});
+  }
+
+  const n = doc.getNumberOfPages();
+  for (let i = 1; i <= n; i++){ doc.setPage(i); doc.setFont("helvetica", "normal"); doc.setFontSize(8); doc.setTextColor(...muted); doc.text(`${S.name || "Map"} · Made with Blockplan`, M, PH - 7); doc.text(`Page ${i} of ${n}`, PW - M, PH - 7, {align:"right"}); }
+  const ok = await saveFile(fileBase() + "-report.pdf", doc.output("blob"));
+  return ok && `PDF report saved: ${n} page${n === 1 ? "" : "s"}.`;
+}
+
+$("#pdfBtn").onclick = () => exporting("Making the PDF report", exportPDF);
+$("#pngBtn").onclick = () => exporting("Drawing the picture", exportPicture);
+$("#amBtn").onclick = () => exporting("Making the ArchiMate model", exportArchimate);
+$("#csvOutBtn").onclick = () => exporting("Making the spreadsheet", exportCSV);
+$("#csvInBtn").onclick = () => { menu.open = false; $("#csvIn").click(); };
+$("#csvIn").addEventListener("change", async e => {
+  const f = e.target.files[0]; e.target.value = ""; if (!f) return;
+  try { openCSVDialog(f.name, parseCSV(await f.text())); }
+  catch { toast("That file couldn't be read. Save the spreadsheet as CSV and try again."); }
+});
 
 /* ---------- tabs, view, zoom, menu ---------- */
 function showTab(t, soft){

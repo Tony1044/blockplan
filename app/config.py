@@ -15,7 +15,7 @@ def _int(name: str, default: int) -> int:
         return default
 
 
-VERSION = "1.1.0"
+VERSION = "1.2.0"
 
 HOST = os.getenv("HOST", "0.0.0.0")
 PORT = _int("PORT", 8080)

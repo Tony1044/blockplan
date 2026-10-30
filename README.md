@@ -12,6 +12,8 @@ A simple, drag-and-drop way to map how an organisation works, with an AI helper 
 - **Stakeholders.** Choose Stakeholders at the top to see the people and groups who have a say in the changes or are affected by them, on a simple grid: more say towards the top, more affected towards the right. Note how each one feels, what they care about, and how you will keep them on side, and link them to the blocks they care about. Blocks show how many stakeholders care about them.
 - **Checks.** Simple rules flag gaps as you build, such as a system nothing uses, an activity no one does, or a plan that depends on something being removed.
 - **AI helper.** Build a starter map, explain the map, find what is missing, spot risks, overlaps, and savings, and suggest stakeholders. It always shows its suggested changes first, and you choose whether to put them on the map.
+- **Bring in what you already have.** Import a spreadsheet (CSV), such as an application list from a CMDB. Blockplan matches the columns for you and shows a preview first.
+- **Share it.** Download a PDF report, a picture of the map or the stakeholder grid for slides, a spreadsheet, or an ArchiMate model for Archi and other architecture tools.
 - **Shared maps.** Maps are saved on the Blockplan server, so everyone using it sees the same maps. If two people save the same map at once, the second person is told and can load the other version or keep theirs as a copy.
 
 ## Quick start
@@ -79,6 +81,45 @@ Maps are kept in `./data`. If Ollama runs on the host, the container reaches it 
 - `bash scripts/backup.sh` makes a dated copy in `backups/`, and is safe to run while Blockplan is running.
 - **Maps → Download this map as a file** gives a `.blockplan.json` file. **Maps → Open a map file** brings one back in, on this or another Blockplan.
 
+## Importing and exporting
+
+Everything is in the **Maps** menu.
+
+**Import from a spreadsheet.** Save the spreadsheet as CSV, with one row per item and column names in the first row. Blockplan recognises common names, for example:
+
+| Blockplan field | Column names it recognises |
+|---|---|
+| Name | Name, Application, System, Title, Service |
+| Kind of block | Type, Kind, Category, Layer. Values such as Application, Capability, Team, Data, Infrastructure, or Goal pick the row. |
+| Description | Description, Notes, Purpose, Summary |
+| Who looks after it | Any column with "owner" in its name, Responsible, Accountable |
+| Status | Status, Lifecycle, Stage, Phase. Planned, Proposed, or Pipeline means planned. Retire, Sunset, Decommission, or To be replaced means being removed. |
+| Health | Health, RAG, Condition, Technical fit. Green, Amber, and Red work, as do Good, Fair, and Poor. |
+| Yearly cost | Any column with "cost", "annual", or "opex" in its name. 40k and £1.2m both work. |
+| One-off cost | One-off, Setup, Capex, Project cost, Implementation |
+
+You can change any match before importing. Rows without a kind go into the row you choose, Systems by default. Importing into an existing map updates blocks with the same name instead of adding them twice. **Download as a spreadsheet** gives a file in the same layout, so it doubles as a template.
+
+**PDF report.** A landscape A4 report: a summary with counts, costs, payback, and stakeholders, then the map (split across pages if it's wide), the stakeholder grid and details, costs, the checks, and a list of everything on the map.
+
+**Picture.** A PNG of whatever you're looking at, either the map (respecting Everything, Today, or Future) or the stakeholder grid. It always uses the light colours, so it suits slides.
+
+**ArchiMate.** A model in the Open Group exchange format (ArchiMate 3.1). In Archi, use **File → Import → Open Exchange XML Model**. Blockplan's rows become ArchiMate elements:
+
+| Blockplan | ArchiMate |
+|---|---|
+| Goal | Goal |
+| Activity | Business Function |
+| Team | Business Actor |
+| Information | Business Object |
+| System | Application Component |
+| Technology | Node |
+| Stakeholder | Stakeholder |
+
+Connections become the matching ArchiMate relationship. For example, a team "does" an activity becomes Assignment, a system "supports" an activity becomes Serving, and a system "runs on" technology becomes Serving from the technology to the system. Where ArchiMate wouldn't allow the matching type, the connection becomes an Association, so every relationship is valid. Owner, status, health, and costs come across as properties. The model includes three views: the map, the stakeholder grid, and what stakeholders care about.
+
+The PDF maker (jsPDF and jsPDF-AutoTable, both MIT licensed) is included in `app/static/vendor/`, so exports work without internet access.
+
 ## Settings
 
 All settings live in `.env`. See `.env.example` for the full list with notes. The main ones:
@@ -102,7 +143,7 @@ app/storage.py       maps in SQLite, with a check that stops people overwriting 
 app/llm.py           Claude first, local model fallback
 app/prompts.py       what the helper is told, kept in one place
 app/config.py        reads .env
-app/static/          the page itself, and its fonts (no internet needed to load it)
+app/static/          the page itself, its fonts, and the PDF maker (no internet needed)
 deploy/              Linux service setup
 scripts/backup.sh    copies all maps to backups/
 run.sh, run.bat      start it on macOS, Linux, or Windows
