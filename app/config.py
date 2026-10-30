@@ -15,10 +15,13 @@ def _int(name: str, default: int) -> int:
         return default
 
 
-VERSION = "1.3.1"
+VERSION = "1.3.2"
 
 HOST = os.getenv("HOST", "0.0.0.0")
 PORT = _int("PORT", 8080)
+# In Docker, the port people use from outside the container (see docker-compose.yml).
+IN_DOCKER = os.getenv("BLOCKPLAN_IN_DOCKER", "") == "1"
+PUBLIC_PORT = _int("BLOCKPLAN_PORT", 0) if IN_DOCKER else 0
 DATA_DIR = Path(os.getenv("DATA_DIR", BASE_DIR / "data")).resolve()
 DB_PATH = DATA_DIR / "blockplan.db"
 

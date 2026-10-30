@@ -2,12 +2,14 @@ services:
   blockplan:
     build: .
     ports:
-      - "8080:8080"
+      # The port people use to reach Blockplan. Set BLOCKPLAN_PORT in .env to change it.
+      - "${BLOCKPLAN_PORT:-443}:8080"
     env_file: .env
     environment:
       DATA_DIR: /data
       CERT_DIR: /certs
       PORT: "8080"
+      BLOCKPLAN_PORT: ${BLOCKPLAN_PORT:-443}
       # Reach Ollama running on the host machine.
       OLLAMA_URL: ${OLLAMA_URL_DOCKER:-http://host.docker.internal:11434}
     extra_hosts:

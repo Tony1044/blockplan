@@ -144,7 +144,9 @@ def run():
     if t:
         for line in tls.explain(t):
             print(line)
-    print(f"Blockplan {config.VERSION} is running. Open {'https' if t else 'http'}://{host}:{config.PORT} in your browser.", flush=True)
+    scheme, port = ("https" if t else "http"), (config.PUBLIC_PORT or config.PORT)
+    shown = "" if (scheme, port) in (("https", 443), ("http", 80)) else f":{port}"
+    print(f"Blockplan {config.VERSION} is running. Open {scheme}://{host}{shown} in your browser.", flush=True)
     kw = {"ssl_certfile": t.certfile, "ssl_keyfile": t.keyfile, "ssl_keyfile_password": t.password} if t else {}
     uvicorn.run("app.main:app", host=config.HOST, port=config.PORT, **kw)
 

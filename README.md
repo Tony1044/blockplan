@@ -214,7 +214,15 @@ cp .env.example .env      # then add your API key
 docker compose up -d
 ```
 
-Maps are kept in `./data`. If Ollama runs on the host, the container reaches it automatically.
+Then open **https://localhost**. With Docker, Blockplan uses the standard HTTPS port, 443, so there's no port number in the address. If something else on the computer already uses 443, such as IIS or another web server, set a different port in `.env` and run `docker compose up -d` again:
+
+```
+BLOCKPLAN_PORT=8443
+```
+
+The address is then `https://localhost:8443`. Inside the container Blockplan always uses 8080, so `BLOCKPLAN_PORT` is the only setting to change. Blockplan's start-up message, shown by `docker compose logs blockplan`, gives the address to use.
+
+Maps are kept in `./data` and certificates in `./certs`. If Ollama runs on the host, the container reaches it automatically.
 
 To update, get the new files (`git pull`, or unzip the new version over the old one), then rebuild:
 
@@ -222,7 +230,7 @@ To update, get the new files (`git pull`, or unzip the new version over the old 
 docker compose up -d --build
 ```
 
-Your maps, `.env`, and certificates are kept. From version 1.3.1, Blockplan opens on `https://localhost:8080` unless your `.env` says `HTTPS=off`. When you update without Docker, `run.sh` and `run.bat` install anything new the next time they start. If the build fails with `NotFound: forwarding Ping: no such job`, that's a known Docker build problem rather than a Blockplan one. Restart Docker Desktop and try again. If it still fails, turn off Docker's newer build method for that window:
+Your maps, `.env`, and certificates are kept. From version 1.3.2, Docker serves Blockplan at `https://localhost` on port 443, unless `BLOCKPLAN_PORT` in your `.env` says otherwise; before that it was `http://localhost:8080`. When you update without Docker, `run.sh` and `run.bat` install anything new the next time they start.
 
 ```powershell
 $env:COMPOSE_BAKE = "false"     # PowerShell; in bash use: export COMPOSE_BAKE=false
@@ -233,7 +241,7 @@ docker compose up -d --build
 
 ## HTTPS
 
-Blockplan uses HTTPS from the first run. If there's no certificate in the `certs` folder, it makes a self-signed one there, covering `localhost` and this computer's name, and keeps using it until it's about to expire. Open `https://localhost:8080`, not `http://`.
+Blockplan uses HTTPS from the first run. If there's no certificate in the `certs` folder, it makes a self-signed one there, covering `localhost` and this computer's name, and keeps using it until it's about to expire. Open `https://localhost:8080`, or `https://localhost` with Docker, not `http://`.
 
 When it starts, Blockplan says which certificate it's using, which names it covers, and when it expires. It warns you when there are 30 days or less left. If something's wrong, such as a key that doesn't match the certificate or a wrong password, it stops with a plain explanation instead of starting half-working.
 
@@ -264,11 +272,17 @@ The certificate should include any intermediate certificates from your provider.
 | `self-signed` | Uses a certificate from the `certs` folder, or makes a self-signed one. This is the default. |
 | `auto` | HTTPS if there's a certificate in the `certs` folder, otherwise plain HTTP |
 | `on` | HTTPS, and Blockplan won't start without a certificate in the `certs` folder |
-| `off` | Plain HTTP, at `http://localhost:8080` |
+| `off` | Plain HTTP, at `http://localhost:8080`. With Docker, also set `BLOCKPLAN_PORT=8080`, since 443 is meant for HTTPS. |
 
 With Docker, the `certs` folder next to `docker-compose.yml` is used, so the self-signed certificate is kept there and survives rebuilds. Files in `certs` are never added to Git.
 
-To use the standard HTTPS port 443, either set `PORT=443` (on Linux this needs extra permissions) or map it in Docker by changing the ports line in `docker-compose.yml` to `"443:8080"`.
+### Using port 443
+
+443 is the standard HTTPS port, so on it the address needs no port number.
+
+- **Docker** uses 443 by default. Change it with `BLOCKPLAN_PORT` in `.env`. See [Running it for a team](#running-it-for-a-team).
+- **Windows and macOS without Docker:** set `PORT=443` in `.env` and restart. Windows may ask you to allow it through the firewall.
+- **Linux without Docker:** ordinary programs can't use ports below 1024, so leave Blockplan on 8080 and forward 443 to it, with `sudo iptables -t nat -A PREROUTING -p tcp --dport 443 -j REDIRECT --to-port 8080`, or put a reverse proxy such as Caddy or nginx in front of it. The forwarding applies to connections from other computers, so on the server itself keep using port 8080.
 
 ## Your maps
 
@@ -303,7 +317,8 @@ All settings live in `.env`. See `.env.example` for the full list with notes. Th
 
 | Setting | Default | Notes |
 |---|---|---|
-| `PORT` | `8080` | Web address port |
+| `PORT` | `8080` | The port Blockplan listens on. In Docker this stays 8080 inside the container. |
+| `BLOCKPLAN_PORT` | `443` | Docker only: the port people use to reach Blockplan |
 | `HOST` | `0.0.0.0` | Use `127.0.0.1` to allow this computer only |
 | `DATA_DIR` | `./data` | Where maps are stored |
 | `AUTH_USER`, `AUTH_PASSWORD` | empty | Set both to require sign-in |
@@ -345,6 +360,10 @@ Yes. The fonts and the PDF maker are included, so everything works offline excep
 - A hosted demo with the example map loaded, so people can try Blockplan without installing it
 
 ## Version history
+
+**1.3.2**
+- Docker serves Blockplan on 443, the standard HTTPS port, so the address is `https://localhost`. Change it with `BLOCKPLAN_PORT` in `.env`, with no need to edit `docker-compose.yml`.
+- The start-up message gives the address people actually use, including in Docker.
 
 **1.3.1**
 - HTTPS from the first run, with a self-signed certificate Blockplan makes and keeps in the `certs` folder. A real certificate in the folder is used instead.
