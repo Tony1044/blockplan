@@ -191,6 +191,8 @@ The PDF and PowerPoint fit the map on one page whenever its text stays readable,
 - Each part repeats the row names, so every page makes sense on its own.
 - Where a connection crosses a split, it ends in an off-page connector, the pointed box used in flowcharts. The connector is labelled with the split's letter and a number, such as **A-1**, and the same label appears where the connection carries on in the next part. The first split's connectors are A-1, A-2, and so on, the next split's are B-1, B-2, and so on.
 - Each connector points the way its connection flows, and points the same way on both pages. A connection that carries on to a later part points right where it leaves and right where it continues; one that goes back to an earlier part points left on both. (Up and down are never needed, because a map has at most six rows, so its height always fits a page.)
+- Each connection that crosses a split gets its own colour, and its line and both connectors are drawn in that colour, so you can follow it from one page to the next. Other lines are faded slightly so the coloured ones stand out.
+- Connectors alternate between two columns as they go down the page, so neighbouring labels don't crowd each other.
 - The heading on each page says which part it is, such as "The map (part 2 of 3)".
 
 ### Picture
@@ -399,6 +401,7 @@ Yes. The fonts and the PDF and PowerPoint makers are included, so everything wor
 - Export to PowerPoint, with editable tables.
 - Export the map as an editable diagram for Visio or draw.io, with each block's details as data.
 - Wide maps in the PDF and PowerPoint fit one page when the text stays readable, in landscape where possible. Otherwise they're split between blocks, with flowchart-style off-page connectors labelled the same on both pages, such as A-1, and pointing the way the connection flows.
+- Each connection that crosses a split has its own colour, on its line and both connectors, and the connectors are staggered so they're easy to tell apart.
 
 **1.3.2**
 - Docker serves Blockplan on 443, the standard HTTPS port, so the address is `https://localhost`. Change it with `BLOCKPLAN_PORT` in `.env`, with no need to edit `docker-compose.yml`.

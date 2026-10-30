@@ -1506,14 +1506,16 @@ const sx = s => xesc(s);
 const VIEW_NAME = {all:"Everything", today:"Today", future:"Future"};
 /* The map drawn for pictures, PDF and PowerPoint. mapParts gives the pieces; mapSVG puts them
    together as one picture, and mapPages cuts them into readable pages with off-page markers. */
-function mapParts(v = view, bare = false){
+function mapParts(v = view, bare = false, colours = null){
   const vis = b => v === "all" || (v === "today" && b.when !== "planned") || (v === "future" && b.when !== "retiring");
   const blocks = S.blocks.filter(vis), TOP = bare ? 14 : 74;
   const lanes = TYPES.filter(t => blocks.some(b => b.type === t.key));
   const offs = {}; lanes.forEach((t, i) => { offs[t.key] = TOP + i * LANE_H - laneTop(t.key); });
   const pb = blocks.map(b => ({...b, y: b.y + offs[b.type]})), byP = Object.fromEntries(pb.map(b => [b.id, b]));
   const W = Math.max(bare ? 600 : 900, ...pb.map(b => b.x + BW + 48)), HB = TOP + Math.max(1, lanes.length) * LANE_H;
-  const defs = `<defs><marker id="ar" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="${EXP.muted}"/></marker>` +
+  const arrowIds = {};
+  const arrowDefs = [...new Set(Object.values(colours || {}))].map((c, i) => { arrowIds[c] = "ar" + i; return `<marker id="ar${i}" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="${c}"/></marker>`; }).join("");
+  const defs = `<defs><marker id="ar" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="${EXP.muted}"/></marker>${arrowDefs}` +
     `<pattern id="gone" width="14" height="14" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><rect width="14" height="14" fill="#FFFFFF"/><rect width="7" height="14" fill="${EXP.goneBg}"/></pattern></defs>`;
   let body = "";
   const laneInfo = [];
@@ -1528,11 +1530,13 @@ function mapParts(v = view, bare = false){
   for (const b of pb) boxes.push({x:b.x - 4, y:b.y - 4, w:BW + 8, h:BH + 8});
   const hits = r => boxes.some(o => r.x < o.x + o.w && r.x + r.w > o.x && r.y < o.y + o.h && r.y + r.h > o.y);
   const at = (p, c1, c2, q, t) => { const u = 1 - t; return {x:u*u*u*p.x + 3*u*u*t*c1.x + 3*u*t*t*c2.x + t*t*t*q.x, y:u*u*u*p.y + 3*u*u*t*c1.y + 3*u*t*t*c2.y + t*t*t*q.y}; };
-  let labels = ""; const missed = [], geoms = [];
+  let labels = "", colouredPaths = ""; const missed = [], geoms = [];
   for (const l of S.links){
     const a = byP[l.from], b = byP[l.to]; if (!a || !b) continue;
     const p = anchor(a, b), q = anchor(b, a), {d} = curve(p, q), faded = a.when !== "now" || b.when !== "now";
-    body += `<path d="${d}" fill="none" stroke="${EXP.muted}" stroke-width="1.6"${faded ? ` stroke-dasharray="5 4" opacity="0.75"` : ""} marker-end="url(#ar)"/>`;
+    const col = colours && colours[l.id];
+    if (col) colouredPaths += `<path d="${d}" fill="none" stroke="${col}" stroke-width="2.2"${faded ? ` stroke-dasharray="6 4"` : ""} marker-end="url(#${arrowIds[col]})"/>`;
+    else body += `<path d="${d}" fill="none" stroke="${EXP.muted}" stroke-width="1.6"${faded ? ` stroke-dasharray="5 4"` : ""}${faded || colours ? ` opacity="${colours ? 0.45 : 0.75}"` : ""} marker-end="url(#ar)"/>`;
     const k = Math.max(36, Math.hypot(q.x - p.x, q.y - p.y) * 0.35), c1 = {x:p.x + p.dx*k, y:p.y + p.dy*k}, c2 = {x:q.x + q.dx*k, y:q.y + q.dy*k};
     geoms.push({l, a, b, pt: t => at(p, c1, c2, q, t)});
     const lf = `11.5px ${XF}`, txt = wrapText(l.label, lf, 170, 1)[0], w = tw(txt, lf) + 14;
@@ -1542,7 +1546,7 @@ function mapParts(v = view, bare = false){
     boxes.push({x:spot.x - w / 2 - 2, y:spot.y - 11, w:w + 4, h:22});
     labels += `<rect x="${(spot.x - w / 2).toFixed(1)}" y="${(spot.y - 10).toFixed(1)}" width="${w.toFixed(1)}" height="20" rx="10" fill="${EXP.bg}" stroke="${EXP.line}"/><text x="${spot.x.toFixed(1)}" y="${(spot.y + 4).toFixed(1)}" font-size="11.5" text-anchor="middle" fill="${EXP.muted}">${sx(txt)}</text>`;
   }
-  body += labels;
+  body += colouredPaths + labels;
   for (const b of pb){
     const c = EXP[b.type], planned = b.when === "planned", ret = b.when === "retiring", n = caresAbout(b.id).length;
     const nf = `600 13.5px ${XF}`, kf = `700 9.5px ${XF}`, cf = `10px ${XF}`;
@@ -1592,7 +1596,8 @@ function mapSVG(v = view){
    areas: page shapes to try, best first, e.g. [{name:"landscape", w:277, h:180}, {name:"portrait", w:190, h:265}].
    Returns {area, scale (mm per px), pages:[{svg, w, h, x0}]}. */
 function mapPages(v, areas, minPt = 5.5){
-  const m = mapParts(v, true), FOOT = 40, PAD = 64, smin = minPt * 0.3528 / 13.5;
+  let m = mapParts(v, true);
+  const FOOT = 40, PAD = 112, smin = minPt * 0.3528 / 13.5;
   const notes0 = m.notes(0, Math.min(m.W, 1400)), H = m.HB + notes0.h + FOOT;
   /* one page: [x0, x1] of the map, with a margin strip for off-page markers at each cut edge */
   const page = (x0, x1, idx, count, left, right) => {
@@ -1623,16 +1628,19 @@ function mapPages(v, areas, minPt = 5.5){
   }
   cuts.push(m.W);
   const count = cuts.length - 1, rights = Array(count).fill(""), lefts = Array(count).fill("");
-  /* off-page connectors: the same label (A-1, A-2, ... for the first split, B-1 ... for the next) where a line leaves one part and where it carries on in the next */
+  /* off-page connectors: the same label (A-1, A-2, ... for the first split, B-1 ... for the next) where a line leaves one part
+     and where it carries on, pointing the way the connection flows. Each crossing connection gets its own colour, used for
+     its whole line and its connectors, and the connectors are staggered in two columns so they're easy to tell apart. */
+  const PALETTE = ["#D0342C", "#2563EB", "#16A34A", "#9333EA", "#EA580C", "#0E8FA8", "#DB2777", "#65A30D", "#B45309", "#4F46E5", "#0F766E", "#BE185D"];
   const cutName = i => { let s2 = ""; i++; while (i > 0){ i--; s2 = String.fromCharCode(65 + i % 26) + s2; i = Math.floor(i / 26); } return s2; };
-  /* the connector points the way the connection flows, on both pages */
   const OPC = {
     right: (cx, y) => [`M${cx - 23},${y - 11} H${cx + 11} L${cx + 23},${y} L${cx + 11},${y + 11} H${cx - 23} Z`, cx - 5, y + 4],
     left:  (cx, y) => [`M${cx + 23},${y - 11} H${cx - 11} L${cx - 23},${y} L${cx - 11},${y + 11} H${cx + 23} Z`, cx + 5, y + 4],
     down:  (cx, y) => [`M${cx - 23},${y - 13} H${cx + 23} V${y + 4} L${cx},${y + 13} L${cx - 23},${y + 4} Z`, cx, y + 1.5],
     up:    (cx, y) => [`M${cx - 23},${y + 13} H${cx + 23} V${y - 4} L${cx},${y - 13} L${cx - 23},${y - 4} Z`, cx, y + 7.5],
   };
-  const opc = (cx, y, label, dir) => { const [d, tx, ty] = OPC[dir](cx, y); return `<path d="${d}" fill="${EXP.bg}" stroke="${EXP.accent}" stroke-width="1.6"/><text x="${tx}" y="${ty}" font-size="11" font-weight="700" text-anchor="middle" fill="${EXP.accent}">${label}</text>`; };
+  const opc = (cx, y, label, dir, col) => { const [d, tx, ty] = OPC[dir](cx, y); return `<path d="${d}" fill="${mix(col, "#FFFFFF", 0.1)}" stroke="${col}" stroke-width="1.8"/><text x="${tx}" y="${ty}" font-size="11" font-weight="700" text-anchor="middle" fill="${col}">${label}</text>`; };
+  const crossings = [], colours = {};
   for (let c = 1; c < count; c++){
     const X = cuts[c], ys = [];
     for (const g of m.geoms){
@@ -1644,13 +1652,20 @@ function mapPages(v, areas, minPt = 5.5){
       }
     }
     ys.sort((p, q) => p.yc - q.yc);
-    let last = m.TOP + 12;
-    for (const it of ys){ it.y = Math.max(it.yc, last + 32); last = it.y; }
+    let last = m.TOP + 4;
+    for (const it of ys){ it.y = Math.max(it.yc, last + 20); last = it.y; }
+    crossings.push({c, X, ys});
+    for (const it of ys) if (!colours[it.g.l.id]) colours[it.g.l.id] = PALETTE[Object.keys(colours).length % PALETTE.length];
+  }
+  if (Object.keys(colours).length) m = mapParts(v, true, colours);
+  for (const {c, X, ys} of crossings){
     ys.forEach((it, k) => {
-      const L = `${cutName(c - 1)}-${k + 1}`, tip = `<title>${sx(it.g.a.name)} ${sx(it.g.l.label)} ${sx(it.g.b.name)}</title>`, line = `stroke="${EXP.muted}" stroke-width="1.6" fill="none"`;
-      const dir = it.g.b.x + BW / 2 > X ? "right" : "left";   /* which way the arrow goes */
-      rights[c - 1] += `<g>${tip}<path d="M${X},${it.yc} L${X + PAD / 2 - 23},${it.y}" ${line}/>${opc(X + PAD / 2, it.y, L, dir)}</g>`;
-      lefts[c] += `<g>${tip}<path d="M${X - PAD / 2 + 23},${it.y} L${X},${it.yc}" ${line}/>${opc(X - PAD / 2, it.y, L, dir)}</g>`;
+      const L = `${cutName(c - 1)}-${k + 1}`, col = colours[it.g.l.id], tip = `<title>${sx(it.g.a.name)} ${sx(it.g.l.label)} ${sx(it.g.b.name)}</title>`;
+      const off = k % 2 ? 78 : 28;                                   /* two columns: near the edge, then further out */
+      const dir = it.g.b.x + BW / 2 > X ? "right" : "left";         /* which way the arrow goes */
+      const line = `stroke="${col}" stroke-width="2.2" fill="none"`;
+      rights[c - 1] += `<g>${tip}<path d="M${X},${it.yc} L${X + off - 23},${it.y}" ${line}/>${opc(X + off, it.y, L, dir, col)}</g>`;
+      lefts[c] += `<g>${tip}<path d="M${X - off + 23},${it.y} L${X},${it.yc}" ${line}/>${opc(X - off, it.y, L, dir, col)}</g>`;
     });
   }
   return {area:a, scale:s, pages:cuts.slice(0, -1).map((x0, i) => page(x0, cuts[i + 1], i, count, lefts[i], rights[i]))};
