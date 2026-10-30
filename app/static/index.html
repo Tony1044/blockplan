@@ -1625,7 +1625,14 @@ function mapPages(v, areas, minPt = 5.5){
   const count = cuts.length - 1, rights = Array(count).fill(""), lefts = Array(count).fill("");
   /* off-page connectors: the same label (A-1, A-2, ... for the first split, B-1 ... for the next) where a line leaves one part and where it carries on in the next */
   const cutName = i => { let s2 = ""; i++; while (i > 0){ i--; s2 = String.fromCharCode(65 + i % 26) + s2; i = Math.floor(i / 26); } return s2; };
-  const opc = (cx, y, label) => `<path d="M${cx - 23},${y - 13} H${cx + 23} V${y + 4} L${cx},${y + 13} L${cx - 23},${y + 4} Z" fill="${EXP.bg}" stroke="${EXP.accent}" stroke-width="1.6"/><text x="${cx}" y="${y + 1.5}" font-size="11" font-weight="700" text-anchor="middle" fill="${EXP.accent}">${label}</text>`;
+  /* the connector points the way the connection flows, on both pages */
+  const OPC = {
+    right: (cx, y) => [`M${cx - 23},${y - 11} H${cx + 11} L${cx + 23},${y} L${cx + 11},${y + 11} H${cx - 23} Z`, cx - 5, y + 4],
+    left:  (cx, y) => [`M${cx + 23},${y - 11} H${cx - 11} L${cx - 23},${y} L${cx - 11},${y + 11} H${cx + 23} Z`, cx + 5, y + 4],
+    down:  (cx, y) => [`M${cx - 23},${y - 13} H${cx + 23} V${y + 4} L${cx},${y + 13} L${cx - 23},${y + 4} Z`, cx, y + 1.5],
+    up:    (cx, y) => [`M${cx - 23},${y + 13} H${cx + 23} V${y - 4} L${cx},${y - 13} L${cx - 23},${y - 4} Z`, cx, y + 7.5],
+  };
+  const opc = (cx, y, label, dir) => { const [d, tx, ty] = OPC[dir](cx, y); return `<path d="${d}" fill="${EXP.bg}" stroke="${EXP.accent}" stroke-width="1.6"/><text x="${tx}" y="${ty}" font-size="11" font-weight="700" text-anchor="middle" fill="${EXP.accent}">${label}</text>`; };
   for (let c = 1; c < count; c++){
     const X = cuts[c], ys = [];
     for (const g of m.geoms){
@@ -1641,8 +1648,9 @@ function mapPages(v, areas, minPt = 5.5){
     for (const it of ys){ it.y = Math.max(it.yc, last + 32); last = it.y; }
     ys.forEach((it, k) => {
       const L = `${cutName(c - 1)}-${k + 1}`, tip = `<title>${sx(it.g.a.name)} ${sx(it.g.l.label)} ${sx(it.g.b.name)}</title>`, line = `stroke="${EXP.muted}" stroke-width="1.6" fill="none"`;
-      rights[c - 1] += `<g>${tip}<path d="M${X},${it.yc} L${X + PAD / 2 - 23},${it.y}" ${line}/>${opc(X + PAD / 2, it.y, L)}</g>`;
-      lefts[c] += `<g>${tip}<path d="M${X - PAD / 2 + 23},${it.y} L${X},${it.yc}" ${line}/>${opc(X - PAD / 2, it.y, L)}</g>`;
+      const dir = it.g.b.x + BW / 2 > X ? "right" : "left";   /* which way the arrow goes */
+      rights[c - 1] += `<g>${tip}<path d="M${X},${it.yc} L${X + PAD / 2 - 23},${it.y}" ${line}/>${opc(X + PAD / 2, it.y, L, dir)}</g>`;
+      lefts[c] += `<g>${tip}<path d="M${X - PAD / 2 + 23},${it.y} L${X},${it.yc}" ${line}/>${opc(X - PAD / 2, it.y, L, dir)}</g>`;
     });
   }
   return {area:a, scale:s, pages:cuts.slice(0, -1).map((x0, i) => page(x0, cuts[i + 1], i, count, lefts[i], rights[i]))};
